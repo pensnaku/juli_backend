@@ -3,9 +3,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.core.security import decode_access_token
 from app.features.auth.domain.models import User
 from app.features.auth.service import AuthService
+from app.features.auth.service.jwt_service import JWTService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -33,16 +33,14 @@ def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    payload = decode_access_token(token)
-    if payload is None:
+    # Extract token data using JWTService
+    token_data = JWTService.extract_token_data(token)
+    if token_data is None or token_data.email is None:
         raise credentials_exception
 
-    email: str = payload.get("sub")
-    if email is None:
-        raise credentials_exception
-
+    # Get user from database
     auth_service = AuthService(db)
-    user = auth_service.get_user_by_email(email)
+    user = auth_service.get_user_by_email(token_data.email)
 
     if user is None:
         raise credentials_exception

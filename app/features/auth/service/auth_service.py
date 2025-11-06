@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from app.features.auth.domain.models import User
 from app.features.auth.domain.schemas import UserCreate, UserUpdate
 from app.features.auth.repository import UserRepository
-from app.core.security import verify_password, get_password_hash, create_access_token
+from app.features.auth.service.jwt_service import JWTService
+from app.core.security import verify_password, get_password_hash
 from app.core.config import settings
 
 
@@ -79,8 +80,9 @@ class AuthService:
             JWT access token
         """
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": user.email, "user_id": user.id},
+        access_token = JWTService.create_user_token(
+            user_id=user.id,
+            email=user.email,
             expires_delta=access_token_expires
         )
         return access_token
