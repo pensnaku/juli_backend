@@ -17,6 +17,12 @@ class UserSettings(Base):
     store_region = Column(String, nullable=True)
     timezone = Column(String, nullable=True)  # e.g., "America/New_York", "Africa/Lagos"
 
+    # Questionnaire-related settings
+    daily_routine = Column(String, nullable=True)  # "student", "working", etc.
+    ethnicity = Column(String, nullable=True)
+    hispanic_latino = Column(String, nullable=True)
+    allow_medical_support = Column(Boolean, default=False)
+
     # Additional settings (optional, for future use)
     phone_number = Column(String, nullable=True)
     language_preference = Column(String, default="en")
@@ -28,4 +34,4 @@ class UserSettings(Base):
     user = relationship("User", back_populates="settings")
 
     def __repr__(self):
-        return f"<UserSettings(user_id={self.user_id}, country={self.store_country})>"
+        return f"<UserSettings(user_id={self.user_id}, routine={self.daily_routine})>"

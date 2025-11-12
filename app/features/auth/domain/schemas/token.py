@@ -1,12 +1,14 @@
 """Token-related Pydantic schemas"""
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
 
 class Token(BaseModel):
-    """JWT token response schema"""
+    """JWT token response schema with onboarding status"""
     access_token: str
     token_type: str = "bearer"
+    onboarding_completed: bool = Field(..., description="Whether user has completed onboarding questionnaire")
+    user_id: int = Field(..., description="User ID")
 
 
 class TokenData(BaseModel):

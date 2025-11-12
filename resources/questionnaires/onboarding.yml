@@ -1,0 +1,314 @@
+# Onboarding Questionnaire - Simplified schema (migrated from FHIR)
+version: "1.0"
+questionnaire_id: onboarding
+title: User Onboarding
+description: Initial questionnaire for new users
+
+# Global settings
+settings:
+  ask_ethnicity: false  # Can be overridden by launch context
+
+questions:
+  # Basic Information
+  - id: name
+    text: What should I call you?
+    type: text
+    validation:
+      required: true
+
+  - id: age
+    text: What is your age?
+    type: number
+    validation:
+      required: true
+      min: 13
+      max: 120
+
+  - id: gender
+    text: How would you describe your gender?
+    type: single_choice
+    validation:
+      required: true
+    options:
+      - value: male
+        label: Male
+      - value: female
+        label: Female
+      - value: transgender-woman
+        label: Transgender (woman)
+      - value: transgender-man
+        label: Transgender (man)
+      - value: non-binary
+        label: Non-binary
+
+  - id: daily-routine-or-main-activity
+    text: How would you describe your current daily routine or main activity?
+    type: single_choice
+    validation:
+      required: true
+    options:
+      - value: student
+        label: Student
+      - value: working
+        label: Working
+      - value: homemaker-and-caregiving
+        label: Homemaker / Caregiving
+      - value: retired
+        label: Retired
+      - value: looking-for-work
+        label: Looking for work
+      - value: not-currently-working
+        label: Not currently working
+      - value: prefer-not-to-answer
+        label: Other / prefer not to say
+
+  - id: allow-support-for-other-condition
+    text: juli can help you with your general wellbeing, dealing with issues like stress or fatigue.
+    help_text: In addition, I may also be able to support you managing a medical condition. Would that be helpful?
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      field: daily-routine-or-main-activity
+      equals: student
+    options:
+      - value: "yes"
+        label: YES, PLEASE
+      - value: "no"
+        label: NO THANK YOU
+
+  # Ethnicity (conditional based on settings)
+  - id: ethnicity
+    text: Please tell us your ethnicity / race
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      setting: ask_ethnicity
+      equals: true
+    options:
+      - value: white
+        label: White
+      - value: black-or-african-american
+        label: Black or African American
+      - value: american-indian-or-alaska-native
+        label: American Indian or Alaska Native
+      - value: asian
+        label: Asian
+      - value: native-hawaiian-or-other-pacific-islander
+        label: Native Hawaiian or Other Pacific Islander
+      - value: prefer-not-to-answer
+        label: Prefer not to answer
+
+  - id: ethnicity-hispanic-latino
+    text: Are you Hispanic / Latino?
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      setting: ask_ethnicity
+      equals: true
+    options:
+      - value: "yes"
+        label: "Yes"
+      - value: "no"
+        label: "No"
+      - value: prefer-not-to-answer
+        label: Prefer not to answer
+
+  # Health Conditions
+  - id: conditions
+    text: Which condition would you like juli to help with? You may choose one or two conditions from the list below.
+    type: multi_choice
+    validation:
+      required: true
+      max_selections: 2
+    options:
+      - value: "197480006"
+        label: Anxiety
+        system: snomed
+      - value: "195967001"
+        label: Asthma
+        system: snomed
+      - value: "13746004"
+        label: Bipolar disorder
+        system: snomed
+      - value: "82423001"
+        label: Chronic pain
+        system: snomed
+      - value: "13645005"
+        label: COPD (Chronic obstructive pulmonary disease)
+        system: snomed
+      - value: "35489007"
+        label: Depression
+        system: snomed
+      - value: "73211009"
+        label: Diabetes
+        system: snomed
+      - value: "162290004"
+        label: Dry eye
+        system: snomed
+      - value: "230461009"
+        label: Headache (non-Migraine)
+        system: snomed
+      - value: "38341003"
+        label: Hypertension
+        system: snomed
+      - value: "37796009"
+        label: Migraine
+        system: snomed
+      - value: "365275006"
+        label: None of the above
+        system: snomed
+
+  - id: comorbidity-condition-diagnosed-by-physician
+    text: Was your condition diagnosed by a physician?
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      field: conditions
+      not_empty: true
+    options:
+      - value: "yes"
+        label: "Yes"
+      - value: "no"
+        label: "No"
+
+  - id: comorbidity-condition-experienced-for
+    text: For how long have you experienced your condition?
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      field: conditions
+      not_empty: true
+    options:
+      - value: less-than-a-month
+        label: "< 1 month"
+      - value: less-than-a-three-month
+        label: 1 - 3 months
+      - value: less-than-a-year
+        label: "< 1 year"
+      - value: between-one-and-two-years
+        label: 1 - 2 years
+      - value: between-two-and-five-years
+        label: 2 - 5 years
+      - value: more-than-five-years
+        label: "> 5 years"
+
+  - id: comorbidity-do-you-see-physician
+    text: Do you see a physician about your condition?
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      field: comorbidity-condition-diagnosed-by-physician
+      equals: "yes"
+    options:
+      - value: regularly
+        label: "Yes, regularly"
+      - value: only-when-i-need-to
+        label: "Yes, but only when I need to"
+      - value: not-anymore
+        label: Not anymore
+      - value: never
+        label: Never
+
+  # Diabetes-specific questions
+  - id: which-type-of-diabetes
+    text: Which diabetes type do you have?
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      field: conditions
+      contains: "73211009"
+    options:
+      - value: type-1-diabetes
+        label: Type 1
+      - value: pre-diabetes-insulin-resistance
+        label: Pre-diabetes/insulin resistance
+      - value: type-2-diabetes
+        label: Type 2
+      - value: gestational-diabetes
+        label: Gestational diabetes
+      - value: other-diabetes
+        label: Other
+
+  - id: what-is-your-diabetes-therapy
+    text: What is your diabetes therapy?
+    type: multi_choice
+    validation:
+      required: true
+      max_selections: 5
+    show_if:
+      field: conditions
+      contains: "73211009"
+    allow_none: true
+    none_option:
+      value: no-medication
+      label: No medication
+    options:
+      - value: pills
+        label: Pills
+      - value: pen-syringe
+        label: Pen/syringe
+      - value: other-insulin-medication
+        label: Other insulin medication
+      - value: pump-and-or-glucose-patch
+        label: Pump and/or glucose patch
+
+  - id: reminder-to-check-blood-glucose
+    text: Would you like reminders to check your blood glucose?
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      field: conditions
+      contains: "73211009"
+    options:
+      - value: yes-remind-me
+        label: "Yes"
+      - value: no-dont-remind-me
+        label: "No"
+
+  - id: glucose-check-reminders
+    text: Add glucose check reminders
+    type: time_list
+    validation:
+      required: true
+      min_times: 1
+      max_times: 5
+    show_if:
+      field: reminder-to-check-blood-glucose
+      equals: yes-remind-me
+
+  # Chronic pain-specific
+  - id: how-would-you-describe-your-pain
+    text: How would you describe your pain?
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      field: conditions
+      contains: "82423001"
+    options:
+      - value: musculoskeletal-pain
+        label: Musculoskeletal pain (including pain from injury, lower back pain)
+      - value: pain-of-unknown-origin
+        label: Pain of unknown origin (including fibromyalgia)
+      - value: nerve-pain
+        label: Nerve pain (including sciatica and peripheral neuropathy)
+      - value: visceral-pain
+        label: Visceral pain (including endometriosis and irritable bowel syndrome)
+      - value: other-pain
+        label: Other pain
+
+  # Daily check-in preferences
+  - id: notification-time
+    text: Our Conversation
+    help_text: We would like to know how you are doing on a daily basis. When would be a good time to ask you two questions?
+    type: time
+    validation:
+      required: true
