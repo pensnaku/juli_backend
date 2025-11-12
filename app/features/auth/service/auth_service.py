@@ -2,8 +2,7 @@
 from typing import Optional
 from datetime import timedelta
 from sqlalchemy.orm import Session
-from app.features.auth.domain.models import User
-from app.features.auth.domain.schemas import UserCreate, UserUpdate
+from app.features.auth.domain import User, UserCreate, UserUpdate
 from app.features.auth.repository import UserRepository
 from app.features.auth.service.jwt_service import JWTService
 from app.core.security import verify_password, get_password_hash

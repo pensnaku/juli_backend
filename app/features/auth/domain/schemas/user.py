@@ -1,4 +1,4 @@
-"""Pydantic schemas for authentication"""
+"""User-related Pydantic schemas"""
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from datetime import datetime
@@ -33,20 +33,15 @@ class UserResponse(UserBase):
     id: int
     is_active: bool
     is_superuser: bool
+    is_legacy_user: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
+    settings: Optional["UserSettingsResponse"] = None  # Forward reference
 
     class Config:
         from_attributes = True
 
 
-class Token(BaseModel):
-    """JWT token response schema"""
-    access_token: str
-    token_type: str = "bearer"
-
-
-class TokenData(BaseModel):
-    """Decoded token data schema"""
-    email: Optional[str] = None
-    user_id: Optional[int] = None
+# Import for forward reference resolution
+from app.features.auth.domain.schemas.user_settings import UserSettingsResponse
+UserResponse.model_rebuild()

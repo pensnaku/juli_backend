@@ -7,9 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from app.core.database import Base, get_db
 from app.main import app
-from app.features.auth.domain.models import User
+from app.features.auth.domain import User, UserCreate
 from app.features.auth.service import AuthService, JWTService
-from app.features.auth.domain.schemas import UserCreate
 
 # Use in-memory SQLite for testing
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test.db"

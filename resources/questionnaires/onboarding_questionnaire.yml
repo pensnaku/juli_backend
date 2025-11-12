@@ -1,0 +1,518 @@
+---
+resourceType: Questionnaire
+status: active
+mapping:
+  - id: patient-extract
+    resourceType: Mapping
+  - id: intake-comorbidity-condition-extract
+    resourceType: Mapping
+launchContext:
+  - name:
+      code: AskEthnicityQuestions
+    type:
+      - boolean
+item:
+  - linkId: ask-ethnicity-question
+    type: boolean
+    hidden: true
+    initialExpression:
+      language: text/fhirpath
+      expression: '%AskEthnicityQuestions'
+  - text: What should I call you?
+    type: string
+    linkId: name
+    required: true
+  - text: What is your age?
+    type: integer
+    linkId: age
+    required: true
+  - text: How would you describe your gender?
+    type: choice
+    linkId: gender
+    required: true
+    answerOption:
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: Male
+            code: male
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: Female
+            code: female
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: Transgender (woman)
+            code: transgender-woman
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: Transgender (man)
+            code: transgender-man
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: Non-binary
+            code: non-binary
+  - text: How would you describe your current daily routine or main activity?
+    type: choice
+    linkId: daily-routine-or-main-activity
+    required: true
+    answerOption:
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: Student
+            code: student
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: Working
+            code: working
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: Homemaker / Caregiving
+            code: homemaker-and-caregiving
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: Retired
+            code: retired
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: Looking for work
+            code: looking-for-work
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: Not currently working
+            code: not-currently-working
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: Other / prefer not to say
+            code: prefer-not-to-answer
+
+  - text: juli can help you with your general wellbeing, dealing with issues like stress or fatigue.
+    helpText: In addition, I may also able to support you managing a medical condition. Would that be helpful?
+    type: choice
+    linkId: allow-support-for-other-condition
+    required: true
+    enableWhen:
+      - question: daily-routine-or-main-activity
+        operator: '='
+        answer:
+          Coding:
+            system: http://api.juli.co
+            display: Student
+            code: student
+    answerOption:
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: YES, PLEASE
+            code: 'yes'
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: NO THANK YOU
+            code: 'no'
+  - text: Please tell us your ethnicity / race
+    type: choice
+    linkId: ethnicity
+    required: true
+    enableWhen:
+      - question: ask-ethnicity-question
+        operator: '='
+        answer:
+          boolean: true
+    answerOption:
+      - value:
+          Coding:
+            system: https://api.juli.co/CodeSystem/juli-ethnicity
+            display: White
+            code: white
+      - value:
+          Coding:
+            system: https://api.juli.co/CodeSystem/juli-ethnicity
+            display: Black or African American
+            code: black-or-african-american
+      - value:
+          Coding:
+            system: https://api.juli.co/CodeSystem/juli-ethnicity
+            display: American Indian or Alaska Native
+            code: american-indian-or-alaska-native
+      - value:
+          Coding:
+            system: https://api.juli.co/CodeSystem/juli-ethnicity
+            display: Asian
+            code: asian
+      - value:
+          Coding:
+            system: https://api.juli.co/CodeSystem/juli-ethnicity
+            display: Native Hawaiian or Other Pacific Islander
+            code: native-hawaiian-or-other-pacific-islander
+      - value:
+          Coding:
+            system: https://api.juli.co/CodeSystem/juli-ethnicity
+            display: Prefer not to answer
+            code: prefer-not-to-answer
+  - text: Are you Hispanic / Latino?
+    type: choice
+    linkId: ethnicity-hispanic-latino
+    required: true
+    enableWhen:
+      - question: ask-ethnicity-question
+        operator: '='
+        answer:
+          boolean: true
+    answerOption:
+      - value:
+          Coding:
+            system: https://api.juli.co/CodeSystem/juli-ethnicity-hispanic-latino
+            display: 'Yes'
+            code: 'yes'
+      - value:
+          Coding:
+            system: https://api.juli.co/CodeSystem/juli-ethnicity-hispanic-latino
+            display: 'No'
+            code: 'no'
+      - value:
+          Coding:
+            system: https://api.juli.co/CodeSystem/juli-ethnicity-hispanic-latino
+            display: Prefer not to answer
+            code: prefer-not-to-answer
+  - text: Which condition would you like juli to help with? You may choose one or two conditions from the list below.
+    type: choice
+    linkId: conditions
+    required: true
+    repeats: true
+    answerOption:
+      - value:
+          Coding:
+            system: http://snomed.info/sct
+            code: '197480006'
+            display: Anxiety
+      - value:
+          Coding:
+            system: http://snomed.info/sct
+            code: '195967001'
+            display: Asthma
+      - value:
+          Coding:
+            system: http://snomed.info/sct
+            code: '13746004'
+            display: Bipolar disorder
+      - value:
+          Coding:
+            system: http://snomed.info/sct
+            code: '82423001'
+            display: Chronic pain
+      - value:
+          Coding:
+            system: http://snomed.info/sct
+            code: '13645005'
+            display: COPD (Chronic obstructive pulmonary disease)
+      - value:
+          Coding:
+            system: http://snomed.info/sct
+            code: '35489007'
+            display: Depression
+      - value:
+          Coding:
+            system: http://snomed.info/sct
+            code: '73211009'
+            display: Diabetes
+      - value:
+          Coding:
+            system: http://snomed.info/sct
+            code: '162290004'
+            display: Dry eye
+      - value:
+          Coding:
+            system: http://snomed.info/sct
+            code: '230461009'
+            display: Headache (non-Migraine)
+      - value:
+          Coding:
+            system: http://snomed.info/sct
+            code: '38341003'
+            display: Hypertension
+      - value:
+          Coding:
+            system: http://snomed.info/sct
+            code: '37796009'
+            display: Migraine
+      - value:
+          Coding:
+            system: http://snomed.info/sct
+            # CODE BELOW IS FOR GENERAL WELLBEING
+            code: '365275006'
+            display: None of the above
+    maxOptions: 2
+  - text: Was your condition diagnosed by a physician?
+    type: choice
+    linkId: comorbidity-condition-diagnosed-by-physician
+    required: true
+    repeats: true
+    answerOption:
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Yes'
+            code: 'yes'
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'No'
+            code: 'no'
+    item:
+      - linkId: condition
+        required: true
+        repeats: false
+        type: choice
+        hidden: true
+        answerValueSet: intake-juli-conditions
+  - text: For how long have you experienced your condition?
+    type: choice
+    linkId: comorbidity-condition-experienced-for
+    required: true
+    answerOption:
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: '< 1 month'
+            code: less-than-a-month
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: '1 - 3 months'
+            code: less-than-a-three-month
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: '< 1 year'
+            code: less-than-a-year
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: '1 - 2 years'
+            code: between-one-and-two-years
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: '2 - 5 years'
+            code: between-two-and-five-years
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: '> 5 years'
+            code: more-than-five-years
+    item:
+      - linkId: condition
+        required: true
+        repeats: false
+        type: choice
+        hidden: true
+        answerValueSet: intake-juli-conditions
+  - text: Do you see a physician about your condition?
+    type: choice
+    linkId: comorbidity-do-you-see-physician
+    required: true
+    enableWhen:
+      - question: comorbidity-condition-diagnosed-by-physician
+        operator: '='
+        answer:
+          Coding:
+            system: http://api.juli.co
+            display: 'Yes'
+            code: 'yes'
+    answerOption:
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Yes, regularly'
+            code: regularly
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Yes, but only when I need to'
+            code: only-when-i-need-to
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Not anymore'
+            code: not-anymore
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Never'
+            code: never
+    item:
+      - linkId: condition
+        required: true
+        repeats: false
+        type: choice
+        hidden: true
+        answerValueSet: intake-juli-conditions
+  - text: Which diabetes type do you have?
+    type: choice
+    linkId: which-type-of-diabetes
+    required: true
+    enableWhen:
+      - question: conditions
+        operator: '='
+        answer:
+          Coding:
+            system: http://snomed.info/sct
+            code: '73211009'
+            display: Diabetes
+    answerOption:
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Type 1'
+            code: type-1-diabetes
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Pre-diabetes/insulin resistance'
+            code: pre-diabetes-insulin-resistance
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Type 2'
+            code: type-2-diabetes
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Gestational diabetes'
+            code: gestational-diabetes
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Other'
+            code: other-diabetes
+  - text: What is your diabetes therapy?
+    type: choice
+    linkId: what-is-your-diabetes-therapy
+    required: true
+    repeats: true
+    maxOptions: 5
+    negationOption:
+      value:
+        Coding:
+          system: http://api.juli.co
+          display: 'No medication'
+          code: no-medication
+    enableWhen:
+      - question: conditions
+        operator: '='
+        answer:
+          Coding:
+            system: http://snomed.info/sct
+            code: '73211009'
+            display: Diabetes
+    answerOption:
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Pills'
+            code: pills
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Pen/syringe'
+            code: pen-syringe
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Other insulin medication'
+            code: other-insulin-medication
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Pump and/or glucose patch'
+            code: pump-and-or-glucose-patch
+  - text: Would you like reminders to check your blood glucose?
+    type: choice
+    linkId: reminder-to-check-blood-glucose
+    required: true
+    enableWhen:
+      - question: conditions
+        operator: '='
+        answer:
+          Coding:
+            system: http://snomed.info/sct
+            code: '73211009'
+            display: Diabetes
+    answerOption:
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Yes'
+            code: yes-remind-me
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'No'
+            code: no-dont-remind-me
+  - text: Add glucose check reminders
+    type: time
+    linkId: glucose-check-reminders
+    required: true
+    enableWhen:
+      - question: reminder-to-check-blood-glucose
+        operator: '='
+        answer:
+          Coding:
+            system: http://api.juli.co
+            display: 'Yes'
+            code: yes-remind-me
+  - text: How would you describe your pain?
+    type: choice
+    linkId: how-would-you-describe-your-pain
+    required: true
+    enableWhen:
+      - question: conditions
+        operator: '='
+        answer:
+          Coding:
+            system: http://snomed.info/sct
+            code: '82423001'
+            display: Chronic pain
+    answerOption:
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Musculoskeletal pain (including pain from injury, lower back pain)'
+            code: musculoskeletal-pain
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Pain of unknown origin (including fibromyalgia)'
+            code: pain-of-unknown-origin
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Nerve pain (including sciatica and peripheral neuropathy)'
+            code: nerve-pain
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Visceral pain (including endometriosis and irritable bowel syndrome)'
+            code: visceral-pain
+      - value:
+          Coding:
+            system: http://api.juli.co
+            display: 'Other pain'
+            code: other-pain
+  - text: Our Conversation
+    type: time
+    helpText: We would like to know how you are doing on a daily basis. When would be a good time to ask you two questions?
+    linkId: notification-time
+    required: true

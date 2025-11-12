@@ -1,27 +1,20 @@
-"""Auth domain layer - entities and schemas"""
-
-# Export entities
-from app.features.auth.domain.entities import User, UserSettings
-
-# Export schemas
-from app.features.auth.domain.schemas import (
+"""Pydantic schemas for authentication feature"""
+from app.features.auth.domain.schemas.user import (
     UserBase,
     UserCreate,
     UserLogin,
     UserUpdate,
     UserResponse,
+)
+from app.features.auth.domain.schemas.user_settings import (
     UserSettingsBase,
     UserSettingsCreate,
     UserSettingsUpdate,
     UserSettingsResponse,
-    Token,
-    TokenData,
 )
+from app.features.auth.domain.schemas.token import Token, TokenData
 
 __all__ = [
-    # Entities
-    "User",
-    "UserSettings",
     # User schemas
     "UserBase",
     "UserCreate",

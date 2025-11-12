@@ -1,7 +1,7 @@
 """Repository for user database operations"""
 from typing import Optional
 from sqlalchemy.orm import Session
-from app.features.auth.domain.models import User
+from app.features.auth.domain import User
 
 
 class UserRepository:
