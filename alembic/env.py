@@ -8,7 +8,8 @@ from app.core.database import Base
 from app.core.config import settings
 
 # Import all models here to ensure they are registered with Base.metadata
-from app.features.auth.domain import models as auth_models
+from app.features.auth.domain import entities as auth_entities
+from app.shared.questionnaire import entities as questionnaire_entities
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

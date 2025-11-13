@@ -1,4 +1,5 @@
 """Service for loading and working with questionnaires"""
+
 from typing import Dict, Any, Optional, List
 from app.core.resource_loader import get_resource_loader
 from app.shared.questionnaire.models import Questionnaire, Question
@@ -27,7 +28,9 @@ class QuestionnaireService:
         raw_data = self.loader.load_yaml(f"questionnaires/{name}.yml")
         return Questionnaire(**raw_data)
 
-    def get_question_by_id(self, questionnaire: Questionnaire, question_id: str) -> Optional[Question]:
+    def get_question_by_id(
+        self, questionnaire: Questionnaire, question_id: str
+    ) -> Optional[Question]:
         """
         Get a specific question by ID
 
@@ -44,9 +47,7 @@ class QuestionnaireService:
         return None
 
     def get_questions_for_context(
-        self,
-        questionnaire: Questionnaire,
-        context: Dict[str, Any]
+        self, questionnaire: Questionnaire, context: Dict[str, Any]
     ) -> List[Question]:
         """
         Get questions that should be shown based on context/answers
@@ -67,10 +68,7 @@ class QuestionnaireService:
         return visible_questions
 
     def _should_show_question(
-        self,
-        question: Question,
-        context: Dict[str, Any],
-        settings: Any
+        self, question: Question, context: Dict[str, Any], settings: Any
     ) -> bool:
         """
         Check if a question should be shown based on show_if conditions
@@ -137,10 +135,12 @@ class QuestionnaireService:
                     "placeholder": q.placeholder,
                     "validation": q.validation.model_dump() if q.validation else {},
                     "showIf": q.show_if.model_dump() if q.show_if else None,
-                    "options": [opt.model_dump() for opt in q.options] if q.options else None,
+                    "options": (
+                        [opt.model_dump() for opt in q.options] if q.options else None
+                    ),
                     "allowNone": q.allow_none,
                     "noneOption": q.none_option.model_dump() if q.none_option else None,
                 }
                 for q in questionnaire.questions
-            ]
+            ],
         }

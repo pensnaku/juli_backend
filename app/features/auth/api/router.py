@@ -1,10 +1,21 @@
 """Authentication API endpoints"""
+import logging
 from typing import Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.features.auth.domain import UserCreate, UserResponse, UserLogin, Token
+
+logger = logging.getLogger(__name__)
+from app.features.auth.domain import (
+    UserCreate,
+    UserResponse,
+    UserWithOnboardingStatus,
+    UserLogin,
+    Token,
+    EmailValidationRequest,
+    EmailValidationResponse,
+)
 from app.features.auth.service import AuthService
 from app.features.auth.api.dependencies import get_current_user
 from app.shared.questionnaire.answer_handler import QuestionnaireAnswerHandler
@@ -18,31 +29,92 @@ from app.shared.constants import QUESTIONNAIRE_IDS
 router = APIRouter()
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
     """
-    Register a new user with email and password
+    Register a new user with email and password, and automatically log them in
 
     Args:
         user_data: User registration data
         db: Database session
 
     Returns:
-        Created user
+        Access token with onboarding completion status (always false for new users)
 
     Raises:
         HTTPException: If email already registered
     """
+    logger.info(f"Registration request received - email: {user_data.email}")
+
     auth_service = AuthService(db)
 
     try:
         user = auth_service.register_user(user_data)
-        return user
+        logger.info(f"User registered successfully - id: {user.id}, email: {user.email}")
+
+        # Automatically log in the user by creating an access token
+        access_token = auth_service.create_access_token(user)
+
+        # Check onboarding completion status (will be false for new users)
+        completion_repo = QuestionnaireCompletionRepository(db)
+        onboarding_completed = completion_repo.is_completed(user.id, QUESTIONNAIRE_IDS["ONBOARDING"])
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "onboarding_completed": onboarding_completed,
+            "user": user
+        }
     except ValueError as e:
+        logger.warning(f"Registration failed for {user_data.email}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+
+
+@router.post("/validate-email", response_model=EmailValidationResponse)
+def validate_email(
+    request: EmailValidationRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Validate email format and check if it's available for registration
+
+    Args:
+        request: Email validation request containing the email to validate
+        db: Database session
+
+    Returns:
+        Validation result with:
+        - is_valid: Whether the email format is valid
+        - is_available: Whether the email is not already registered
+        - message: Descriptive message about the validation result
+
+    Example request body:
+    ```json
+    {
+        "email": "user@example.com"
+    }
+    ```
+
+    Example response:
+    ```json
+    {
+        "email": "user@example.com",
+        "is_valid": true,
+        "is_available": true,
+        "message": "This email address is available"
+    }
+    ```
+    """
+    auth_service = AuthService(db)
+    validation_result = auth_service.validate_email(request.email)
+
+    return EmailValidationResponse(
+        email=request.email,
+        **validation_result
+    )
 
 
 @router.post("/login", response_model=Token)
@@ -83,7 +155,7 @@ def login(
         "access_token": access_token,
         "token_type": "bearer",
         "onboarding_completed": onboarding_completed,
-        "user_id": user.id
+        "user": user
     }
 
 
@@ -122,7 +194,7 @@ def login_json(user_login: UserLogin, db: Session = Depends(get_db)):
         "access_token": access_token,
         "token_type": "bearer",
         "onboarding_completed": onboarding_completed,
-        "user_id": user.id
+        "user": user
     }
 
 
@@ -140,18 +212,39 @@ def get_current_user_info(current_user = Depends(get_current_user)):
     return current_user
 
 
-@router.post("/test-token", response_model=UserResponse)
-def test_token(current_user = Depends(get_current_user)):
+@router.post("/test-token", response_model=UserWithOnboardingStatus)
+def test_token(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """
-    Test access token validity
+    Test access token validity and get user information with onboarding status
 
     Args:
         current_user: Current authenticated user
+        db: Database session
 
     Returns:
-        User information if token is valid
+        User information with onboarding completion status if token is valid
     """
-    return current_user
+    # Check onboarding completion status
+    completion_repo = QuestionnaireCompletionRepository(db)
+    onboarding_completed = completion_repo.is_completed(current_user.id, QUESTIONNAIRE_IDS["ONBOARDING"])
+
+    # Convert user to dict and add onboarding status
+    user_dict = {
+        "id": current_user.id,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "is_active": current_user.is_active,
+        "is_superuser": current_user.is_superuser,
+        "is_legacy_user": current_user.is_legacy_user,
+        "terms_accepted": current_user.terms_accepted,
+        "age_confirmed": current_user.age_confirmed,
+        "created_at": current_user.created_at,
+        "updated_at": current_user.updated_at,
+        "settings": current_user.settings,
+        "onboarding_completed": onboarding_completed
+    }
+
+    return user_dict
 
 
 @router.post("/questionnaire/answers", response_model=QuestionnaireAnswersResponse, status_code=status.HTTP_200_OK)

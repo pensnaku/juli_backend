@@ -18,12 +18,21 @@ class UserRepository:
         """Get user by email"""
         return self.db.query(User).filter(User.email == email).first()
 
-    def create(self, email: str, hashed_password: str, full_name: Optional[str] = None) -> User:
+    def create(
+        self,
+        email: str,
+        hashed_password: str,
+        full_name: Optional[str] = None,
+        terms_accepted: bool = False,
+        age_confirmed: bool = False
+    ) -> User:
         """Create a new user"""
         user = User(
             email=email,
             hashed_password=hashed_password,
-            full_name=full_name
+            full_name=full_name,
+            terms_accepted=terms_accepted,
+            age_confirmed=age_confirmed
         )
         self.db.add(user)
         self.db.commit()

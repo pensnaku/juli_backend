@@ -26,11 +26,18 @@ class AuthService:
             Created user
 
         Raises:
-            ValueError: If email already exists
+            ValueError: If email already exists or validations fail
         """
         # Check if user already exists
         if self.repository.exists_by_email(user_data.email):
             raise ValueError("Email already registered")
+
+        # Validate terms and age confirmation
+        if not user_data.terms_accepted:
+            raise ValueError("You must accept the terms and conditions")
+
+        if not user_data.age_confirmed:
+            raise ValueError("You must confirm you meet the minimum age requirement")
 
         # Hash password
         hashed_password = get_password_hash(user_data.password)
@@ -39,7 +46,8 @@ class AuthService:
         user = self.repository.create(
             email=user_data.email,
             hashed_password=hashed_password,
-            full_name=user_data.full_name
+            terms_accepted=user_data.terms_accepted,
+            age_confirmed=user_data.age_confirmed
         )
 
         return user
@@ -125,3 +133,32 @@ class AuthService:
             user.hashed_password = get_password_hash(user_data.password)
 
         return self.repository.update(user)
+
+    def validate_email(self, email: str) -> dict:
+        """
+        Validate email format and availability
+
+        Args:
+            email: Email address to validate
+
+        Returns:
+            Dictionary with validation results:
+                - is_valid: Whether email format is valid (always True if this method is called after Pydantic validation)
+                - is_available: Whether email is not already registered
+                - message: Descriptive message
+        """
+        # Check if email already exists
+        exists = self.repository.exists_by_email(email)
+
+        if exists:
+            return {
+                "is_valid": True,
+                "is_available": False,
+                "message": "This email address is already registered"
+            }
+        else:
+            return {
+                "is_valid": True,
+                "is_available": True,
+                "message": "This email address is available"
+            }
