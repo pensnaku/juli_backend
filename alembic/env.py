@@ -9,6 +9,7 @@ from app.core.config import settings
 
 # Import all models here to ensure they are registered with Base.metadata
 from app.features.auth.domain import entities as auth_entities
+from app.features.dares.domain import entities as dares_entities
 from app.shared.questionnaire import entities as questionnaire_entities
 
 # this is the Alembic Config object, which provides
