@@ -11,9 +11,10 @@ class UserReminder(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    medication_id = Column(Integer, ForeignKey("user_medications.id"), nullable=True, index=True)
 
     # Reminder configuration
-    reminder_type = Column(String, nullable=False)  # "daily_check_in", "glucose_check", etc.
+    reminder_type = Column(String, nullable=False)  # "daily_check_in", "glucose_check", "medication", etc.
     time = Column(Time, nullable=False)  # Time of day for reminder (e.g., 08:00:00)
     is_active = Column(Boolean, default=True)
 
@@ -22,6 +23,7 @@ class UserReminder(Base):
 
     # Relationships
     user = relationship("User", back_populates="reminders")
+    medication = relationship("UserMedication", back_populates="reminders")
 
     def __repr__(self):
         return f"<UserReminder(user_id={self.user_id}, type={self.reminder_type}, time={self.time})>"

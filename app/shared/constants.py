@@ -23,6 +23,21 @@ CONDITION_CODES: Dict[str, Dict[str, Any]] = {
         "system": "snomed",
         "description": "Chronic obstructive lung disease"
     },
+    "195967001": {
+        "label": "Asthma",
+        "system": "snomed",
+        "description": "Asthma"
+    },
+    "35489007": {
+        "label": "Depression",
+        "system": "snomed",
+        "description": "Depressive disorder"
+    },
+    "13746004": {
+        "label": "Bipolar disorder",
+        "system": "snomed",
+        "description": "Bipolar disorder"
+    },
 }
 
 # Reminder types
@@ -38,4 +53,12 @@ QUESTIONNAIRE_IDS = {
     "ONBOARDING": "onboarding",
     "DAILY": "daily",
     "BIWEEKLY": "biweekly",
+}
+
+# Tracking topic labels
+TRACKING_TOPIC_LABELS = {
+    "coffee-consumption": "Coffee consumption",
+    "alcohol-consumption": "Alcohol consumption",
+    "smoking": "Smoking",
+    "hours-spent-outside": "Hours spent outside",
 }

@@ -23,6 +23,13 @@ class UserSettings(Base):
     hispanic_latino = Column(String, nullable=True)
     allow_medical_support = Column(Boolean, default=False)
 
+    # Medication preferences
+    takes_medication = Column(Boolean, default=False)
+    wants_medication_reminders = Column(Boolean, default=False)
+
+    # Tracking preferences
+    wants_additional_tracking = Column(Boolean, default=False)
+
     # Additional settings (optional, for future use)
     phone_number = Column(String, nullable=True)
     language_preference = Column(String, default="en")

@@ -1,12 +1,12 @@
 # Onboarding Questionnaire - Simplified schema (migrated from FHIR)
-version: "1.0"
+version: '1.0'
 questionnaire_id: onboarding
 title: User Onboarding
 description: Initial questionnaire for new users
 
 # Global settings
 settings:
-  ask_ethnicity: false  # Can be overridden by launch context
+  ask_ethnicity: false # Can be overridden by launch context
 
 questions:
   # Basic Information
@@ -72,9 +72,9 @@ questions:
       field: daily-routine-or-main-activity
       equals: student
     options:
-      - value: "yes"
+      - value: 'yes'
         label: YES, PLEASE
-      - value: "no"
+      - value: 'no'
         label: NO THANK YOU
 
   # Ethnicity (conditional based on settings)
@@ -109,10 +109,10 @@ questions:
       setting: ask_ethnicity
       equals: true
     options:
-      - value: "yes"
-        label: "Yes"
-      - value: "no"
-        label: "No"
+      - value: 'yes'
+        label: 'Yes'
+      - value: 'no'
+        label: 'No'
       - value: prefer-not-to-answer
         label: Prefer not to answer
 
@@ -124,40 +124,40 @@ questions:
       required: true
       max_selections: 2
     options:
-      - value: "197480006"
+      - value: '197480006'
         label: Anxiety
         system: snomed
-      - value: "195967001"
+      - value: '195967001'
         label: Asthma
         system: snomed
-      - value: "13746004"
+      - value: '13746004'
         label: Bipolar disorder
         system: snomed
-      - value: "82423001"
+      - value: '82423001'
         label: Chronic pain
         system: snomed
-      - value: "13645005"
+      - value: '13645005'
         label: COPD (Chronic obstructive pulmonary disease)
         system: snomed
-      - value: "35489007"
+      - value: '35489007'
         label: Depression
         system: snomed
-      - value: "73211009"
+      - value: '73211009'
         label: Diabetes
         system: snomed
-      - value: "162290004"
+      - value: '162290004'
         label: Dry eye
         system: snomed
-      - value: "230461009"
+      - value: '230461009'
         label: Headache (non-Migraine)
         system: snomed
-      - value: "38341003"
+      - value: '38341003'
         label: Hypertension
         system: snomed
-      - value: "37796009"
+      - value: '37796009'
         label: Migraine
         system: snomed
-      - value: "365275006"
+      - value: '365275006'
         label: None of the above
         system: snomed
 
@@ -170,10 +170,10 @@ questions:
       field: conditions
       not_empty: true
     options:
-      - value: "yes"
-        label: "Yes"
-      - value: "no"
-        label: "No"
+      - value: 'yes'
+        label: 'Yes'
+      - value: 'no'
+        label: 'No'
 
   - id: comorbidity-condition-experienced-for
     text: For how long have you experienced your condition?
@@ -185,17 +185,17 @@ questions:
       not_empty: true
     options:
       - value: less-than-a-month
-        label: "< 1 month"
+        label: '< 1 month'
       - value: less-than-a-three-month
         label: 1 - 3 months
       - value: less-than-a-year
-        label: "< 1 year"
+        label: '< 1 year'
       - value: between-one-and-two-years
         label: 1 - 2 years
       - value: between-two-and-five-years
         label: 2 - 5 years
       - value: more-than-five-years
-        label: "> 5 years"
+        label: '> 5 years'
 
   - id: comorbidity-do-you-see-physician
     text: Do you see a physician about your condition?
@@ -204,12 +204,12 @@ questions:
       required: true
     show_if:
       field: comorbidity-condition-diagnosed-by-physician
-      equals: "yes"
+      equals: 'yes'
     options:
       - value: regularly
-        label: "Yes, regularly"
+        label: 'Yes, regularly'
       - value: only-when-i-need-to
-        label: "Yes, but only when I need to"
+        label: 'Yes, but only when I need to'
       - value: not-anymore
         label: Not anymore
       - value: never
@@ -223,7 +223,7 @@ questions:
       required: true
     show_if:
       field: conditions
-      contains: "73211009"
+      contains: '73211009'
     options:
       - value: type-1-diabetes
         label: Type 1
@@ -244,7 +244,7 @@ questions:
       max_selections: 5
     show_if:
       field: conditions
-      contains: "73211009"
+      contains: '73211009'
     allow_none: true
     none_option:
       value: no-medication
@@ -266,12 +266,12 @@ questions:
       required: true
     show_if:
       field: conditions
-      contains: "73211009"
+      contains: '73211009'
     options:
       - value: yes-remind-me
-        label: "Yes"
+        label: 'Yes'
       - value: no-dont-remind-me
-        label: "No"
+        label: 'No'
 
   - id: glucose-check-reminders
     text: Add glucose check reminders
@@ -292,7 +292,7 @@ questions:
       required: true
     show_if:
       field: conditions
-      contains: "82423001"
+      contains: '82423001'
     options:
       - value: musculoskeletal-pain
         label: Musculoskeletal pain (including pain from injury, lower back pain)
@@ -312,3 +312,74 @@ questions:
     type: time
     validation:
       required: true
+
+  - id: do-you-take-medication
+    text: Do you take regular medication for your condition?
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      field: comorbidity-condition-diagnosed-by-physician
+      equals: true
+    options:
+      - value: 'yes'
+        label: 'Yes'
+      - value: 'no'
+        label: 'No'
+
+  - id: medication-reminder
+    text: Do you want juli to remind you to take your medication?
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      field: do-you-take-medication
+      equals: "yes"
+    options:
+      - value: "yes"
+        label: "Yes"
+      - value: "no"
+        label: "No"
+
+  - id: medications-notifications
+    text: Add medication reminder times
+    type: time_list
+    validation:
+      required: true
+    show_if:
+      field: medication-reminder
+      equals: "yes"
+
+  - id: track-additional-topics
+    text: During our daily conversation, we could ask you a few things so you can track more topics that might influence your condition (like coffee or alcohol consumption). Would you like to do that?
+    type: single_choice
+    validation:
+      required: true
+    options:
+      - value: "yes"
+        label: "Yes"
+      - value: "no"
+        label: "No"
+
+  - id: tracking-symptoms
+    text: What would you like juli to track?
+    help_text: You can also add your own later
+    type: multi_choice
+    validation:
+      required: true
+    show_if:
+      field: track-additional-topics
+      equals: "yes"
+    allow_none: true
+    none_option: nothing-from-the-list
+    options:
+      - value: coffee-consumption
+        label: "Coffee consumption"
+      - value: alcohol-consumption
+        label: "Alcohol consumption"
+      - value: smoking
+        label: "Smoking"
+      - value: hours-spent-outside
+        label: "Hours spent outside"
+      - value: nothing-from-the-list
+        label: "Nothing from this list"

@@ -7,13 +7,14 @@ from app.features.auth.repository import (
     UserRepository,
     UserConditionRepository,
     UserReminderRepository,
+    UserTrackingTopicRepository,
 )
 from app.features.auth.domain import User, UserSettings
 from app.features.auth.domain.schemas import (
     UserConditionCreate,
     UserReminderCreate,
 )
-from app.shared.constants import CONDITION_CODES
+from app.shared.constants import CONDITION_CODES, TRACKING_TOPIC_LABELS
 from app.shared.questionnaire.repositories import QuestionnaireCompletionRepository
 
 
@@ -28,6 +29,7 @@ class QuestionnaireAnswerHandler:
         self.user_repo = UserRepository(db)
         self.condition_repo = UserConditionRepository(db)
         self.reminder_repo = UserReminderRepository(db)
+        self.tracking_topic_repo = UserTrackingTopicRepository(db)
         self.completion_repo = QuestionnaireCompletionRepository(db)
 
     def save_answers(
@@ -85,15 +87,31 @@ class QuestionnaireAnswerHandler:
         elif question_id == "age":
             user.age = int(answer) if answer else None
         elif question_id == "gender":
-            user.gender = answer
+            # Handle both string and array formats (extract first item for single_choice)
+            if isinstance(answer, list):
+                user.gender = answer[0] if answer else None
+            else:
+                user.gender = answer
 
         # User settings fields
         elif question_id == "daily-routine-or-main-activity":
-            user.settings.daily_routine = answer
+            # Handle both string and array formats (extract first item for single_choice)
+            if isinstance(answer, list):
+                user.settings.daily_routine = answer[0] if answer else None
+            else:
+                user.settings.daily_routine = answer
         elif question_id == "ethnicity":
-            user.settings.ethnicity = answer
+            # Handle both string and array formats (extract first item for single_choice)
+            if isinstance(answer, list):
+                user.settings.ethnicity = answer[0] if answer else None
+            else:
+                user.settings.ethnicity = answer
         elif question_id == "ethnicity-hispanic-latino":
-            user.settings.hispanic_latino = answer
+            # Handle both string and array formats (extract first item for single_choice)
+            if isinstance(answer, list):
+                user.settings.hispanic_latino = answer[0] if answer else None
+            else:
+                user.settings.hispanic_latino = answer
         elif question_id == "allow-support-for-other-condition":
             user.settings.allow_medical_support = self._parse_boolean(answer)
 
@@ -105,28 +123,60 @@ class QuestionnaireAnswerHandler:
         elif question_id == "comorbidity-condition-diagnosed-by-physician":
             self._update_all_conditions(user.id, "diagnosed_by_physician", self._parse_boolean(answer))
         elif question_id == "comorbidity-condition-experienced-for":
-            self._update_all_conditions(user.id, "duration", answer)
+            # Handle both string and array formats (extract first item for single_choice)
+            value = answer[0] if isinstance(answer, list) and answer else answer
+            self._update_all_conditions(user.id, "duration", value)
         elif question_id == "comorbidity-do-you-see-physician":
-            self._update_all_conditions(user.id, "physician_frequency", answer)
+            # Handle both string and array formats (extract first item for single_choice)
+            value = answer[0] if isinstance(answer, list) and answer else answer
+            self._update_all_conditions(user.id, "physician_frequency", value)
 
         # Diabetes-specific fields
         elif question_id == "which-type-of-diabetes":
-            self._update_condition_field(user.id, "73211009", "diabetes_type", answer)
+            # Handle both string and array formats (extract first item for single_choice)
+            value = answer[0] if isinstance(answer, list) and answer else answer
+            self._update_condition_field(user.id, "73211009", "diabetes_type", value)
         elif question_id == "what-is-your-diabetes-therapy":
             self._handle_diabetes_therapy(user.id, answer)
         elif question_id == "reminder-to-check-blood-glucose":
-            wants_reminders = answer == "yes-remind-me"
+            # Handle both string and array formats (extract first item for single_choice)
+            check_value = answer[0] if isinstance(answer, list) and answer else answer
+            wants_reminders = check_value == "yes-remind-me"
             self._update_condition_field(user.id, "73211009", "wants_glucose_reminders", wants_reminders)
 
         # Pain-specific fields
         elif question_id == "how-would-you-describe-your-pain":
-            self._update_condition_field(user.id, "82423001", "pain_type", answer)
+            # Handle both string and array formats (extract first item for single_choice)
+            value = answer[0] if isinstance(answer, list) and answer else answer
+            self._update_condition_field(user.id, "82423001", "pain_type", value)
 
         # Reminders
         elif question_id == "notification-time":
             self._handle_daily_reminder(user.id, answer)
         elif question_id == "glucose-check-reminders":
             self._handle_glucose_reminders(user.id, answer)
+
+        # Medication questions
+        elif question_id == "do-you-take-medication":
+            # Handle both string and array formats (extract first item for single_choice)
+            value = answer[0] if isinstance(answer, list) and answer else answer
+            user.settings.takes_medication = self._parse_boolean(value)
+        elif question_id == "medication-reminder":
+            # Handle both string and array formats (extract first item for single_choice)
+            value = answer[0] if isinstance(answer, list) and answer else answer
+            user.settings.wants_medication_reminders = self._parse_boolean(value)
+        elif question_id == "medications-notifications":
+            # time_list - array of times to create medication reminders
+            self._handle_medication_reminders(user.id, answer)
+
+        # Tracking questions
+        elif question_id == "track-additional-topics":
+            # Handle both string and array formats (extract first item for single_choice)
+            value = answer[0] if isinstance(answer, list) and answer else answer
+            user.settings.wants_additional_tracking = self._parse_boolean(value)
+        elif question_id == "tracking-symptoms":
+            # multi_choice - array of topic codes to track
+            self._handle_tracking_topics(user.id, answer)
 
     def _handle_conditions(self, user_id: int, condition_codes: List[str]) -> None:
         """Create or update user conditions from selected condition codes"""
@@ -223,6 +273,53 @@ class QuestionnaireAnswerHandler:
         except (ValueError, AttributeError):
             return None
         return None
+
+    def _handle_medication_reminders(self, user_id: int, times: List[str]) -> None:
+        """Create/update medication reminders"""
+        if not times or not isinstance(times, list):
+            return
+
+        reminder_data_list = []
+        for time_str in times:
+            reminder_time = self._parse_time(time_str)
+            if reminder_time:
+                reminder_data_list.append(
+                    UserReminderCreate(
+                        reminder_type="medication",
+                        time=reminder_time,
+                        is_active=True,
+                    )
+                )
+
+        if reminder_data_list:
+            # Replace existing medication reminders with new ones
+            self.reminder_repo.replace_reminders_by_type(
+                user_id, "medication", reminder_data_list
+            )
+
+    def _handle_tracking_topics(self, user_id: int, topic_codes: List[str]) -> None:
+        """Create/update user tracking topics"""
+        if not topic_codes or not isinstance(topic_codes, list):
+            return
+
+        # Filter out the "nothing-from-the-list" option
+        topic_codes = [code for code in topic_codes if code != "nothing-from-the-list"]
+
+        if not topic_codes:
+            # User selected "nothing from the list" - deactivate all topics
+            existing_topics = self.tracking_topic_repo.get_by_user_id(user_id, active_only=False)
+            for topic in existing_topics:
+                topic.is_active = False
+            return
+
+        # Build list of (topic_code, topic_label) tuples
+        topics = []
+        for code in topic_codes:
+            label = TRACKING_TOPIC_LABELS.get(code, code.replace("-", " ").title())
+            topics.append((code, label))
+
+        # Replace all topics for user
+        self.tracking_topic_repo.replace_all(user_id, topics)
 
     @staticmethod
     def _parse_boolean(value: Any) -> bool:

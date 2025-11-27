@@ -43,6 +43,16 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan"
     )
+    medications = relationship(
+        "UserMedication",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    tracking_topics = relationship(
+        "UserTrackingTopic",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
     questionnaire_completions = relationship(
         "QuestionnaireCompletion",
         back_populates="user",
