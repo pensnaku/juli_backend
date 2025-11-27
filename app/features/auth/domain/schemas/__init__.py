@@ -27,6 +27,18 @@ from app.features.auth.domain.schemas.user_reminder import (
     UserReminderUpdate,
     UserReminderResponse,
 )
+from app.features.auth.domain.schemas.user_medication import (
+    UserMedicationBase,
+    UserMedicationCreate,
+    UserMedicationUpdate,
+    UserMedicationResponse,
+)
+from app.features.auth.domain.schemas.user_tracking_topic import (
+    UserTrackingTopicBase,
+    UserTrackingTopicCreate,
+    UserTrackingTopicUpdate,
+    UserTrackingTopicResponse,
+)
 from app.features.auth.domain.schemas.token import Token, TokenData
 
 __all__ = [
@@ -54,6 +66,16 @@ __all__ = [
     "UserReminderCreate",
     "UserReminderUpdate",
     "UserReminderResponse",
+    # User medication schemas
+    "UserMedicationBase",
+    "UserMedicationCreate",
+    "UserMedicationUpdate",
+    "UserMedicationResponse",
+    # User tracking topic schemas
+    "UserTrackingTopicBase",
+    "UserTrackingTopicCreate",
+    "UserTrackingTopicUpdate",
+    "UserTrackingTopicResponse",
     # Token schemas
     "Token",
     "TokenData",
