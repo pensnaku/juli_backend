@@ -1,6 +1,6 @@
 """Repository for journal entries"""
 from typing import List, Optional, Tuple
-from datetime import date
+from datetime import date, datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.features.journal.domain.entities import JournalEntry
@@ -34,6 +34,7 @@ class JournalEntryRepository:
         page_size: int = 20,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
+        search: Optional[str] = None,
     ) -> Tuple[List[JournalEntry], int]:
         """Get paginated journal entries for a user, newest first"""
         query = (
@@ -41,10 +42,18 @@ class JournalEntryRepository:
             .filter(JournalEntry.user_id == user_id)
         )
 
+        # Only filter by start_date if provided
         if start_date:
             query = query.filter(func.date(JournalEntry.created_at) >= start_date)
-        if end_date:
-            query = query.filter(func.date(JournalEntry.created_at) <= end_date)
+
+        # Default end_date to today if not provided
+        effective_end_date = end_date if end_date else date.today()
+        query = query.filter(func.date(JournalEntry.created_at) <= effective_end_date)
+
+        if search:
+            # Full-text search using PostgreSQL ts_vector
+            search_filter = func.to_tsvector('english', JournalEntry.content).match(search)
+            query = query.filter(search_filter)
 
         query = query.order_by(JournalEntry.created_at.desc())
 

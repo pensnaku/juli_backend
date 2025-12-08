@@ -36,12 +36,13 @@ def list_journal_entries(
     page_size: int = Query(default=20, ge=1, le=100),
     start_date: Optional[date] = Query(default=None, description="Filter entries from this date (inclusive)"),
     end_date: Optional[date] = Query(default=None, description="Filter entries until this date (inclusive)"),
+    search: Optional[str] = Query(default=None, description="Full-text search query"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Get paginated list of journal entries, optionally filtered by date range"""
+    """Get paginated list of journal entries, optionally filtered by date range and search"""
     service = JournalService(db)
-    return service.list_entries(current_user.id, page, page_size, start_date, end_date)
+    return service.list_entries(current_user.id, page, page_size, start_date, end_date, search)
 
 
 @router.get("/{entry_id}", response_model=JournalEntryResponse)

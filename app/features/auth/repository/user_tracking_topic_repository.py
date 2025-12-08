@@ -49,12 +49,36 @@ class UserTrackingTopicRepository:
             self.db.rollback()
             return None
 
-    def upsert(self, user_id: int, topic_code: str, topic_label: str) -> UserTrackingTopic:
-        """Create or reactivate a tracking topic"""
+    def upsert(
+        self,
+        user_id: int,
+        topic_code: str,
+        topic_label: str,
+        question: Optional[str] = None,
+        data_type: Optional[str] = None,
+        unit: Optional[str] = None,
+        emoji: Optional[str] = None,
+        min_value: Optional[int] = None,
+        max_value: Optional[int] = None,
+    ) -> UserTrackingTopic:
+        """Create or reactivate a tracking topic with optional custom metadata"""
         existing = self.get_by_user_and_topic(user_id, topic_code)
         if existing:
             existing.is_active = True
-            existing.topic_label = topic_label  # Update label in case it changed
+            existing.topic_label = topic_label
+            # Update custom fields if provided
+            if question is not None:
+                existing.question = question
+            if data_type is not None:
+                existing.data_type = data_type
+            if unit is not None:
+                existing.unit = unit
+            if emoji is not None:
+                existing.emoji = emoji
+            if min_value is not None:
+                existing.min_value = min_value
+            if max_value is not None:
+                existing.max_value = max_value
             self.db.flush()
             return existing
         else:
@@ -62,7 +86,13 @@ class UserTrackingTopicRepository:
                 user_id=user_id,
                 topic_code=topic_code,
                 topic_label=topic_label,
-                is_active=True
+                is_active=True,
+                question=question,
+                data_type=data_type,
+                unit=unit,
+                emoji=emoji,
+                min_value=min_value,
+                max_value=max_value,
             )
             self.db.add(topic)
             self.db.flush()

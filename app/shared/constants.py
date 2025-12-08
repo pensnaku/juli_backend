@@ -55,10 +55,45 @@ QUESTIONNAIRE_IDS = {
     "BIWEEKLY": "biweekly",
 }
 
-# Tracking topic labels
-TRACKING_TOPIC_LABELS = {
-    "coffee-consumption": "Coffee consumption",
-    "alcohol-consumption": "Alcohol consumption",
-    "smoking": "Smoking",
-    "hours-spent-outside": "Hours spent outside",
+# Tracking topics with metadata
+TRACKING_TOPICS: Dict[str, Dict[str, Any]] = {
+    "coffee-consumption": {
+        "label": "Coffee Consumption",
+        "question": "How many cups of coffee did you drink yesterday?",
+        "data_type": "number",
+        "unit": "cups-of-coffee",
+        "emoji": "☕",
+        "min": 0,
+        "max": 10,
+    },
+    "smoking": {
+        "label": "Smoking",
+        "question": "How many cigarettes did you smoke yesterday?",
+        "data_type": "number",
+        "unit": "number-of-cigarettes",
+        "emoji": "🚬",
+        "min": 0,
+        "max": 20,
+    },
+    "alcohol-consumption": {
+        "label": "Alcohol Consumption",
+        "question": "How many glasses of alcohol did you drink yesterday?",
+        "data_type": "number",
+        "unit": "glasses-of-alcohol",
+        "emoji": "🍷",
+        "min": 0,
+        "max": 5,
+    },
+    "hours-spent-outside": {
+        "label": "Hours Spent Outside",
+        "question": "How many hours did you spend outside yesterday?",
+        "data_type": "number",
+        "unit": "hours-spent-outside",
+        "emoji": "☀",
+        "min": 0,
+        "max": 5,
+    },
 }
+
+# Backwards compatibility alias
+TRACKING_TOPIC_LABELS = {code: info["label"] for code, info in TRACKING_TOPICS.items()}

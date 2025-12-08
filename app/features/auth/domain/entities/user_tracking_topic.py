@@ -17,6 +17,14 @@ class UserTrackingTopic(Base):
     topic_label = Column(String, nullable=False)  # e.g., "Coffee consumption"
     is_active = Column(Boolean, default=True)
 
+    # Custom topic metadata (null for default topics, populated for custom)
+    question = Column(String, nullable=True)  # Question to ask users
+    data_type = Column(String, nullable=True)  # "number" or "boolean"
+    unit = Column(String, nullable=True)  # Unit of measurement
+    emoji = Column(String, nullable=True)  # Visual indicator
+    min_value = Column(Integer, nullable=True)  # Minimum value for number types
+    max_value = Column(Integer, nullable=True)  # Maximum value for number types
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

@@ -1,6 +1,6 @@
 """Service layer for journal business logic"""
 from typing import Optional
-from datetime import date
+from datetime import date, datetime
 from sqlalchemy.orm import Session
 
 from app.features.journal.repository import JournalEntryRepository
@@ -42,10 +42,11 @@ class JournalService:
         page_size: int = 20,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
+        search: Optional[str] = None,
     ) -> JournalEntryListResponse:
         """Get paginated list of journal entries for a user"""
         entries, total = self.repo.get_by_user_paginated(
-            user_id, page, page_size, start_date, end_date
+            user_id, page, page_size, start_date, end_date, search
         )
 
         return JournalEntryListResponse(

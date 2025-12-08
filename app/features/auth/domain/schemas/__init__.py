@@ -38,6 +38,9 @@ from app.features.auth.domain.schemas.user_tracking_topic import (
     UserTrackingTopicCreate,
     UserTrackingTopicUpdate,
     UserTrackingTopicResponse,
+    TrackingTopicUpdate,
+    TrackingTopicResponse,
+    TrackingTopicListResponse,
 )
 from app.features.auth.domain.schemas.token import Token, TokenData
 
@@ -76,6 +79,9 @@ __all__ = [
     "UserTrackingTopicCreate",
     "UserTrackingTopicUpdate",
     "UserTrackingTopicResponse",
+    "TrackingTopicUpdate",
+    "TrackingTopicResponse",
+    "TrackingTopicListResponse",
     # Token schemas
     "Token",
     "TokenData",

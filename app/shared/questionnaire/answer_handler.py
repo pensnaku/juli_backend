@@ -14,7 +14,7 @@ from app.features.auth.domain.schemas import (
     UserConditionCreate,
     UserReminderCreate,
 )
-from app.shared.constants import CONDITION_CODES, TRACKING_TOPIC_LABELS
+from app.shared.constants import CONDITION_CODES, TRACKING_TOPICS
 from app.shared.questionnaire.repositories import QuestionnaireCompletionRepository
 
 
@@ -315,7 +315,8 @@ class QuestionnaireAnswerHandler:
         # Build list of (topic_code, topic_label) tuples
         topics = []
         for code in topic_codes:
-            label = TRACKING_TOPIC_LABELS.get(code, code.replace("-", " ").title())
+            topic_info = TRACKING_TOPICS.get(code)
+            label = topic_info["label"] if topic_info else code.replace("-", " ").title()
             topics.append((code, label))
 
         # Replace all topics for user
