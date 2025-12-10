@@ -21,13 +21,20 @@ class UserMedicationRepository:
             query = query.filter(UserMedication.is_active == True)
         return query.all()
 
-    def create(self, user_id: int, medication_name: str, dosage: Optional[str] = None,
-               notes: Optional[str] = None) -> UserMedication:
+    def create(
+        self,
+        user_id: int,
+        medication_name: str,
+        dosage: Optional[str] = None,
+        times_per_day: Optional[int] = None,
+        notes: Optional[str] = None,
+    ) -> UserMedication:
         """Create a new medication"""
         medication = UserMedication(
             user_id=user_id,
             medication_name=medication_name,
             dosage=dosage,
+            times_per_day=times_per_day,
             notes=notes,
             is_active=True
         )

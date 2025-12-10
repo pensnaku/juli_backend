@@ -96,3 +96,39 @@ class UserReminderRepository:
         self.delete_by_user_and_type(user_id, reminder_type)
         # Create new reminders
         return self.create_many(user_id, new_reminders)
+
+    def get_by_medication_id(self, medication_id: int) -> List[UserReminder]:
+        """Get all reminders for a specific medication"""
+        return (
+            self.db.query(UserReminder)
+            .filter(UserReminder.medication_id == medication_id)
+            .all()
+        )
+
+    def delete_by_medication_id(self, medication_id: int) -> int:
+        """Delete all reminders for a specific medication. Returns count of deleted reminders"""
+        reminders = self.get_by_medication_id(medication_id)
+        count = len(reminders)
+        for reminder in reminders:
+            self.db.delete(reminder)
+        self.db.flush()
+        return count
+
+    def create_medication_reminders(
+        self, user_id: int, medication_id: int, times: List
+    ) -> List[UserReminder]:
+        """Create medication reminders for specific times"""
+        from datetime import time as time_type
+        reminders = []
+        for t in times:
+            reminder = UserReminder(
+                user_id=user_id,
+                medication_id=medication_id,
+                reminder_type="medication_reminder",
+                time=t,
+                is_active=True,
+            )
+            self.db.add(reminder)
+            reminders.append(reminder)
+        self.db.flush()
+        return reminders

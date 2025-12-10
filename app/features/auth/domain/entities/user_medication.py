@@ -15,6 +15,7 @@ class UserMedication(Base):
     # Medication details
     medication_name = Column(String, nullable=False)
     dosage = Column(String, nullable=True)
+    times_per_day = Column(Integer, nullable=True)
     notes = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True)
 
