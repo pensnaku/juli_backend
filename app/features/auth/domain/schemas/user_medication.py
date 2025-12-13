@@ -13,6 +13,7 @@ class UserMedicationBase(BaseModel):
     dosage: Optional[str] = Field(None, description="Dosage information")
     times_per_day: Optional[int] = Field(None, description="Number of times per day to take medication")
     notes: Optional[str] = Field(None, description="Additional notes")
+    reminder_enabled: bool = Field(default=True, description="Whether user wants reminders for this medication")
 
 
 class UserMedicationCreate(UserMedicationBase):
@@ -27,6 +28,7 @@ class UserMedicationUpdate(BaseModel):
     times_per_day: Optional[int] = None
     notes: Optional[str] = None
     is_active: Optional[bool] = None
+    reminder_enabled: Optional[bool] = Field(None, description="Whether user wants reminders for this medication")
     notification_times: Optional[List[time_type]] = Field(None, description="List of times to send medication reminders (replaces existing)")
 
 

@@ -1,6 +1,6 @@
 """API router for medications feature"""
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -19,13 +19,12 @@ router = APIRouter()
 
 @router.get("", response_model=List[UserMedicationResponse])
 def get_medications(
-    include_inactive: bool = Query(False, description="Include inactive medications"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Get all medications for the current user"""
+    """Get all medications for the current user (both active and inactive)"""
     service = MedicationService(db)
-    return service.get_all(current_user.id, include_inactive=include_inactive)
+    return service.get_all(current_user.id)
 
 
 @router.get("/{medication_id}", response_model=UserMedicationResponse)

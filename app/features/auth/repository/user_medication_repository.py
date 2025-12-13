@@ -28,6 +28,7 @@ class UserMedicationRepository:
         dosage: Optional[str] = None,
         times_per_day: Optional[int] = None,
         notes: Optional[str] = None,
+        reminder_enabled: bool = True,
     ) -> UserMedication:
         """Create a new medication"""
         medication = UserMedication(
@@ -36,7 +37,8 @@ class UserMedicationRepository:
             dosage=dosage,
             times_per_day=times_per_day,
             notes=notes,
-            is_active=True
+            is_active=True,
+            reminder_enabled=reminder_enabled,
         )
         self.db.add(medication)
         self.db.flush()

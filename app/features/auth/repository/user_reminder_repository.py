@@ -114,11 +114,19 @@ class UserReminderRepository:
         self.db.flush()
         return count
 
+    def set_active_by_medication_id(self, medication_id: int, is_active: bool) -> int:
+        """Set is_active for all reminders of a specific medication. Returns count of updated reminders"""
+        reminders = self.get_by_medication_id(medication_id)
+        count = len(reminders)
+        for reminder in reminders:
+            reminder.is_active = is_active
+        self.db.flush()
+        return count
+
     def create_medication_reminders(
         self, user_id: int, medication_id: int, times: List
     ) -> List[UserReminder]:
         """Create medication reminders for specific times"""
-        from datetime import time as time_type
         reminders = []
         for t in times:
             reminder = UserReminder(
@@ -132,3 +140,40 @@ class UserReminderRepository:
             reminders.append(reminder)
         self.db.flush()
         return reminders
+
+    def update_medication_reminders(
+        self, user_id: int, medication_id: int, times: List
+    ) -> List[UserReminder]:
+        """Update medication reminders - reuses existing records where possible"""
+        existing = self.get_by_medication_id(medication_id)
+        new_count = len(times)
+        existing_count = len(existing)
+
+        result = []
+
+        # Update existing reminders with new times
+        for i, t in enumerate(times):
+            if i < existing_count:
+                # Reuse existing reminder
+                existing[i].time = t
+                existing[i].is_active = True
+                result.append(existing[i])
+            else:
+                # Create new reminder
+                reminder = UserReminder(
+                    user_id=user_id,
+                    medication_id=medication_id,
+                    reminder_type="medication_reminder",
+                    time=t,
+                    is_active=True,
+                )
+                self.db.add(reminder)
+                result.append(reminder)
+
+        # Delete excess reminders if new count is less than existing
+        if new_count < existing_count:
+            for i in range(new_count, existing_count):
+                self.db.delete(existing[i])
+
+        self.db.flush()
+        return result
