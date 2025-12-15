@@ -1,6 +1,6 @@
 """Repository for user database operations"""
 from typing import Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.features.auth.domain import User
 
 
@@ -11,12 +11,18 @@ class UserRepository:
         self.db = db
 
     def get_by_id(self, user_id: int) -> Optional[User]:
-        """Get user by ID"""
-        return self.db.query(User).filter(User.id == user_id).first()
+        """Get user by ID with conditions eagerly loaded"""
+        return self.db.query(User).options(
+            joinedload(User.settings),
+            joinedload(User.conditions)
+        ).filter(User.id == user_id).first()
 
     def get_by_email(self, email: str) -> Optional[User]:
-        """Get user by email"""
-        return self.db.query(User).filter(User.email == email).first()
+        """Get user by email with conditions eagerly loaded"""
+        return self.db.query(User).options(
+            joinedload(User.settings),
+            joinedload(User.conditions)
+        ).filter(User.email == email).first()
 
     def create(
         self,

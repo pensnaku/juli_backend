@@ -54,6 +54,7 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     settings: Optional["UserSettingsResponse"] = None  # Forward reference
+    conditions: list["UserConditionResponse"] = []  # User's health conditions
 
     class Config:
         from_attributes = True
@@ -69,5 +70,6 @@ class UserWithOnboardingStatus(UserResponse):
 
 # Import for forward reference resolution
 from app.features.auth.domain.schemas.user_settings import UserSettingsResponse
+from app.features.auth.domain.schemas.user_condition import UserConditionResponse
 UserResponse.model_rebuild()
 UserWithOnboardingStatus.model_rebuild()

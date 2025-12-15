@@ -241,6 +241,7 @@ def test_token(current_user = Depends(get_current_user), db: Session = Depends(g
         "created_at": current_user.created_at,
         "updated_at": current_user.updated_at,
         "settings": current_user.settings,
+        "conditions": current_user.conditions,
         "onboarding_completed": onboarding_completed
     }
 
