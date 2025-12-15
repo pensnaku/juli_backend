@@ -145,9 +145,10 @@ DEPRESSION_FACTORS: Dict[str, FactorConfig] = {
         observation_code="heart-rate-variability",
         time_window_days=30,
         steps=[
-            Step(-5, float('inf'), 1.0),
-            Step(-15, -6, 0.5),
-            Step(float('-inf'), -16, 0.0),
+            Step(0, float('inf'), 1.0),           # >= 0: full score (1.0)
+            Step(-10, -0.01, 0.5),                # [-10, 0): half score (0.5)
+            Step(-15, -10.01, 0.25),              # [-15, -10): quarter score (0.25)
+            Step(float('-inf'), -15.01, 0.0),    # < -15: no score (0.0)
         ]
     ),
 }
@@ -217,9 +218,10 @@ ASTHMA_FACTORS: Dict[str, FactorConfig] = {
         observation_code="heart-rate-variability",
         time_window_days=30,
         steps=[
-            Step(-5, float('inf'), 1.0),
-            Step(-15, -6, 0.5),
-            Step(float('-inf'), -16, 0.0),
+            Step(0, float('inf'), 1.0),           # >= 0: full score (1.0)
+            Step(-6, -0.01, 0.75),                # [-6, 0): 0.75 score
+            Step(-14, -6.01, 0.5),                # [-14, -6): half score (0.5)
+            Step(float('-inf'), -14.01, 0.25),   # < -14: quarter score (0.25)
         ]
     ),
     "pollen": FactorConfig(
@@ -252,14 +254,15 @@ ASTHMA_FACTORS: Dict[str, FactorConfig] = {
 MIGRAINE_FACTORS: Dict[str, FactorConfig] = {
     "air_quality": FactorConfig(
         weight=30,
-        minimum_score=-30,  # Can go negative
+        minimum_score=-6,  # Can go negative for AQI > 140
         just_math=False,
         observation_code="air-quality",
         time_window_days=0,
         steps=[
-            Step(0, 50, 1.0),
-            Step(51, 100, 0.0),
-            Step(101, float('inf'), -1.0),
+            Step(0, 50, 1.0),       # AQI 0-50: full score (30)
+            Step(51, 100, 0.5),     # AQI 51-100: half score (15)
+            Step(101, 140, 0.0),    # AQI 101-140: no score (0)
+            Step(141, float('inf'), -0.2),  # AQI > 140: negative (-6)
         ]
     ),
     "sleep": FactorConfig(
@@ -306,9 +309,10 @@ MIGRAINE_FACTORS: Dict[str, FactorConfig] = {
         observation_code="heart-rate-variability",
         time_window_days=30,
         steps=[
-            Step(-5, float('inf'), 1.0),
-            Step(-15, -6, 0.5),
-            Step(float('-inf'), -16, 0.0),
+            Step(0, float('inf'), 1.0),           # >= 0: full score (1.0)
+            Step(-10, -0.01, 0.5),                # [-10, 0): half score (0.5)
+            Step(-15, -10.01, 0.25),              # [-15, -10): quarter score (0.25)
+            Step(float('-inf'), -15.01, 0.0),    # < -15: no score (0.0)
         ]
     ),
 }

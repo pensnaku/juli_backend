@@ -45,7 +45,11 @@ class FactorCalculator:
 
         # Calculate factor score
         if config.just_math:
-            calculated = float(transformed_value) * (config.multiplier or 1.0)
+            # Special handling for active_energy to use exact 1/3 for precision
+            if factor_name == "active_energy":
+                calculated = float(transformed_value) / 3.0
+            else:
+                calculated = float(transformed_value) * (config.multiplier or 1.0)
         else:
             calculated = self._apply_steps(float(transformed_value), config)
 
