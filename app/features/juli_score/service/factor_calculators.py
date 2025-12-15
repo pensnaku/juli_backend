@@ -79,6 +79,10 @@ class FactorCalculator:
             )
             return float(MOOD_VALUES.get(mood_str, 0)) if mood_str else None
 
+        # Special handling for sleep (sum stages if time-asleep not available)
+        if factor_name == "sleep":
+            return self._get_sleep_total(config)
+
         # Special handling for HRV (diff from average)
         if factor_name == "hrv":
             return self._get_hrv_diff(config)
@@ -121,6 +125,42 @@ class FactorCalculator:
         """
         # TODO: Implement based on user medications and tracking
         return None
+
+    def _get_sleep_total(self, config: FactorConfig) -> Optional[float]:
+        """
+        Get total sleep time in minutes.
+        First tries 'time-asleep', then sums sleep stages if not available.
+        """
+        # Try direct time-asleep first
+        value = self.repo.get_observation_value_for_date(
+            self.user_id,
+            config.observation_code,  # "time-asleep"
+            self.target_date,
+        )
+        if value is not None:
+            return float(value)
+
+        # Fall back to summing sleep stages
+        sleep_stage_codes = [
+            "time-light-sleep",
+            "time-rem-sleep",
+            "time-deep-sleep",
+        ]
+
+        total_sleep = 0.0
+        has_any_stage = False
+
+        for code in sleep_stage_codes:
+            stage_value = self.repo.get_observation_value_for_date(
+                self.user_id,
+                code,
+                self.target_date,
+            )
+            if stage_value is not None:
+                total_sleep += float(stage_value)
+                has_any_stage = True
+
+        return total_sleep if has_any_stage else None
 
     def _get_hrv_diff(self, config: FactorConfig) -> Optional[float]:
         """Get HRV value as difference from 10-day average"""

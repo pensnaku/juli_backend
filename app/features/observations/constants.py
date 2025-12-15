@@ -7,6 +7,9 @@ class ObservationCodes:
     # Sleep & Rest
     TIME_ASLEEP = "time-asleep"
     TIME_IN_BED = "time-in-bed"
+    TIME_LIGHT_SLEEP = "time-light-sleep"
+    TIME_REM_SLEEP = "time-rem-sleep"
+    TIME_DEEP_SLEEP = "time-deep-sleep"
 
     # Activity & Exercise
     STEPS_COUNT = "steps-count"
@@ -115,6 +118,9 @@ OBSERVATION_CODE_CATEGORIES = {
     # Sleep
     ObservationCodes.TIME_ASLEEP: ObservationCategories.SLEEP,
     ObservationCodes.TIME_IN_BED: ObservationCategories.SLEEP,
+    ObservationCodes.TIME_LIGHT_SLEEP: ObservationCategories.SLEEP,
+    ObservationCodes.TIME_REM_SLEEP: ObservationCategories.SLEEP,
+    ObservationCodes.TIME_DEEP_SLEEP: ObservationCategories.SLEEP,
 
     # Activity
     ObservationCodes.STEPS_COUNT: ObservationCategories.ACTIVITY,
