@@ -1,14 +1,32 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.core.config import settings
+from app.core.scheduler import start_scheduler, stop_scheduler
 from app.api import api_router_v1
+from app.features.juli_score.scheduler import register_juli_score_job
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifecycle - startup and shutdown events"""
+    # Startup
+    register_juli_score_job()
+    start_scheduler()
+    yield
+    # Shutdown
+    stop_scheduler()
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description="Juli Backend API",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # CORS middleware

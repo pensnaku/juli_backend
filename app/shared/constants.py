@@ -38,6 +38,11 @@ CONDITION_CODES: Dict[str, Dict[str, Any]] = {
         "system": "snomed",
         "description": "Bipolar disorder"
     },
+    "37796009": {
+        "label": "Migraine",
+        "system": "snomed",
+        "description": "Migraine"
+    },
 }
 
 # Reminder types
