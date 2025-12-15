@@ -57,6 +57,7 @@ class JuliScoreService:
         )
 
         # Count data points and calculate totals
+        # Only count weights for factors that have data (per Juli Score spec)
         total_score = 0.0
         total_weight = 0
         data_points = 0
@@ -64,10 +65,10 @@ class JuliScoreService:
 
         for factor_name, (score, raw_input) in factor_results.items():
             config = factors_config[factor_name]
-            total_weight += config.weight
 
             if score is not None:
                 total_score += score
+                total_weight += config.weight  # Only add weight when we have data
                 data_points += 1
 
             factor_data[factor_name] = {

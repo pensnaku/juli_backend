@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.scheduler import get_scheduler_status
 from app.features.auth.api.dependencies import get_current_user
 from app.features.auth.domain.entities import User
 from app.features.juli_score.service import JuliScoreService
@@ -15,6 +16,12 @@ from app.features.juli_score.constants import SUPPORTED_CONDITION_CODES
 
 
 router = APIRouter()
+
+
+@router.get("/scheduler-status")
+def get_scheduler_info():
+    """Get the current scheduler status and registered jobs (debug endpoint)."""
+    return get_scheduler_status()
 
 
 @router.get("/latest", response_model=JuliScoreLatestResponse)

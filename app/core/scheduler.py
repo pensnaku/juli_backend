@@ -23,6 +23,7 @@ def start_scheduler():
     if not scheduler.running:
         scheduler.start()
         logger.info("Background scheduler started")
+        print("✅ Background scheduler started")
 
 
 def stop_scheduler():
@@ -30,3 +31,20 @@ def stop_scheduler():
     if scheduler.running:
         scheduler.shutdown(wait=False)
         logger.info("Background scheduler stopped")
+        print("🛑 Background scheduler stopped")
+
+
+def get_scheduler_status():
+    """Get current scheduler status and jobs"""
+    jobs = scheduler.get_jobs()
+    return {
+        "running": scheduler.running,
+        "jobs": [
+            {
+                "id": job.id,
+                "name": job.name,
+                "next_run": str(job.next_run_time) if job.next_run_time else None,
+            }
+            for job in jobs
+        ]
+    }

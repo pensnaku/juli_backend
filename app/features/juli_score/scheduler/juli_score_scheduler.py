@@ -18,6 +18,7 @@ def calculate_all_scores_job():
     Runs every N minutes (configurable via SCHEDULER_INTERVAL_MINUTES).
     Only processes users who have been active in the last N days.
     """
+    print("🔄 [JuliScore] Starting calculation job...")
     logger.info("Starting Juli Score calculation job...")
 
     db = SessionLocal()
@@ -31,9 +32,11 @@ def calculate_all_scores_job():
         )
 
         if not user_condition_pairs:
+            print("ℹ️  [JuliScore] No active users with supported conditions found")
             logger.info("No active users with supported conditions found")
             return
 
+        print(f"📊 [JuliScore] Processing {len(user_condition_pairs)} user-condition pairs")
         logger.info(f"Processing {len(user_condition_pairs)} user-condition pairs")
 
         success_count = 0
@@ -48,21 +51,30 @@ def calculate_all_scores_job():
                 )
                 if result:
                     success_count += 1
+                    print(f"   ✅ User {user_id} ({condition_code}): score={result.score}")
                 else:
                     skip_count += 1  # Insufficient data or unchanged
+                    print(f"   ⏭️  User {user_id} ({condition_code}): skipped (insufficient data or unchanged)")
             except Exception as e:
                 error_count += 1
+                print(f"   ❌ User {user_id} ({condition_code}): error - {e}")
                 logger.error(
                     f"Error calculating score for user {user_id}, "
                     f"condition {condition_code}: {e}"
                 )
 
+        summary = (
+            f"✅ [JuliScore] Job completed: {success_count} saved, "
+            f"{skip_count} skipped, {error_count} errors"
+        )
+        print(summary)
         logger.info(
             f"Juli Score job completed: {success_count} saved, "
             f"{skip_count} skipped, {error_count} errors"
         )
 
     except Exception as e:
+        print(f"❌ [JuliScore] Job failed: {e}")
         logger.error(f"Juli Score job failed: {e}")
     finally:
         db.close()
@@ -78,6 +90,7 @@ def register_juli_score_job():
         name='Calculate Juli Scores for active users',
         replace_existing=True,
     )
+    print(f"📅 [JuliScore] Registered job to run every {SCHEDULER_INTERVAL_MINUTES} minutes")
     logger.info(
         f"Registered Juli Score job to run every {SCHEDULER_INTERVAL_MINUTES} minutes"
     )
