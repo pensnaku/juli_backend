@@ -1,7 +1,7 @@
 """Authentication API endpoints"""
 import logging
-from typing import Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Dict, Any, Optional, List
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -15,9 +15,12 @@ from app.features.auth.domain import (
     Token,
     EmailValidationRequest,
     EmailValidationResponse,
+    UserReminderResponse,
+    UserReminderUpdate,
 )
 from app.features.auth.service import AuthService
 from app.features.auth.api.dependencies import get_current_user
+from app.features.auth.repository import UserReminderRepository
 from app.shared.questionnaire.answer_handler import QuestionnaireAnswerHandler
 from app.shared.questionnaire.repositories import QuestionnaireCompletionRepository
 from app.shared.questionnaire.schemas import (
@@ -310,3 +313,74 @@ def save_questionnaire_answers(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error saving questionnaire answers: {str(e)}"
         )
+
+
+@router.get("/reminders", response_model=List[UserReminderResponse])
+def get_reminders(
+    reminder_type: Optional[str] = Query(
+        default=None,
+        description="Filter by reminder type (e.g., 'daily_check_in', 'medication_reminder')"
+    ),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all reminders for the current user, optionally filtered by type.
+
+    Args:
+        reminder_type: Optional filter by reminder type
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        List of user reminders
+    """
+    repo = UserReminderRepository(db)
+
+    if reminder_type:
+        reminders = repo.get_by_user_and_type(current_user.id, reminder_type)
+    else:
+        reminders = repo.get_by_user_id(current_user.id)
+
+    return reminders
+
+
+@router.put("/reminders/{reminder_id}", response_model=UserReminderResponse)
+def update_reminder(
+    reminder_id: int,
+    update_data: UserReminderUpdate,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Update a reminder's time or active status.
+
+    Args:
+        reminder_id: ID of the reminder to update
+        update_data: Fields to update (time, is_active)
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Updated reminder
+
+    Raises:
+        HTTPException: If reminder not found or doesn't belong to user
+    """
+    repo = UserReminderRepository(db)
+    reminder = repo.get_by_id(reminder_id)
+
+    if not reminder:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Reminder not found"
+        )
+
+    if reminder.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update this reminder"
+        )
+
+    updated_reminder = repo.update(reminder, update_data)
+    return updated_reminder
