@@ -140,8 +140,9 @@ class JuliScoreService:
         user_id: int,
         condition_code: str,
     ) -> Optional[JuliScoreResponse]:
-        """Get the most recent score for a condition"""
-        score = self.repo.get_latest_juli_score(user_id, condition_code)
+        """Get today's score for a condition"""
+        today = date.today()
+        score = self.repo.get_juli_score_for_date(user_id, condition_code, today)
         if not score:
             return None
         return self._entity_to_response(score)
@@ -150,14 +151,15 @@ class JuliScoreService:
         self,
         user_id: int,
     ) -> JuliScoreLatestResponse:
-        """Get latest scores for all user conditions"""
+        """Get today's scores for all user conditions"""
+        today = date.today()
         condition_codes = self.repo.get_user_conditions(user_id)
 
         scores = []
         conditions_without_score = []
 
         for condition_code in condition_codes:
-            score = self.repo.get_latest_juli_score(user_id, condition_code)
+            score = self.repo.get_juli_score_for_date(user_id, condition_code, today)
             if score:
                 scores.append(self._entity_to_response(score))
             else:

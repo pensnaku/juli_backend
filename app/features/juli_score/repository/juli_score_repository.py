@@ -181,6 +181,28 @@ class JuliScoreRepository:
             .first()
         )
 
+    def get_juli_score_for_date(
+        self,
+        user_id: int,
+        condition_code: str,
+        target_date: date,
+    ) -> Optional[JuliScore]:
+        """Get Juli Score for a specific date"""
+        start_of_day = datetime.combine(target_date, datetime.min.time())
+        end_of_day = datetime.combine(target_date, datetime.max.time())
+
+        return (
+            self.db.query(JuliScore)
+            .filter(
+                JuliScore.user_id == user_id,
+                JuliScore.condition_code == condition_code,
+                JuliScore.effective_at >= start_of_day,
+                JuliScore.effective_at <= end_of_day,
+            )
+            .order_by(JuliScore.effective_at.desc())
+            .first()
+        )
+
     def get_juli_score_history(
         self,
         user_id: int,
