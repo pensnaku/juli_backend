@@ -14,6 +14,8 @@ class UserCreate(UserBase):
     password: str = Field(..., min_length=8, max_length=72, description="Password must be between 8 and 72 characters")
     terms_accepted: bool = Field(..., description="User must accept terms and conditions")
     age_confirmed: bool = Field(..., description="User must confirm they meet minimum age requirement")
+    store_country: Optional[str] = Field(None, description="App store country code")
+    store_region: Optional[str] = Field(None, description="App store region")
 
 
 class UserLogin(BaseModel):

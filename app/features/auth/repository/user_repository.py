@@ -2,6 +2,7 @@
 from typing import Optional
 from sqlalchemy.orm import Session, joinedload
 from app.features.auth.domain import User
+from app.features.auth.domain.entities.user_settings import UserSettings
 
 
 class UserRepository:
@@ -30,9 +31,11 @@ class UserRepository:
         hashed_password: str,
         full_name: Optional[str] = None,
         terms_accepted: bool = False,
-        age_confirmed: bool = False
+        age_confirmed: bool = False,
+        store_country: Optional[str] = None,
+        store_region: Optional[str] = None,
     ) -> User:
-        """Create a new user"""
+        """Create a new user with optional initial settings"""
         user = User(
             email=email,
             hashed_password=hashed_password,
@@ -41,6 +44,17 @@ class UserRepository:
             age_confirmed=age_confirmed
         )
         self.db.add(user)
+        self.db.flush()  # Get user.id without committing
+
+        # Create UserSettings if store location is provided
+        if store_country or store_region:
+            settings = UserSettings(
+                user_id=user.id,
+                store_country=store_country,
+                store_region=store_region,
+            )
+            self.db.add(settings)
+
         self.db.commit()
         self.db.refresh(user)
         return user

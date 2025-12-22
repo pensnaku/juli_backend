@@ -47,7 +47,9 @@ class AuthService:
             email=user_data.email,
             hashed_password=hashed_password,
             terms_accepted=user_data.terms_accepted,
-            age_confirmed=user_data.age_confirmed
+            age_confirmed=user_data.age_confirmed,
+            store_country=user_data.store_country,
+            store_region=user_data.store_region,
         )
 
         return user
