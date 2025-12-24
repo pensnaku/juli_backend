@@ -45,8 +45,17 @@ class Observation(Base):
     # External reference for deduplication
     source_id = Column(String(255), nullable=True)  # External ID from data source
 
+    # Optional link to questionnaire completion (for questionnaire answers)
+    questionnaire_completion_id = Column(
+        Integer,
+        ForeignKey("questionnaire_completions.id"),
+        nullable=True,
+        index=True
+    )
+
     # Relationships
     user = relationship("User", back_populates="observations")
+    questionnaire_completion = relationship("QuestionnaireCompletion", back_populates="observations")
 
     # Unique constraint to prevent duplicate observations
     __table_args__ = (

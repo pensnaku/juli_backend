@@ -46,6 +46,7 @@ class ObservationRepository:
         code: Optional[str] = None,
         variant: Optional[str] = None,
         category: Optional[str] = None,
+        data_source: Optional[str] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
     ) -> Tuple[List[Observation], int]:
@@ -60,6 +61,9 @@ class ObservationRepository:
 
         if category:
             query = query.filter(Observation.category == category)
+
+        if data_source:
+            query = query.filter(Observation.data_source == data_source)
 
         if start_date:
             query = query.filter(Observation.effective_at >= start_date)

@@ -1,5 +1,5 @@
 """Pydantic schemas for questionnaire-related requests and responses"""
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 from pydantic import BaseModel, Field
 
@@ -45,3 +45,48 @@ class QuestionnaireCompletionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ========== Daily Questionnaire Schemas ==========
+
+class DailyAnswerRequest(BaseModel):
+    """Request schema for submitting a single daily questionnaire answer"""
+    completion_date: str = Field(
+        ...,
+        description="Date in ISO format (YYYY-MM-DD)"
+    )
+    question_id: str = Field(
+        ...,
+        description="The question being answered"
+    )
+    answer: Any = Field(
+        ...,
+        description="The answer value (number, boolean, string)"
+    )
+    questionnaire_id: str = Field(
+        ...,
+        description="Which questionnaire this belongs to (e.g., 'daily-asthma')"
+    )
+    completed: bool = Field(
+        default=False,
+        description="Set true when user finishes this questionnaire"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "completion_date": "2025-12-23",
+                "question_id": "how-often-inhaler-or-nebulizer",
+                "answer": 2,
+                "questionnaire_id": "daily-asthma",
+                "completed": False
+            }
+        }
+
+
+class DailyAnswerResponse(BaseModel):
+    """Response schema for daily answer submission"""
+    message: str
+    question_id: str
+    questionnaire_id: str
+    completed: bool = Field(..., description="Whether questionnaire was marked as completed")

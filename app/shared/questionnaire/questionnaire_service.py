@@ -1,12 +1,15 @@
 """Service for questionnaire operations"""
+
 from typing import Optional, Dict, Any, List
+from datetime import date
 from sqlalchemy.orm import Session
 
 from app.core.resource_loader import ResourceLoader
 from app.features.auth.domain import User
-from app.features.auth.repository import UserRepository
+from app.features.auth.repository import UserRepository, UserMedicationRepository
+from app.features.observations.repository import ObservationRepository
 from app.shared.questionnaire.repositories import QuestionnaireCompletionRepository
-from app.shared.constants import QUESTIONNAIRE_IDS
+from app.shared.constants import QUESTIONNAIRE_IDS, DAILY_QUESTIONNAIRE_MAP, CONDITION_CODES
 
 
 class QuestionnaireService:
@@ -16,15 +19,20 @@ class QuestionnaireService:
         self.db = db
         self.user_repo = UserRepository(db)
         self.completion_repo = QuestionnaireCompletionRepository(db)
+        self.medication_repo = UserMedicationRepository(db)
+        self.observation_repo = ObservationRepository(db)
         self.resource_loader = ResourceLoader()
 
-    def get_next_questionnaire(self, user_id: int) -> Optional[Dict[str, Any]]:
+    def get_next_questionnaire(
+        self, user_id: int, target_date: Optional[date] = None
+    ) -> Optional[Dict[str, Any]]:
         """
         Get the next eligible questionnaire for a user with their existing answers.
         Returns None if no questionnaires are available.
 
         Args:
             user_id: User ID
+            target_date: Date for daily questionnaires (defaults to today)
 
         Returns:
             Questionnaire dict with user's answers merged in, or None
@@ -34,14 +42,16 @@ class QuestionnaireService:
             raise ValueError(f"User {user_id} not found")
 
         # Check onboarding first (priority questionnaire)
-        if not self.completion_repo.is_completed(user_id, QUESTIONNAIRE_IDS["ONBOARDING"]):
-            return self.get_questionnaire_with_answers(user_id, QUESTIONNAIRE_IDS["ONBOARDING"])
+        if not self.completion_repo.is_completed(
+            user_id, QUESTIONNAIRE_IDS["ONBOARDING"]
+        ):
+            return self.get_questionnaire_with_answers(
+                user_id, QUESTIONNAIRE_IDS["ONBOARDING"]
+            )
 
-        # Future: Add logic for daily, biweekly questionnaires
-        # if self._is_daily_due(user_id):
-        #     return self.get_questionnaire_with_answers(user_id, QUESTIONNAIRE_IDS["DAILY"])
-
-        return None
+        # Return daily questionnaires for the specified date
+        questionnaire_date = target_date or date.today()
+        return self.get_daily_questionnaires(user_id, questionnaire_date)
 
     def get_questionnaire_with_answers(
         self, user_id: int, questionnaire_id: str
@@ -65,7 +75,9 @@ class QuestionnaireService:
 
         # Load questionnaire from YAML
         try:
-            questionnaire_data = self.resource_loader.load_questionnaire(questionnaire_id)
+            questionnaire_data = self.resource_loader.load_questionnaire(
+                questionnaire_id
+            )
         except FileNotFoundError:
             raise ValueError(f"Questionnaire '{questionnaire_id}' not found")
 
@@ -82,7 +94,9 @@ class QuestionnaireService:
 
         return questionnaire_with_answers
 
-    def _extract_user_answers(self, user: User, questionnaire_id: str) -> Dict[str, Any]:
+    def _extract_user_answers(
+        self, user: User, questionnaire_id: str
+    ) -> Dict[str, Any]:
         """
         Extract user's existing answers from database based on questionnaire type.
 
@@ -107,13 +121,17 @@ class QuestionnaireService:
             # Extract from user settings
             if user.settings:
                 if user.settings.daily_routine:
-                    answers["daily-routine-or-main-activity"] = user.settings.daily_routine
+                    answers["daily-routine-or-main-activity"] = (
+                        user.settings.daily_routine
+                    )
                 if user.settings.ethnicity:
                     answers["ethnicity"] = user.settings.ethnicity
                 if user.settings.hispanic_latino:
                     answers["ethnicity-hispanic-latino"] = user.settings.hispanic_latino
                 if user.settings.allow_medical_support is not None:
-                    answers["allow-support-for-other-condition"] = user.settings.allow_medical_support
+                    answers["allow-support-for-other-condition"] = (
+                        user.settings.allow_medical_support
+                    )
 
             # Extract from user conditions
             if user.conditions:
@@ -124,27 +142,39 @@ class QuestionnaireService:
                 # Extract condition-specific fields
                 for condition in user.conditions:
                     if condition.diagnosed_by_physician is not None:
-                        answers["comorbidity-condition-diagnosed-by-physician"] = condition.diagnosed_by_physician
+                        answers["comorbidity-condition-diagnosed-by-physician"] = (
+                            condition.diagnosed_by_physician
+                        )
                     if condition.duration:
-                        answers["comorbidity-condition-experienced-for"] = condition.duration
+                        answers["comorbidity-condition-experienced-for"] = (
+                            condition.duration
+                        )
                     if condition.physician_frequency:
-                        answers["comorbidity-do-you-see-physician"] = condition.physician_frequency
+                        answers["comorbidity-do-you-see-physician"] = (
+                            condition.physician_frequency
+                        )
 
                     # Diabetes-specific
                     if condition.condition_code == "73211009":
                         if condition.diabetes_type:
                             answers["which-type-of-diabetes"] = condition.diabetes_type
                         if condition.therapy_type:
-                            answers["what-is-your-diabetes-therapy"] = [condition.therapy_type]
+                            answers["what-is-your-diabetes-therapy"] = [
+                                condition.therapy_type
+                            ]
                         if condition.wants_glucose_reminders is not None:
                             answers["reminder-to-check-blood-glucose"] = (
-                                "yes-remind-me" if condition.wants_glucose_reminders else "no-thanks"
+                                "yes-remind-me"
+                                if condition.wants_glucose_reminders
+                                else "no-thanks"
                             )
 
                     # Pain-specific
                     if condition.condition_code == "82423001":
                         if condition.pain_type:
-                            answers["how-would-you-describe-your-pain"] = condition.pain_type
+                            answers["how-would-you-describe-your-pain"] = (
+                                condition.pain_type
+                            )
 
             # Extract from reminders
             if user.reminders:
@@ -154,7 +184,33 @@ class QuestionnaireService:
                     elif reminder.reminder_type == "glucose_check":
                         if "glucose-check-reminders" not in answers:
                             answers["glucose-check-reminders"] = []
-                        answers["glucose-check-reminders"].append(reminder.time.strftime("%H:%M"))
+                        answers["glucose-check-reminders"].append(
+                            reminder.time.strftime("%H:%M")
+                        )
+
+            # Extract medications (read-only, managed via /medications endpoints)
+            medications = self.medication_repo.get_by_user_id(user.id, active_only=True)
+            if medications:
+                answers["medications-notifications"] = [
+                    {
+                        "id": med.id,
+                        "medication_name": med.medication_name,
+                        "dosage": med.dosage,
+                        "times_per_day": med.times_per_day,
+                        "notes": med.notes,
+                        "reminder_enabled": med.reminder_enabled,
+                        "notification_times": (
+                            [
+                                r.time.strftime("%H:%M")
+                                for r in med.reminders
+                                if r.is_active
+                            ]
+                            if med.reminders
+                            else []
+                        ),
+                    }
+                    for med in medications
+                ]
 
         return answers
 
@@ -183,3 +239,169 @@ class QuestionnaireService:
                     question["answer"] = None
 
         return result
+
+    # ========== Daily Questionnaire Methods ==========
+
+    def get_daily_questionnaires(
+        self, user_id: int, target_date: date
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get daily questionnaires for a user based on their conditions.
+        Always returns all questionnaires with is_completed status for each.
+
+        Args:
+            user_id: User ID
+            target_date: The date for the questionnaires
+
+        Returns:
+            Dictionary with questionnaires array, or None if user has no conditions
+        """
+        user = self.user_repo.get_by_id(user_id)
+        if not user:
+            raise ValueError(f"User {user_id} not found")
+
+        if not user.conditions:
+            return None
+
+        questionnaires = []
+
+        for condition in user.conditions:
+            condition_code = condition.condition_code
+
+            # Get questionnaire filename for this condition
+            condition_key = DAILY_QUESTIONNAIRE_MAP.get(condition_code)
+            if not condition_key:
+                continue
+
+            # Get condition label
+            condition_info = CONDITION_CODES.get(condition_code, {})
+            condition_label = condition_info.get("label", condition.condition_label)
+
+            questionnaire = self._build_daily_questionnaire(
+                user_id=user_id,
+                condition_key=condition_key,
+                condition_code=condition_code,
+                condition_label=condition_label,
+                target_date=target_date,
+            )
+            if questionnaire:
+                questionnaires.append(questionnaire)
+
+        if not questionnaires:
+            return None
+
+        return {
+            "title": "Daily Check-in",
+            "description": "Your daily health questions",
+            "completion_date": target_date.isoformat(),
+            "questionnaires": questionnaires
+        }
+
+    def _build_daily_questionnaire(
+        self,
+        user_id: int,
+        condition_key: str,
+        condition_code: str,
+        condition_label: str,
+        target_date: date,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Build a single daily questionnaire item.
+
+        Args:
+            user_id: User ID
+            condition_key: Condition filename key (e.g., 'asthma')
+            condition_code: SNOMED condition code
+            condition_label: Human-readable condition name
+            target_date: The date for the questionnaire
+
+        Returns:
+            Questionnaire item dict, or None if questionnaire file not found
+        """
+        try:
+            questionnaire_data = self.resource_loader.load_daily_questionnaire(
+                condition_key
+            )
+        except FileNotFoundError:
+            return None
+
+        questionnaire_id = questionnaire_data.get(
+            "questionnaire_id", f"daily-{condition_key}"
+        )
+
+        # Get existing answers for this questionnaire and date
+        user_answers = self._extract_daily_answers(
+            user_id, questionnaire_id, target_date
+        )
+
+        # Merge answers into questions
+        questions = questionnaire_data.get("questions", [])
+        for question in questions:
+            question_id = question.get("id")
+            question["answer"] = user_answers.get(question_id)
+
+        # Check completion status from database
+        is_completed = self.completion_repo.is_condition_completed_for_date(
+            user_id, questionnaire_id, target_date
+        )
+
+        return {
+            "condition_key": condition_key,
+            "condition_code": condition_code,
+            "condition_label": condition_label,
+            "questionnaire_id": questionnaire_id,
+            "questions": questions,
+            "is_completed": is_completed
+        }
+
+    def _extract_daily_answers(
+        self, user_id: int, questionnaire_id: str, target_date: date
+    ) -> Dict[str, Any]:
+        """
+        Extract user's daily answers from observations for a specific questionnaire and date.
+
+        Args:
+            user_id: User ID
+            questionnaire_id: Questionnaire ID (e.g., "daily-asthma")
+            target_date: The date to get answers for
+
+        Returns:
+            Dictionary of question_id -> answer
+        """
+        from datetime import datetime, timezone
+
+        # Create datetime range for the target date (midnight to midnight)
+        start_datetime = datetime.combine(
+            target_date, datetime.min.time(), tzinfo=timezone.utc
+        )
+        end_datetime = datetime.combine(
+            target_date, datetime.max.time(), tzinfo=timezone.utc
+        )
+
+        # Query observations by data_source (questionnaire_id)
+        observations, _ = self.observation_repo.get_by_user_paginated(
+            user_id=user_id,
+            data_source=questionnaire_id,
+            start_date=start_datetime,
+            end_date=end_datetime,
+            page=1,
+            page_size=100,
+        )
+
+        answers = {}
+
+        for obs in observations:
+            # code is the question_id
+            question_id = obs.code
+
+            # Get the answer value
+            if obs.value_boolean is not None:
+                answers[question_id] = obs.value_boolean
+            elif obs.value_integer is not None:
+                answers[question_id] = obs.value_integer
+            elif obs.value_decimal is not None:
+                answers[question_id] = float(obs.value_decimal)
+            elif obs.value_string is not None:
+                answers[question_id] = obs.value_string
+
+        return answers

@@ -1,0 +1,7 @@
+# Daily questionnaire for Wellbeing
+version: '1.0'
+questionnaire_id: daily-wellbeing
+title: Wellbeing Daily Check-in
+description: Daily questions to track your overall wellbeing
+
+questions: []

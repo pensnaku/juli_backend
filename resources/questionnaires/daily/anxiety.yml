@@ -1,0 +1,28 @@
+# Daily questionnaire for Anxiety
+version: '1.0'
+questionnaire_id: daily-anxiety
+title: Anxiety Daily Check-in
+description: Daily questions to track your anxiety
+
+questions:
+  - id: anxiety-rating-for-today
+    text: How would you rate your anxiety today?
+    type: number
+    required: true
+    range:
+      min: 0
+      max: 5
+    labels:
+      upper: 'Low'
+      lower: 'High'
+
+  - id: anxiety-management-for-today
+    text: How well have you been able to manage your anxiety today?
+    type: number
+    required: true
+    range:
+      min: 0
+      max: 5
+    labels:
+      upper: 'Well'
+      lower: 'Poorly'

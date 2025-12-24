@@ -1,0 +1,33 @@
+# Daily questionnaire for Asthma
+version: '1.0'
+questionnaire_id: daily-asthma
+title: Asthma Daily Check-in
+description: Daily questions to track your asthma symptoms
+
+questions:
+  - id: how-often-inhaler-or-nebulizer
+    text: How often did you have to use your emergency inhaler?
+    type: number
+    required: true
+    range:
+      min: 0
+      max: 6
+    labels:
+      upper: 'Very often'
+      lower: 'Never'
+
+  - id: how-often-shortness-of-breath
+    text: How often did you have an episode of shortness of breath?
+    type: number
+    required: true
+    range:
+      min: 0
+      max: 6
+    labels:
+      upper: 'Very often'
+      lower: 'Never'
+
+  - id: wake-up-last-night
+    text: Did you wake up last night due to an episode?
+    type: boolean
+    required: true

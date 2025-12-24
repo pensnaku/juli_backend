@@ -43,6 +43,16 @@ CONDITION_CODES: Dict[str, Dict[str, Any]] = {
         "system": "snomed",
         "description": "Migraine"
     },
+    "197480006": {
+        "label": "Anxiety",
+        "system": "snomed",
+        "description": "Anxiety disorder"
+    },
+    "162290004": {
+        "label": "Dry Eye",
+        "system": "snomed",
+        "description": "Dry eye syndrome"
+    },
 }
 
 # Reminder types
@@ -58,6 +68,28 @@ QUESTIONNAIRE_IDS = {
     "ONBOARDING": "onboarding",
     "DAILY": "daily",
     "BIWEEKLY": "biweekly",
+}
+
+# Daily questionnaire filename mapping (condition_code -> filename)
+# Maps SNOMED condition codes to daily questionnaire YAML filenames
+DAILY_QUESTIONNAIRE_MAP: Dict[str, str] = {
+    "197480006": "anxiety",
+    "195967001": "asthma",
+    "13746004": "bipolar",
+    "82423001": "chronic_pain",
+    "13645005": "copd",
+    "35489007": "depression",
+    "73211009": "diabetes",
+    "162290004": "dry_eye",
+    "230461009": "headache",
+    "38341003": "hypertension",
+    "37796009": "migraine",
+    "365275006": "wellbeing",
+}
+
+# Reverse mapping for lookup (filename -> condition_code)
+DAILY_QUESTIONNAIRE_CONDITION_MAP: Dict[str, str] = {
+    v: k for k, v in DAILY_QUESTIONNAIRE_MAP.items()
 }
 
 # Tracking topics with metadata

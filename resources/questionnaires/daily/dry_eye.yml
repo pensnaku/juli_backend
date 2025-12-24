@@ -1,0 +1,39 @@
+# Daily questionnaire for Dry Eye
+version: '1.0'
+questionnaire_id: daily-dry_eye
+title: Dry Eye Daily Check-in
+description: Daily questions to track your dry eye symptoms
+
+questions:
+  - id: current-feeling-in-eyes
+    text: How do your eyes feel right now?
+    type: number
+    required: true
+    range:
+      min: 1
+      max: 5
+    labels:
+      upper: 'Very uncomfortable'
+      lower: 'Very comfortable'
+
+  - id: dry-eye-interference-with-daily-activities
+    text: How much did dry eye symptoms interfere with your daily activities (e.g., reading, screen time, driving)?
+    type: number
+    required: true
+    range:
+      min: 1
+      max: 5
+    labels:
+      upper: 'A lot'
+      lower: 'Not at all'
+
+  - id: eye-drop-use-frequency
+    text: How often have you used eyedrops since the last time we've chatted?
+    type: number
+    required: true
+    range:
+      min: 1
+      max: 5
+    labels:
+      upper: 'Frequently'
+      lower: 'Never'
