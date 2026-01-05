@@ -1,0 +1,11 @@
+# Daily questionnaire for Depression
+version: '1.0'
+questionnaire_id: daily-depression
+title: Depression Daily Check-in
+description: Daily questions to track your mood and energy
+
+questions:
+  - id: mood-energy
+    text: Could you pinpoint how you're feeling? Just swipe to the part of the square that reflects your mood best.
+    type: string
+    required: true

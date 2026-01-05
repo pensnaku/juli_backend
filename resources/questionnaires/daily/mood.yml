@@ -1,0 +1,22 @@
+# Daily mood questionnaire - shown to all users regardless of condition
+version: '1.0'
+questionnaire_id: daily-mood
+title: Daily Mood Check-in
+description: How are you feeling today?
+
+questions:
+  - id: mood
+    text: How are you today?
+    type: single_choice
+    required: true
+    options:
+      - value: very-bad
+        label: Very Bad
+      - value: bad
+        label: Bad
+      - value: good
+        label: Good
+      - value: very-good
+        label: Very Good
+      - value: excellent
+        label: Excellent

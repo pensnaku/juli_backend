@@ -5,6 +5,10 @@ from app.features.observations.domain.schemas.observation import (
     ObservationResponse,
     ObservationListResponse,
     ObservationBulkCreate,
+    ObservationQueryRequest,
+    ObservationQueryResponse,
+    ObservationQueryGroupedResponse,
+    ObservationQueryItem,
 )
 
 __all__ = [
@@ -13,4 +17,8 @@ __all__ = [
     "ObservationResponse",
     "ObservationListResponse",
     "ObservationBulkCreate",
+    "ObservationQueryRequest",
+    "ObservationQueryResponse",
+    "ObservationQueryGroupedResponse",
+    "ObservationQueryItem",
 ]

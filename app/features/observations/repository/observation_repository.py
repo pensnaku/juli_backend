@@ -1,7 +1,8 @@
 """Repository for observation database operations"""
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 from datetime import datetime
 from uuid import UUID
+from collections import defaultdict
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from app.features.observations.domain.entities import Observation
@@ -153,3 +154,112 @@ class ObservationRepository:
         count = query.delete()
         self.db.flush()
         return count
+
+    def get_by_codes_and_date_range(
+        self,
+        user_id: int,
+        codes: List[str],
+        start_date: datetime,
+        end_date: datetime,
+        variants: Optional[List[str]] = None,
+        data_sources: Optional[List[str]] = None,
+        limit_per_code: Optional[int] = None,
+    ) -> List[Observation]:
+        """
+        Optimized query for fetching observations by multiple codes and date range.
+
+        Uses IN clause for codes and BETWEEN for date range for optimal index usage.
+        Results are ordered by effective_at DESC.
+
+        Args:
+            user_id: User ID
+            codes: List of observation codes to query
+            start_date: Start of date range (inclusive)
+            end_date: End of date range (inclusive)
+            variants: Optional list of variants to filter by
+            data_sources: Optional list of data sources to filter by
+            limit_per_code: Optional limit per code (requires post-query filtering)
+
+        Returns:
+            List of observations matching the criteria
+        """
+        query = (
+            self.db.query(
+                Observation.id,
+                Observation.code,
+                Observation.variant,
+                Observation.value_integer,
+                Observation.value_decimal,
+                Observation.value_string,
+                Observation.value_boolean,
+                Observation.effective_at,
+                Observation.unit,
+                Observation.data_source,
+            )
+            .filter(Observation.user_id == user_id)
+            .filter(Observation.code.in_(codes))
+            .filter(Observation.effective_at.between(start_date, end_date))
+        )
+
+        if variants:
+            query = query.filter(Observation.variant.in_(variants))
+
+        if data_sources:
+            query = query.filter(Observation.data_source.in_(data_sources))
+
+        query = query.order_by(Observation.effective_at.desc())
+
+        results = query.all()
+
+        # Apply limit_per_code if specified (post-query filtering)
+        if limit_per_code:
+            code_counts: Dict[str, int] = defaultdict(int)
+            filtered_results = []
+            for row in results:
+                if code_counts[row.code] < limit_per_code:
+                    filtered_results.append(row)
+                    code_counts[row.code] += 1
+            return filtered_results
+
+        return results
+
+    def get_by_codes_and_date_range_grouped(
+        self,
+        user_id: int,
+        codes: List[str],
+        start_date: datetime,
+        end_date: datetime,
+        variants: Optional[List[str]] = None,
+        data_sources: Optional[List[str]] = None,
+        limit_per_code: Optional[int] = None,
+    ) -> Dict[str, List]:
+        """
+        Same as get_by_codes_and_date_range but returns results grouped by code.
+
+        Args:
+            user_id: User ID
+            codes: List of observation codes to query
+            start_date: Start of date range (inclusive)
+            end_date: End of date range (inclusive)
+            variants: Optional list of variants to filter by
+            data_sources: Optional list of data sources to filter by
+            limit_per_code: Optional limit per code
+
+        Returns:
+            Dictionary mapping code -> list of observations
+        """
+        results = self.get_by_codes_and_date_range(
+            user_id=user_id,
+            codes=codes,
+            start_date=start_date,
+            end_date=end_date,
+            variants=variants,
+            data_sources=data_sources,
+            limit_per_code=limit_per_code,
+        )
+
+        grouped: Dict[str, List] = defaultdict(list)
+        for row in results:
+            grouped[row.code].append(row)
+
+        return dict(grouped)

@@ -1,0 +1,42 @@
+# Daily questionnaire for COPD
+version: '1.0'
+questionnaire_id: daily-copd
+title: COPD Daily Check-in
+description: Daily questions to track your COPD symptoms
+
+questions:
+  - id: how-often-shortness-of-breath
+    text: How often did you have an episode of shortness of breath?
+    type: number
+    required: true
+    range:
+      min: 0
+      max: 6
+    labels:
+      lower: 'Never'
+      upper: 'Very often'
+
+  - id: how-often-inhaler-or-nebulizer
+    text: How often did you have to use your emergency inhaler?
+    type: number
+    required: true
+    range:
+      min: 0
+      max: 6
+    labels:
+      lower: 'Never'
+      upper: 'Very often'
+    show_if:
+      question_id: how-often-shortness-of-breath
+      operator: greater_than
+      value: 0
+
+  - id: cough-up-mucus
+    text: Did you cough up mucus?
+    type: boolean
+    required: true
+
+  - id: wake-up-last-night
+    text: Did you wake up last night due to an episode?
+    type: boolean
+    required: true

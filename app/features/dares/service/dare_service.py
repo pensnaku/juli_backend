@@ -1,4 +1,5 @@
 """Service layer for dares business logic"""
+import asyncio
 from typing import List
 from datetime import date
 from sqlalchemy.orm import Session
@@ -14,6 +15,7 @@ from app.features.dares.domain.schemas import (
     DareHistoryResponse,
 )
 from app.features.auth.repository import UserConditionRepository
+from app.features.daily_dare_badges.service.badge_service import DailyDareBadgeService
 
 
 # The 4 categories for daily dares
@@ -28,6 +30,7 @@ class DareService:
         self.dare_repo = DareRepository(db)
         self.assignment_repo = DailyDareAssignmentRepository(db)
         self.condition_repo = UserConditionRepository(db)
+        self.badge_service = DailyDareBadgeService(db)
 
     def get_dares_for_date(self, user_id: int, target_date: date) -> DailyDaresResponse:
         """
@@ -139,12 +142,19 @@ class DareService:
             updated_assignment = self.assignment_repo.mark_completed(assignment_id, points)
             self.db.commit()
 
+            # Evaluate badges (non-blocking)
+            earned_badges = self.badge_service.evaluate_badges_for_user(
+                user_id=user_id,
+                completion_date=assignment.assigned_date
+            )
+
             return UpdateDareCompletionResponse(
                 success=True,
                 assignment_id=assignment_id,
                 is_completed=True,
                 points_earned=points,
-                completed_at=updated_assignment.completed_at
+                completed_at=updated_assignment.completed_at,
+                badges_earned=earned_badges
             )
         else:
             # Uncomplete the dare

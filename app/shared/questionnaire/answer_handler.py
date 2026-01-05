@@ -398,11 +398,17 @@ class QuestionnaireAnswerHandler:
         """
         Save a single daily questionnaire answer.
 
+        Supports both single-value and multi-value answers:
+        - Single value: answer = 4, answer = "good", answer = True
+        - Multi-value: answer = {"mood": 4, "energy": 7}
+
+        Multi-value answers are stored as separate observations with the variant field.
+
         Args:
             user_id: The user ID
             completion_date: The date for this questionnaire
             question_id: The question being answered
-            answer: The answer value (number, boolean, string)
+            answer: The answer value (number, boolean, string, or dict for multi-value)
             questionnaire_id: Which questionnaire this belongs to (e.g., 'daily-asthma')
             mark_completed: If True, mark the questionnaire as completed
 
@@ -429,56 +435,41 @@ class QuestionnaireAnswerHandler:
             tzinfo=timezone.utc
         )
 
-        # Determine value type
-        value_integer = None
-        value_decimal = None
-        value_string = None
-        value_boolean = None
+        # Check if this is a multi-value answer (dict with multiple components)
+        if isinstance(answer, dict) and 'value' not in answer:
+            # Multi-value answer - create observation for each component
+            # Skip empty dicts
+            if not answer:
+                return {
+                    "question_id": question_id,
+                    "questionnaire_id": questionnaire_id,
+                    "completed": False
+                }
 
-        if isinstance(answer, bool):
-            value_boolean = answer
-        elif isinstance(answer, int):
-            value_integer = answer
-        elif isinstance(answer, float):
-            value_decimal = answer
-        elif isinstance(answer, str):
-            # Try to parse string booleans
-            if answer.lower() in ('yes', 'true'):
-                value_boolean = True
-            elif answer.lower() in ('no', 'false'):
-                value_boolean = False
-            else:
-                value_string = answer
+            for variant_key, variant_value in answer.items():
+                # Skip null values
+                if variant_value is None:
+                    continue
 
-        # Check if observation already exists (upsert logic)
-        existing = self.observation_repo.get_by_code_and_time(
-            user_id=user_id,
-            code=question_id,
-            variant=None,
-            effective_at=effective_datetime,
-        )
-
-        if existing:
-            # Update existing observation
-            existing.value_integer = value_integer
-            existing.value_decimal = value_decimal
-            existing.value_string = value_string
-            existing.value_boolean = value_boolean
-            existing.questionnaire_completion_id = completion.id
-            self.observation_repo.update(existing)
+                self._create_or_update_observation(
+                    user_id=user_id,
+                    code=question_id,
+                    variant=variant_key,
+                    answer=variant_value,
+                    effective_datetime=effective_datetime,
+                    questionnaire_id=questionnaire_id,
+                    completion=completion,
+                )
         else:
-            # Create new observation
-            self.observation_repo.create(
+            # Single-value answer - use existing logic
+            self._create_or_update_observation(
                 user_id=user_id,
                 code=question_id,
-                value_integer=value_integer,
-                value_decimal=value_decimal,
-                value_string=value_string,
-                value_boolean=value_boolean,
-                effective_at=effective_datetime,
-                category="questionnaire",
-                data_source=questionnaire_id,
-                questionnaire_completion_id=completion.id,
+                variant=None,
+                answer=answer,
+                effective_datetime=effective_datetime,
+                questionnaire_id=questionnaire_id,
+                completion=completion,
             )
 
         # Mark questionnaire as completed if requested
@@ -498,3 +489,90 @@ class QuestionnaireAnswerHandler:
             "questionnaire_id": questionnaire_id,
             "completed": is_completed
         }
+
+    def _create_or_update_observation(
+        self,
+        user_id: int,
+        code: str,
+        variant: Optional[str],
+        answer: Any,
+        effective_datetime: datetime,
+        questionnaire_id: str,
+        completion: Any,
+    ) -> None:
+        """
+        Create or update a single observation for a questionnaire answer.
+
+        Args:
+            user_id: The user ID
+            code: The question ID (observation code)
+            variant: Optional variant for multi-value answers (e.g., "mood", "energy")
+            answer: The answer value
+            effective_datetime: When the observation was effective
+            questionnaire_id: Which questionnaire this belongs to
+            completion: The questionnaire completion record
+        """
+        # Determine value type
+        value_integer = None
+        value_decimal = None
+        value_string = None
+        value_boolean = None
+        unit = None
+
+        if isinstance(answer, bool):
+            value_boolean = answer
+        elif isinstance(answer, dict):
+            # Quantity value with unit (e.g., {"value": 120, "unit": "mg/dL"})
+            if 'value' in answer:
+                quantity_value = answer['value']
+                if isinstance(quantity_value, int):
+                    value_integer = quantity_value
+                elif isinstance(quantity_value, float):
+                    value_decimal = quantity_value
+                unit = answer.get('unit')
+        elif isinstance(answer, int):
+            value_integer = answer
+        elif isinstance(answer, float):
+            value_decimal = answer
+        elif isinstance(answer, str):
+            # Try to parse string booleans
+            if answer.lower() in ('yes', 'true'):
+                value_boolean = True
+            elif answer.lower() in ('no', 'false'):
+                value_boolean = False
+            else:
+                value_string = answer
+
+        # Check if observation already exists (upsert logic)
+        existing = self.observation_repo.get_by_code_and_time(
+            user_id=user_id,
+            code=code,
+            variant=variant,
+            effective_at=effective_datetime,
+        )
+
+        if existing:
+            # Update existing observation
+            existing.value_integer = value_integer
+            existing.value_decimal = value_decimal
+            existing.value_string = value_string
+            existing.value_boolean = value_boolean
+            existing.unit = unit
+            existing.questionnaire_completion_id = completion.id
+            self.observation_repo.update(existing)
+        else:
+            # Create new observation
+            self.observation_repo.create(
+                user_id=user_id,
+                code=code,
+                variant=variant,
+                value_integer=value_integer,
+                value_decimal=value_decimal,
+                value_string=value_string,
+                value_boolean=value_boolean,
+                unit=unit,
+                effective_at=effective_datetime,
+                category="questionnaire",
+                data_source=questionnaire_id,
+                questionnaire_completion_id=completion.id,
+            )

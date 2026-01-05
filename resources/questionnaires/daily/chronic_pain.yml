@@ -1,0 +1,31 @@
+# Daily questionnaire for Chronic Pain
+version: '1.0'
+questionnaire_id: daily-chronic-pain
+title: Chronic Pain Daily Check-in
+description: Daily questions to track your pain levels
+
+questions:
+  - id: activity-pain
+    text: Can you tell me more about your pain today? Just swipe to the part of the square that reflects your pain best.
+    type: string
+    required: true
+
+  - id: needed-pain-medication
+    text: Did you need to take additional pain medication today?
+    type: boolean
+    required: true
+
+  - id: relief-from-pain-medication
+    text: Please swipe to the point that shows how much relief you have received from pain medication (0=no relief, 10=full relief).
+    type: number
+    required: true
+    range:
+      min: 0
+      max: 10
+    labels:
+      lower: 'No relief'
+      upper: 'Full relief'
+    show_if:
+      question_id: needed-pain-medication
+      operator: equals
+      value: true

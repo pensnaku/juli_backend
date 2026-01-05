@@ -57,6 +57,7 @@ class UpdateDareCompletionResponse(BaseModel):
     is_completed: bool
     points_earned: int
     completed_at: Optional[datetime] = None
+    badges_earned: Optional[List[str]] = None  # List of badge slugs earned
 
 
 class CompleteDareResponse(UpdateDareCompletionResponse):

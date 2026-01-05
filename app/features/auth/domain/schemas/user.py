@@ -56,7 +56,17 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     settings: Optional["UserSettingsResponse"] = None  # Forward reference
-    conditions: list["UserConditionResponse"] = []  # User's health conditions
+    conditions: list["UserConditionResponse"] = []  # User's health conditions ordered by priority
+
+    @classmethod
+    def from_orm(cls, obj):
+        """Override from_orm to use ordered_conditions instead of conditions"""
+        # Get the dict representation
+        data = super().from_orm(obj).__dict__
+        # Replace conditions with ordered_conditions if available
+        if hasattr(obj, 'ordered_conditions'):
+            data['conditions'] = obj.ordered_conditions
+        return cls(**data)
 
     class Config:
         from_attributes = True

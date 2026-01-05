@@ -1,0 +1,35 @@
+# Daily questionnaire for Hypertension
+version: '1.0'
+questionnaire_id: daily-hypertension
+title: Hypertension Daily Check-in
+description: Daily questions to track your blood pressure
+
+questions:
+  - id: blood-pressure
+    text: What is your blood pressure today?
+    type: group
+    required: true
+    items:
+      - id: blood-pressure-systolic
+        text: Systolic (top number)
+        type: number
+        required: true
+        range:
+          min: 0
+          max: 250
+
+      - id: blood-pressure-diastolic
+        text: Diastolic (bottom number)
+        type: number
+        required: true
+        range:
+          min: 0
+          max: 150
+
+      - id: blood-pressure-heart-rate
+        text: Heart rate
+        type: number
+        required: true
+        range:
+          min: 0
+          max: 150

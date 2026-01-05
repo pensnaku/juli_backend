@@ -1,5 +1,5 @@
 """Pydantic schemas for observations"""
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
@@ -94,3 +94,64 @@ class ObservationListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+# ========== Optimized Query Schemas ==========
+
+class ObservationQueryRequest(BaseModel):
+    """Request schema for querying observations by multiple codes and date range"""
+    codes: List[str] = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        description="List of observation codes to query"
+    )
+    start_date: datetime = Field(..., description="Start of date range (inclusive)")
+    end_date: datetime = Field(..., description="End of date range (inclusive)")
+    variants: Optional[List[str]] = Field(
+        None,
+        description="Optional list of variants to filter by"
+    )
+    data_sources: Optional[List[str]] = Field(
+        None,
+        description="Optional list of data sources to filter by"
+    )
+    group_by_code: bool = Field(
+        False,
+        description="If true, results are grouped by code in a dictionary"
+    )
+    limit_per_code: Optional[int] = Field(
+        None,
+        ge=1,
+        le=100,
+        description="Optional limit of results per code (max 100)"
+    )
+
+
+class ObservationQueryItem(BaseModel):
+    """Minimal observation item for query responses (optimized for performance)"""
+    id: UUID
+    code: str
+    variant: Optional[str] = None
+    value_integer: Optional[int] = None
+    value_decimal: Optional[Decimal] = None
+    value_string: Optional[str] = None
+    value_boolean: Optional[bool] = None
+    effective_at: datetime
+    unit: Optional[str] = None
+    data_source: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ObservationQueryResponse(BaseModel):
+    """Response schema for observation query - flat list"""
+    observations: List[ObservationQueryItem]
+    count: int
+
+
+class ObservationQueryGroupedResponse(BaseModel):
+    """Response schema for observation query - grouped by code"""
+    observations: Dict[str, List[ObservationQueryItem]]
+    count: int

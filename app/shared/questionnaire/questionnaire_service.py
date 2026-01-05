@@ -1,5 +1,6 @@
 """Service for questionnaire operations"""
 
+import copy
 from typing import Optional, Dict, Any, List
 from datetime import date
 from sqlalchemy.orm import Session
@@ -9,7 +10,10 @@ from app.features.auth.domain import User
 from app.features.auth.repository import UserRepository, UserMedicationRepository
 from app.features.observations.repository import ObservationRepository
 from app.shared.questionnaire.repositories import QuestionnaireCompletionRepository
-from app.shared.constants import QUESTIONNAIRE_IDS, DAILY_QUESTIONNAIRE_MAP, CONDITION_CODES
+from app.shared.constants import (
+    QUESTIONNAIRE_IDS,
+    DAILY_QUESTIONNAIRE_MAP,
+)
 
 
 class QuestionnaireService:
@@ -133,11 +137,14 @@ class QuestionnaireService:
                         user.settings.allow_medical_support
                     )
 
-            # Extract from user conditions
+            # Extract from user conditions (ordered by priority)
             if user.conditions:
+                from app.shared.condition_utils import order_leading_conditions
+
                 condition_codes = [c.condition_code for c in user.conditions]
                 if condition_codes:
-                    answers["conditions"] = condition_codes
+                    # Order condition codes by priority
+                    answers["conditions"] = order_leading_conditions(condition_codes)
 
                 # Extract condition-specific fields
                 for condition in user.conditions:
@@ -242,50 +249,79 @@ class QuestionnaireService:
 
     # ========== Daily Questionnaire Methods ==========
 
+    # TEST MODE: Return ALL questionnaires regardless of user conditions
+    TEST_MODE_ALL_QUESTIONNAIRES = False
+
     def get_daily_questionnaires(
         self, user_id: int, target_date: date
     ) -> Optional[Dict[str, Any]]:
         """
-        Get daily questionnaires for a user based on their conditions.
-        Always returns all questionnaires with is_completed status for each.
+        Get daily questionnaires for a user.
+        Always includes mood questionnaire first, then condition-specific questionnaires.
 
         Args:
             user_id: User ID
             target_date: The date for the questionnaires
 
         Returns:
-            Dictionary with questionnaires array, or None if user has no conditions
+            Dictionary with questionnaires array, or None if no questionnaires available
         """
         user = self.user_repo.get_by_id(user_id)
         if not user:
             raise ValueError(f"User {user_id} not found")
 
-        if not user.conditions:
-            return None
-
         questionnaires = []
 
-        for condition in user.conditions:
-            condition_code = condition.condition_code
+        # Always include mood questionnaire first (for all users)
+        mood_questionnaire = self._build_mood_questionnaire(user_id, target_date)
+        if mood_questionnaire:
+            questionnaires.append(mood_questionnaire)
 
-            # Get questionnaire filename for this condition
-            condition_key = DAILY_QUESTIONNAIRE_MAP.get(condition_code)
-            if not condition_key:
-                continue
+        # TEST MODE: Return ALL available questionnaires
+        if self.TEST_MODE_ALL_QUESTIONNAIRES:
+            all_condition_keys = [
+                "asthma",
+                "anxiety",
+                "bipolar",
+                "chronic_pain",
+                "copd",
+                "depression",
+                "diabetes",
+                "dry_eye",
+                "headache",
+                "hypertension",
+                "migraine",
+                "wellbeing",
+            ]
 
-            # Get condition label
-            condition_info = CONDITION_CODES.get(condition_code, {})
-            condition_label = condition_info.get("label", condition.condition_label)
+            for condition_key in all_condition_keys:
+                questionnaire = self._build_daily_questionnaire(
+                    user_id=user_id,
+                    condition_key=condition_key,
+                    target_date=target_date,
+                )
+                if questionnaire:
+                    questionnaires.append(questionnaire)
+        else:
+            # Normal mode: Only user's conditions (ordered by priority)
+            if user.conditions:
+                # Use ordered_conditions to ensure questionnaires appear in priority order
+                ordered = user.ordered_conditions if hasattr(user, 'ordered_conditions') else user.conditions
+                for condition in ordered:
+                    condition_code = condition.condition_code
 
-            questionnaire = self._build_daily_questionnaire(
-                user_id=user_id,
-                condition_key=condition_key,
-                condition_code=condition_code,
-                condition_label=condition_label,
-                target_date=target_date,
-            )
-            if questionnaire:
-                questionnaires.append(questionnaire)
+                    # Get questionnaire filename for this condition
+                    condition_key = DAILY_QUESTIONNAIRE_MAP.get(condition_code)
+                    if not condition_key:
+                        continue
+
+                    questionnaire = self._build_daily_questionnaire(
+                        user_id=user_id,
+                        condition_key=condition_key,
+                        target_date=target_date,
+                    )
+                    if questionnaire:
+                        questionnaires.append(questionnaire)
 
         if not questionnaires:
             return None
@@ -294,15 +330,55 @@ class QuestionnaireService:
             "title": "Daily Check-in",
             "description": "Your daily health questions",
             "completion_date": target_date.isoformat(),
-            "questionnaires": questionnaires
+            "questionnaires": questionnaires,
+        }
+
+    def _build_mood_questionnaire(
+        self, user_id: int, target_date: date
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Build the mood questionnaire (shown to all users daily).
+
+        Args:
+            user_id: User ID
+            target_date: The date for the questionnaire
+
+        Returns:
+            Mood questionnaire dict, or None if file not found
+        """
+        try:
+            questionnaire_data = self.resource_loader.load_daily_questionnaire("mood")
+        except FileNotFoundError:
+            return None
+
+        questionnaire_id = questionnaire_data.get("questionnaire_id", "daily-mood")
+
+        # Get existing answers for this questionnaire and date
+        user_answers = self._extract_daily_answers(
+            user_id, questionnaire_id, target_date
+        )
+
+        # Merge answers into questions (deep copy to avoid mutating original)
+        questions = copy.deepcopy(questionnaire_data.get("questions", []))
+        for question in questions:
+            question_id = question.get("id")
+            question["answer"] = user_answers.get(question_id)
+
+        # Check completion status from database
+        is_completed = self.completion_repo.is_condition_completed_for_date(
+            user_id, questionnaire_id, target_date
+        )
+
+        return {
+            "questionnaire_id": questionnaire_id,
+            "questions": questions,
+            "is_completed": is_completed,
         }
 
     def _build_daily_questionnaire(
         self,
         user_id: int,
         condition_key: str,
-        condition_code: str,
-        condition_label: str,
         target_date: date,
     ) -> Optional[Dict[str, Any]]:
         """
@@ -311,8 +387,6 @@ class QuestionnaireService:
         Args:
             user_id: User ID
             condition_key: Condition filename key (e.g., 'asthma')
-            condition_code: SNOMED condition code
-            condition_label: Human-readable condition name
             target_date: The date for the questionnaire
 
         Returns:
@@ -346,12 +420,9 @@ class QuestionnaireService:
         )
 
         return {
-            "condition_key": condition_key,
-            "condition_code": condition_code,
-            "condition_label": condition_label,
             "questionnaire_id": questionnaire_id,
             "questions": questions,
-            "is_completed": is_completed
+            "is_completed": is_completed,
         }
 
     def _extract_daily_answers(
@@ -360,6 +431,9 @@ class QuestionnaireService:
         """
         Extract user's daily answers from observations for a specific questionnaire and date.
 
+        Reconstructs multi-value answers (e.g., mood-energy) from multiple observations
+        with variants into a single dictionary answer.
+
         Args:
             user_id: User ID
             questionnaire_id: Questionnaire ID (e.g., "daily-asthma")
@@ -367,8 +441,11 @@ class QuestionnaireService:
 
         Returns:
             Dictionary of question_id -> answer
+            - Single-value: {"mood": 4}
+            - Multi-value: {"mood-energy": {"mood": 4, "energy": 7}}
         """
         from datetime import datetime, timezone
+        from collections import defaultdict
 
         # Create datetime range for the target date (midnight to midnight)
         start_datetime = datetime.combine(
@@ -388,20 +465,45 @@ class QuestionnaireService:
             page_size=100,
         )
 
+        # Group observations by code (question_id)
+        observations_by_code = defaultdict(list)
+        for obs in observations:
+            observations_by_code[obs.code].append(obs)
+
         answers = {}
 
-        for obs in observations:
-            # code is the question_id
-            question_id = obs.code
-
-            # Get the answer value
-            if obs.value_boolean is not None:
-                answers[question_id] = obs.value_boolean
-            elif obs.value_integer is not None:
-                answers[question_id] = obs.value_integer
-            elif obs.value_decimal is not None:
-                answers[question_id] = float(obs.value_decimal)
-            elif obs.value_string is not None:
-                answers[question_id] = obs.value_string
+        # Reconstruct answers
+        for question_id, obs_list in observations_by_code.items():
+            if len(obs_list) == 1 and obs_list[0].variant is None:
+                # Single-value answer
+                obs = obs_list[0]
+                answers[question_id] = self._extract_observation_value(obs)
+            else:
+                # Multi-value answer - reconstruct as dict
+                multi_value = {}
+                for obs in obs_list:
+                    variant = obs.variant or "value"
+                    multi_value[variant] = self._extract_observation_value(obs)
+                answers[question_id] = multi_value
 
         return answers
+
+    def _extract_observation_value(self, obs: Any) -> Any:
+        """
+        Extract the value from an observation based on which value field is populated.
+
+        Args:
+            obs: Observation entity
+
+        Returns:
+            The observation value (int, float, str, or bool)
+        """
+        if obs.value_boolean is not None:
+            return obs.value_boolean
+        elif obs.value_integer is not None:
+            return obs.value_integer
+        elif obs.value_decimal is not None:
+            return float(obs.value_decimal)
+        elif obs.value_string is not None:
+            return obs.value_string
+        return None

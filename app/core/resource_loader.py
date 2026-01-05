@@ -1,6 +1,6 @@
 """Resource loader utility for loading configuration files"""
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import yaml
 
 
@@ -58,6 +58,50 @@ class ResourceLoader:
             questionnaire = loader.load_questionnaire("onboarding_questionnaire")
         """
         return self.load_yaml(f"questionnaires/{questionnaire_name}.yml")
+
+    def load_daily_questionnaire(self, condition_filename: str) -> Dict[str, Any]:
+        """
+        Load a daily questionnaire by condition filename
+
+        Args:
+            condition_filename: Condition-specific filename (e.g., 'asthma', 'diabetes')
+
+        Returns:
+            Questionnaire configuration as dictionary
+
+        Raises:
+            FileNotFoundError: If questionnaire file doesn't exist
+
+        Example:
+            loader = ResourceLoader()
+            questionnaire = loader.load_daily_questionnaire("asthma")
+        """
+        # Try both .yml and .yaml extensions
+        for ext in ['.yml', '.yaml']:
+            file_path = self.base_path / f"questionnaires/daily/{condition_filename}{ext}"
+            if file_path.exists():
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    return yaml.safe_load(file)
+
+        raise FileNotFoundError(
+            f"Daily questionnaire not found: {condition_filename}"
+        )
+
+    def list_daily_questionnaires(self) -> List[str]:
+        """
+        List all available daily questionnaire filenames (without extension)
+
+        Returns:
+            List of condition filenames (e.g., ['asthma', 'diabetes', 'migraine'])
+        """
+        daily_path = self.base_path / "questionnaires" / "daily"
+        if not daily_path.exists():
+            return []
+
+        return [
+            f.stem for f in daily_path.iterdir()
+            if f.suffix in ['.yml', '.yaml'] and f.is_file()
+        ]
 
     def get_resource_path(self, relative_path: str) -> Path:
         """

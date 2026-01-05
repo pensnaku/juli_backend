@@ -9,6 +9,7 @@ from app.features.medication.api import router as medication_router
 from app.features.observations.api import router as observations_router
 from app.features.juli_score.api import router as juli_score_router
 from app.features.environment.api import router as environment_router
+from app.features.daily_dare_badges.api import router as badges_router
 
 # Create main API router
 api_router_v1 = APIRouter()
@@ -23,5 +24,6 @@ api_router_v1.include_router(medication_router, prefix="/medications", tags=["me
 api_router_v1.include_router(observations_router, prefix="/observations", tags=["observations"])
 api_router_v1.include_router(juli_score_router, prefix="/juli-score", tags=["juli-score"])
 api_router_v1.include_router(environment_router, prefix="/environment", tags=["environment"])
+api_router_v1.include_router(badges_router, prefix="/badges", tags=["badges"])
 
 __all__ = ["api_router_v1"]

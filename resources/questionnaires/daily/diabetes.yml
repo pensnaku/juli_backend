@@ -1,0 +1,27 @@
+# Daily questionnaire for Diabetes
+version: '1.0'
+questionnaire_id: daily-diabetes
+title: Diabetes Daily Check-in
+description: Daily questions to track your diabetes management
+
+questions:
+  - id: glucose-level-measured
+    text: Please enter the glucose level that you measured today
+    type: quantity
+    required: false
+    unit: mg/dL
+
+  - id: units-of-insulin-injected
+    text: How many units of insulin did you inject?
+    type: number
+    required: false
+
+  - id: did-you-take-medication
+    text: Did you take your medication?
+    type: boolean
+    required: false
+
+  - id: food-quality-against-quantity
+    text: Could you pinpoint how your food consumption was yesterday? Just swipe to the part of the square that reflects your food intake best.
+    type: string
+    required: true

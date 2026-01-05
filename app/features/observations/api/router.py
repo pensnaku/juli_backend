@@ -18,7 +18,12 @@ from app.features.observations.domain.schemas import (
     ObservationResponse,
     ObservationListResponse,
     ObservationBulkCreate,
+    ObservationQueryRequest,
+    ObservationQueryResponse,
+    ObservationQueryGroupedResponse,
+    ObservationQueryItem,
 )
+from app.features.observations.repository import ObservationRepository
 
 
 router = APIRouter()
@@ -72,6 +77,91 @@ def upsert_observation(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
+        )
+
+
+@router.post("/query")
+def query_observations(
+    request: ObservationQueryRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Query observations by multiple codes and date range.
+
+    This is an optimized endpoint for fetching observations efficiently.
+    Supports filtering by codes, date range, variants, and data sources.
+
+    Returns either a flat list or grouped by code based on the `group_by_code` parameter.
+    """
+    repo = ObservationRepository(db)
+
+    if request.group_by_code:
+        grouped_results = repo.get_by_codes_and_date_range_grouped(
+            user_id=current_user.id,
+            codes=request.codes,
+            start_date=request.start_date,
+            end_date=request.end_date,
+            variants=request.variants,
+            data_sources=request.data_sources,
+            limit_per_code=request.limit_per_code,
+        )
+
+        # Convert to response format
+        observations_dict = {}
+        total_count = 0
+        for code, rows in grouped_results.items():
+            observations_dict[code] = [
+                ObservationQueryItem(
+                    id=row.id,
+                    code=row.code,
+                    variant=row.variant,
+                    value_integer=row.value_integer,
+                    value_decimal=row.value_decimal,
+                    value_string=row.value_string,
+                    value_boolean=row.value_boolean,
+                    effective_at=row.effective_at,
+                    unit=row.unit,
+                    data_source=row.data_source,
+                )
+                for row in rows
+            ]
+            total_count += len(rows)
+
+        return ObservationQueryGroupedResponse(
+            observations=observations_dict,
+            count=total_count,
+        )
+    else:
+        results = repo.get_by_codes_and_date_range(
+            user_id=current_user.id,
+            codes=request.codes,
+            start_date=request.start_date,
+            end_date=request.end_date,
+            variants=request.variants,
+            data_sources=request.data_sources,
+            limit_per_code=request.limit_per_code,
+        )
+
+        observations = [
+            ObservationQueryItem(
+                id=row.id,
+                code=row.code,
+                variant=row.variant,
+                value_integer=row.value_integer,
+                value_decimal=row.value_decimal,
+                value_string=row.value_string,
+                value_boolean=row.value_boolean,
+                effective_at=row.effective_at,
+                unit=row.unit,
+                data_source=row.data_source,
+            )
+            for row in results
+        ]
+
+        return ObservationQueryResponse(
+            observations=observations,
+            count=len(observations),
         )
 
 

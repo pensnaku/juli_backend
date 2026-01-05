@@ -1,4 +1,5 @@
 """User entity - authentication and authorization"""
+from typing import List
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -73,6 +74,34 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan"
     )
+
+    @property
+    def ordered_conditions(self) -> List:
+        """
+        Get user conditions ordered by clinical priority.
+
+        Uses the order_leading_conditions utility to sort conditions
+        by their clinical priority, with the leading condition first.
+
+        Returns:
+            List of UserCondition objects sorted by priority
+        """
+        if not self.conditions:
+            return []
+
+        from app.shared.condition_utils import order_leading_conditions
+
+        # Get condition codes
+        condition_codes = [c.condition_code for c in self.conditions]
+
+        # Order them by priority
+        ordered_codes = order_leading_conditions(condition_codes)
+
+        # Create a mapping of condition_code -> condition object
+        condition_map = {c.condition_code: c for c in self.conditions}
+
+        # Return conditions in priority order
+        return [condition_map[code] for code in ordered_codes if code in condition_map]
 
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email})>"

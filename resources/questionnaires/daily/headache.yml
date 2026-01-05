@@ -1,0 +1,40 @@
+# Daily questionnaire for Headache
+version: '1.0'
+questionnaire_id: daily-headache
+title: Headache Daily Check-in
+description: Daily questions to track your headache symptoms
+
+questions:
+  - id: do-you-have-a-headache-today
+    text: Did you have a headache today?
+    type: boolean
+    required: true
+
+  - id: activity-pain
+    text: Can you tell me more about your pain today? Just swipe to the part of the square that reflects your pain best.
+    type: string
+    required: true
+    show_if:
+      question_id: do-you-have-a-headache-today
+      operator: equals
+      value: true
+
+  - id: needed-pain-medication
+    text: Did you need to take additional pain medication today?
+    type: boolean
+    required: true
+
+  - id: relief-from-pain-medication
+    text: Please swipe to the point that shows how much relief you have received from pain medication (0=no relief, 10=full relief).
+    type: number
+    required: true
+    range:
+      min: 0
+      max: 10
+    labels:
+      lower: 'No relief'
+      upper: 'Full relief'
+    show_if:
+      question_id: needed-pain-medication
+      operator: equals
+      value: true

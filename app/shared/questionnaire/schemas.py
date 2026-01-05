@@ -50,7 +50,16 @@ class QuestionnaireCompletionResponse(BaseModel):
 # ========== Daily Questionnaire Schemas ==========
 
 class DailyAnswerRequest(BaseModel):
-    """Request schema for submitting a single daily questionnaire answer"""
+    """
+    Request schema for submitting a single daily questionnaire answer.
+
+    The 'answer' field supports both single values and multi-value answers:
+    - Single value: answer = 4, answer = "good", answer = True
+    - Multi-value: answer = {"mood": 4, "energy": 7}
+
+    Multi-value answers are stored as separate observations with
+    the variant field set to the dictionary key.
+    """
     completion_date: str = Field(
         ...,
         description="Date in ISO format (YYYY-MM-DD)"
@@ -61,7 +70,7 @@ class DailyAnswerRequest(BaseModel):
     )
     answer: Any = Field(
         ...,
-        description="The answer value (number, boolean, string)"
+        description="The answer value (number, boolean, string, or dict for multi-value)"
     )
     questionnaire_id: str = Field(
         ...,
