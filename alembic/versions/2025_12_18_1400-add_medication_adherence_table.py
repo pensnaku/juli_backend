@@ -19,19 +19,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create enum type for adherence status (skip if already exists)
+    # Create enum type using raw SQL to avoid SQLAlchemy's automatic creation
     conn = op.get_bind()
-    result = conn.execute(sa.text(
-        "SELECT 1 FROM pg_type WHERE typname = 'adherencestatus'"
-    ))
-    type_exists = result.fetchone() is not None
-
-    if not type_exists:
-        adherence_status = sa.Enum('not_set', 'taken', 'not_taken', 'partly_taken', name='adherencestatus')
-        adherence_status.create(conn)
-
-    # Reference the enum type (whether we just created it or it already existed)
-    adherence_status_type = sa.Enum('not_set', 'taken', 'not_taken', 'partly_taken', name='adherencestatus')
+    conn.execute(sa.text("""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'adherencestatus') THEN
+                CREATE TYPE adherencestatus AS ENUM ('not_set', 'taken', 'not_taken', 'partly_taken');
+            END IF;
+        END $$;
+    """))
 
     # Check if table already exists
     result = conn.execute(sa.text(
@@ -40,21 +37,22 @@ def upgrade() -> None:
     table_exists = result.fetchone() is not None
 
     if not table_exists:
-        op.create_table(
-            'medication_adherence',
-            sa.Column('id', sa.Integer(), nullable=False),
-            sa.Column('user_id', sa.Integer(), nullable=False),
-            sa.Column('medication_id', sa.Integer(), nullable=False),
-            sa.Column('date', sa.Date(), nullable=False),
-            sa.Column('status', adherence_status_type, nullable=False, server_default='not_set'),
-            sa.Column('notes', sa.String(500), nullable=True),
-            sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now()),
-            sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-            sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-            sa.ForeignKeyConstraint(['medication_id'], ['user_medications.id'], ),
-            sa.PrimaryKeyConstraint('id'),
-            sa.UniqueConstraint('user_id', 'medication_id', 'date', name='uq_user_medication_date'),
-        )
+        # Create table using raw SQL to use the existing enum type
+        conn.execute(sa.text("""
+            CREATE TABLE medication_adherence (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id),
+                medication_id INTEGER NOT NULL REFERENCES user_medications(id),
+                date DATE NOT NULL,
+                status adherencestatus NOT NULL DEFAULT 'not_set',
+                notes VARCHAR(500),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE,
+                CONSTRAINT uq_user_medication_date UNIQUE (user_id, medication_id, date)
+            );
+        """))
+
+        # Create indexes
         op.create_index(op.f('ix_medication_adherence_id'), 'medication_adherence', ['id'], unique=False)
         op.create_index(op.f('ix_medication_adherence_user_id'), 'medication_adherence', ['user_id'], unique=False)
         op.create_index(op.f('ix_medication_adherence_medication_id'), 'medication_adherence', ['medication_id'], unique=False)
