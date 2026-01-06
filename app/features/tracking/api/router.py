@@ -43,7 +43,7 @@ def activate_tracking_topic(
     - Only `topic_code` is required
 
     For custom topics:
-    - `topic_code`: unique identifier for the topic
+    - `topic_code`: unique identifier (optional - auto-generated from label with random suffix if not provided)
     - `label`: human-readable name (required)
     - `question`: question to ask users (required)
     - `data_type`: "number" or "boolean" (required)
@@ -51,6 +51,19 @@ def activate_tracking_topic(
     - `emoji`: visual indicator (optional)
     - `min`: minimum value (optional, for number types)
     - `max`: maximum value (optional, for number types)
+
+    Example custom topic request (topic_code will be auto-generated):
+    {
+        "label": "Water Intake",
+        "question": "How many glasses of water did you drink?",
+        "data_type": "number",
+        "unit": "glasses",
+        "emoji": "💧",
+        "min": 0,
+        "max": 20
+    }
+
+    Generated topic_code might be: "water-intake-a3b9f2"
     """
     service = TrackingTopicService(db)
     try:

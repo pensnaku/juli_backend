@@ -12,7 +12,7 @@ class UserTrackingTopicBase(BaseModel):
 
 class UserTrackingTopicCreate(BaseModel):
     """Schema for creating/activating a tracking topic (default or custom)"""
-    topic_code: str = Field(..., description="Code of the tracking topic")
+    topic_code: Optional[str] = Field(None, description="Code of the tracking topic (auto-generated for custom topics if not provided)")
     label: Optional[str] = Field(None, description="Human-readable label (required for custom topics)")
     question: Optional[str] = Field(None, description="Question to ask users (required for custom topics)")
     data_type: Optional[Literal["number", "boolean"]] = Field(None, description="Type of data (required for custom topics)")

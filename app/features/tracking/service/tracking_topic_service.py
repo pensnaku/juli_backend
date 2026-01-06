@@ -1,5 +1,7 @@
 """Service layer for tracking topics business logic"""
 from typing import List, Optional
+import re
+import secrets
 from sqlalchemy.orm import Session
 
 from app.features.auth.repository import UserTrackingTopicRepository
@@ -10,6 +12,37 @@ from app.features.auth.domain.schemas import (
     TrackingTopicListResponse,
 )
 from app.shared.constants import TRACKING_TOPICS
+
+
+def generate_topic_code(label: str, length: int = 6) -> str:
+    """
+    Generate a unique topic code from a label.
+
+    Converts label to lowercase slug and adds random suffix for uniqueness.
+
+    Args:
+        label: Human-readable label (e.g., "Water Intake")
+        length: Length of random suffix (default: 6)
+
+    Returns:
+        Topic code (e.g., "water-intake-a3b9f2")
+
+    Example:
+        >>> generate_topic_code("Water Intake")
+        'water-intake-a3b9f2'
+    """
+    # Convert to lowercase and replace spaces with dashes
+    slug = label.lower().strip()
+    # Replace multiple spaces/special chars with single dash
+    slug = re.sub(r'[^\w\s-]', '', slug)
+    slug = re.sub(r'[-\s]+', '-', slug)
+    # Remove leading/trailing dashes
+    slug = slug.strip('-')
+
+    # Generate random suffix for uniqueness
+    random_suffix = secrets.token_hex(length // 2)
+
+    return f"{slug}-{random_suffix}"
 
 
 class TrackingTopicService:
@@ -116,10 +149,28 @@ class TrackingTopicService:
             if not request.data_type:
                 raise ValueError("data_type is required for custom topics")
 
+            # Generate unique topic code if not provided or if it conflicts
+            final_topic_code = topic_code
+
+            # If user provided a topic_code, use it as-is (they take responsibility)
+            # Otherwise, generate one from the label
+            if not topic_code or topic_code == request.label.lower().replace(' ', '-'):
+                final_topic_code = generate_topic_code(request.label)
+
+                # Ensure uniqueness across all users
+                max_attempts = 10
+                for _ in range(max_attempts):
+                    existing = self.repo.get_by_user_and_topic(user_id, final_topic_code)
+                    if not existing:
+                        break
+                    final_topic_code = generate_topic_code(request.label)
+                else:
+                    raise ValueError("Could not generate unique topic code. Please try again.")
+
             # Create the custom topic with metadata
             topic = self.repo.upsert(
                 user_id=user_id,
-                topic_code=topic_code,
+                topic_code=final_topic_code,
                 topic_label=request.label,
                 question=request.question,
                 data_type=request.data_type,
@@ -131,7 +182,7 @@ class TrackingTopicService:
             self.db.commit()
 
             return TrackingTopicResponse(
-                topic_code=topic_code,
+                topic_code=final_topic_code,
                 label=request.label,
                 question=request.question,
                 data_type=request.data_type,

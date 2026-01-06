@@ -1,0 +1,15 @@
+id: daily-individual-tracking
+title: Daily Individual Tracking
+description: Track your personalized metrics
+type: daily
+version: 1.0
+
+# This questionnaire is dynamically populated based on user's selected tracking topics
+# Questions are generated from the user's tracking_topics in the database
+# See app/shared/constants.py TRACKING_TOPICS for available topics:
+# - coffee-consumption
+# - smoking
+# - alcohol-consumption
+# - hours-spent-outside
+
+questions: []
