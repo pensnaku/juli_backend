@@ -18,9 +18,8 @@ class ObservationCodes:
     ACTIVE_ENERGY_BURNED = "active-energy-burned"
     FLIGHTS_CLIMBED = "flights-climbed"
 
-    # Environment
-    AIR_QUALITY = "air-quality"
-    AIR_QUALITY_POLLEN = "air-quality-pollen"
+    # Environment (unified code with variants)
+    ENVIRONMENT = "environment"
 
     # Body Measurements
     WEIGHT = "weight"
@@ -111,6 +110,31 @@ class ObservationDataSources:
     QUESTIONNAIRE = "questionnaire"
     DEVICE = "device"
     CALCULATED = "calculated"
+    AMBEE = "ambee"
+    OPENWEATHERMAP = "openweathermap"
+
+
+class EnvironmentVariants:
+    """Variants for environment observations"""
+
+    # Air Quality
+    AIR_QUALITY_INDEX = "air-quality-index"
+    AIR_QUALITY_POLLUTANT = "air-quality-pollutant"
+
+    # Pollen
+    POLLEN_GRASS = "pollen-grass"
+    POLLEN_TREE = "pollen-tree"
+    POLLEN_WEED = "pollen-weed"
+    POLLEN_TOTAL = "pollen-total"
+
+    # Weather
+    TEMPERATURE = "temperature"
+    HUMIDITY = "humidity"
+    AIR_PRESSURE = "air-pressure"
+    WIND_SPEED = "wind-speed"
+    WIND_DIRECTION = "wind-direction"
+    SUNRISE = "sunrise"
+    SUNSET = "sunset"
 
 
 # Mapping of codes to their default categories
@@ -130,8 +154,7 @@ OBSERVATION_CODE_CATEGORIES = {
     ObservationCodes.FLIGHTS_CLIMBED: ObservationCategories.ACTIVITY,
 
     # Environment
-    ObservationCodes.AIR_QUALITY: ObservationCategories.ENVIRONMENT,
-    ObservationCodes.AIR_QUALITY_POLLEN: ObservationCategories.ENVIRONMENT,
+    ObservationCodes.ENVIRONMENT: ObservationCategories.ENVIRONMENT,
 
     # Body Measurements
     ObservationCodes.WEIGHT: ObservationCategories.BODY_MEASUREMENTS,

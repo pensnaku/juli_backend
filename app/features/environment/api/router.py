@@ -1,7 +1,12 @@
 """API router for environment feature - weather, air quality, pollen"""
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends, status
+from sqlalchemy.orm import Session
+from datetime import datetime, timezone
 
 from app.core.config import settings
+from app.core.database import get_db
+from app.features.auth.api.dependencies import get_current_user
+from app.features.auth.domain.entities import User
 from app.features.environment.service import WeatherService, AirQualityService
 from app.features.environment.domain.schemas import (
     WeatherResponse,
@@ -9,6 +14,12 @@ from app.features.environment.domain.schemas import (
     PollenResponse,
 )
 from app.features.environment.exceptions import WeatherException, AirQualityException
+from app.features.observations.repository import ObservationRepository
+from app.features.observations.constants import (
+    ObservationCodes,
+    EnvironmentVariants,
+    ObservationDataSources,
+)
 
 
 router = APIRouter()
@@ -106,4 +117,217 @@ async def get_pollen(
         raise HTTPException(
             status_code=422,
             detail={"error": "Cannot fetch data from external API", "code": "external_api_error"},
+        )
+
+
+@router.post("/save", status_code=status.HTTP_201_CREATED)
+async def save_environment_data(
+    lat: float = Query(..., description="Latitude"),
+    lon: float = Query(..., description="Longitude"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Fetch and save current environment data (weather, air quality, pollen) as observations.
+
+    This endpoint:
+    1. Fetches current weather, air quality, and pollen data for the given location
+    2. Stores all metrics as observations with code='environment' and appropriate variants
+    3. Returns a summary of saved observations
+
+    All observations are stored with the current timestamp.
+
+    Returns:
+        Dictionary with counts of saved observations by category
+    """
+    observation_repo = ObservationRepository(db)
+    current_time = datetime.now(timezone.utc)
+    saved_count = 0
+
+    try:
+        # Fetch all environment data
+        weather_service = _get_weather_service()
+        air_quality_service = _get_air_quality_service()
+
+        weather = await weather_service.get_weather(lat, lon)
+        air_quality = await air_quality_service.get_air_quality(lat, lon)
+        pollen = await air_quality_service.get_pollen(lat, lon)
+
+        # Save air quality
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.AIR_QUALITY_INDEX,
+            value_integer=air_quality.airQualityIndex,
+            category="environment",
+            data_source=ObservationDataSources.AMBEE,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.AIR_QUALITY_POLLUTANT,
+            value_string=air_quality.mainPollutant,
+            category="environment",
+            data_source=ObservationDataSources.AMBEE,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        # Save pollen data
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.POLLEN_GRASS,
+            value_integer=pollen.count.grass,
+            category="environment",
+            data_source=ObservationDataSources.AMBEE,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.POLLEN_TREE,
+            value_integer=pollen.count.tree,
+            category="environment",
+            data_source=ObservationDataSources.AMBEE,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.POLLEN_WEED,
+            value_integer=pollen.count.weed,
+            category="environment",
+            data_source=ObservationDataSources.AMBEE,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.POLLEN_TOTAL,
+            value_integer=pollen.count.grass + pollen.count.tree + pollen.count.weed,
+            category="environment",
+            data_source=ObservationDataSources.AMBEE,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        # Save weather data
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.TEMPERATURE,
+            value_decimal=weather.current.temperature,
+            unit="celsius",
+            category="environment",
+            data_source=ObservationDataSources.OPENWEATHERMAP,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.HUMIDITY,
+            value_integer=weather.current.humidity,
+            unit="percent",
+            category="environment",
+            data_source=ObservationDataSources.OPENWEATHERMAP,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.AIR_PRESSURE,
+            value_integer=weather.current.atmosphericPressure,
+            unit="hPa",
+            category="environment",
+            data_source=ObservationDataSources.OPENWEATHERMAP,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.WIND_SPEED,
+            value_decimal=weather.current.windStrength,
+            unit="m/s",
+            category="environment",
+            data_source=ObservationDataSources.OPENWEATHERMAP,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.WIND_DIRECTION,
+            value_integer=weather.current.windDirection,
+            unit="degrees",
+            category="environment",
+            data_source=ObservationDataSources.OPENWEATHERMAP,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        # Save sunrise/sunset as timestamps
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.SUNRISE,
+            value_string=weather.current.sunrise.isoformat(),
+            category="environment",
+            data_source=ObservationDataSources.OPENWEATHERMAP,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        observation_repo.create(
+            user_id=current_user.id,
+            code=ObservationCodes.ENVIRONMENT,
+            variant=EnvironmentVariants.SUNSET,
+            value_string=weather.current.sunset.isoformat(),
+            category="environment",
+            data_source=ObservationDataSources.OPENWEATHERMAP,
+            effective_at=current_time,
+        )
+        saved_count += 1
+
+        db.commit()
+
+        return {
+            "message": "Environment data saved successfully",
+            "saved_observations": saved_count,
+            "timestamp": current_time.isoformat(),
+            "location": {
+                "lat": lat,
+                "lon": lon,
+                "city": weather.location.city,
+                "country": weather.location.country,
+            },
+        }
+
+    except (WeatherException, AirQualityException) as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=422,
+            detail={"error": "Cannot fetch data from external API", "code": "external_api_error"},
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail={"error": f"Failed to save environment data: {str(e)}", "code": "internal_error"},
         )

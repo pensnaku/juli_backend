@@ -1,4 +1,5 @@
 """Shared constants for the application"""
+
 from typing import Dict, Any
 
 # Medical condition codes (SNOMED CT)
@@ -6,67 +7,55 @@ CONDITION_CODES: Dict[str, Dict[str, Any]] = {
     "73211009": {
         "label": "Diabetes",
         "system": "snomed",
-        "description": "Diabetes mellitus"
+        "description": "Diabetes mellitus",
     },
     "82423001": {
         "label": "Chronic pain",
         "system": "snomed",
-        "description": "Chronic pain disorder"
+        "description": "Chronic pain disorder",
     },
     "49601007": {
         "label": "Cardiovascular disease",
         "system": "snomed",
-        "description": "Disorder of cardiovascular system"
+        "description": "Disorder of cardiovascular system",
     },
     "13645005": {
         "label": "Chronic obstructive pulmonary disease",
         "system": "snomed",
-        "description": "Chronic obstructive lung disease"
+        "description": "Chronic obstructive lung disease",
     },
-    "195967001": {
-        "label": "Asthma",
-        "system": "snomed",
-        "description": "Asthma"
-    },
+    "195967001": {"label": "Asthma", "system": "snomed", "description": "Asthma"},
     "35489007": {
         "label": "Depression",
         "system": "snomed",
-        "description": "Depressive disorder"
+        "description": "Depressive disorder",
     },
     "13746004": {
         "label": "Bipolar disorder",
         "system": "snomed",
-        "description": "Bipolar disorder"
+        "description": "Bipolar disorder",
     },
-    "37796009": {
-        "label": "Migraine",
-        "system": "snomed",
-        "description": "Migraine"
-    },
+    "37796009": {"label": "Migraine", "system": "snomed", "description": "Migraine"},
     "197480006": {
         "label": "Anxiety",
         "system": "snomed",
-        "description": "Anxiety disorder"
+        "description": "Anxiety disorder",
     },
     "162290004": {
         "label": "Dry Eye",
         "system": "snomed",
-        "description": "Dry eye syndrome"
+        "description": "Dry eye syndrome",
     },
-    "230461009": {
-        "label": "Headache",
-        "system": "snomed",
-        "description": "Headache"
-    },
+    "230461009": {"label": "Headache", "system": "snomed", "description": "Headache"},
     "38341003": {
         "label": "Hypertension",
         "system": "snomed",
-        "description": "Essential hypertension"
+        "description": "Essential hypertension",
     },
     "195967001+35489007": {
         "label": "Asthma + Depression Comorbidity",
         "system": "snomed",
-        "description": "Comorbidity: Asthma and Depressive disorder"
+        "description": "Comorbidity: Asthma and Depressive disorder",
     },
 }
 

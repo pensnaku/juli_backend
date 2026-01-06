@@ -85,7 +85,8 @@ DEPRESSION_FACTORS: Dict[str, FactorConfig] = {
         weight=20,
         minimum_score=0,
         just_math=False,
-        observation_code="air-quality",
+        observation_code="environment",
+        observation_variant="air-quality-index",
         time_window_days=0,
         steps=[
             Step(0, 50, 1.0),
@@ -158,7 +159,8 @@ ASTHMA_FACTORS: Dict[str, FactorConfig] = {
         weight=20,
         minimum_score=0,
         just_math=False,
-        observation_code="air-quality",
+        observation_code="environment",
+        observation_variant="air-quality-index",
         time_window_days=0,
         steps=[
             Step(0, 50, 1.0),
@@ -228,7 +230,8 @@ ASTHMA_FACTORS: Dict[str, FactorConfig] = {
         weight=30,
         minimum_score=0,
         just_math=False,
-        observation_code="air-quality-pollen",
+        observation_code="environment",
+        observation_variant="pollen-total",
         time_window_days=0,
         steps=[
             Step(0, 50, 1.0),
@@ -256,7 +259,8 @@ MIGRAINE_FACTORS: Dict[str, FactorConfig] = {
         weight=30,
         minimum_score=-6,  # Can go negative for AQI > 140
         just_math=False,
-        observation_code="air-quality",
+        observation_code="environment",
+        observation_variant="air-quality-index",
         time_window_days=0,
         steps=[
             Step(0, 50, 1.0),       # AQI 0-50: full score (30)
