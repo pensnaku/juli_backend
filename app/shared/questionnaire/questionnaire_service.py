@@ -323,6 +323,11 @@ class QuestionnaireService:
                     if questionnaire:
                         questionnaires.append(questionnaire)
 
+        # Add individual tracking questionnaire if user has active tracking topics
+        tracking_questionnaire = self._build_individual_tracking_questionnaire(user_id, target_date)
+        if tracking_questionnaire:
+            questionnaires.append(tracking_questionnaire)
+
         if not questionnaires:
             return None
 
@@ -365,6 +370,83 @@ class QuestionnaireService:
             question["answer"] = user_answers.get(question_id)
 
         # Check completion status from database
+        is_completed = self.completion_repo.is_condition_completed_for_date(
+            user_id, questionnaire_id, target_date
+        )
+
+        return {
+            "questionnaire_id": questionnaire_id,
+            "questions": questions,
+            "is_completed": is_completed,
+        }
+
+    def _build_individual_tracking_questionnaire(
+        self, user_id: int, target_date: date
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Build the individual tracking questionnaire from user's active tracking topics.
+
+        Dynamically generates questions based on user's active tracking topics.
+        Observations are stored with code='individual-tracking' and variant=topic_code.
+
+        Args:
+            user_id: User ID
+            target_date: The date for the questionnaire
+
+        Returns:
+            Individual tracking questionnaire dict, or None if user has no active topics
+        """
+        from app.features.auth.repository import UserTrackingTopicRepository
+
+        tracking_repo = UserTrackingTopicRepository(self.db)
+        active_topics = tracking_repo.get_by_user_id(user_id, active_only=True)
+
+        if not active_topics:
+            return None
+
+        questionnaire_id = "daily-individual-tracking"
+
+        # Get existing answers for this questionnaire and date
+        user_answers = self._extract_daily_answers(
+            user_id, questionnaire_id, target_date
+        )
+
+        # Build questions from active tracking topics
+        questions = []
+        for topic in active_topics:
+            question_data = {
+                "id": topic.topic_code,  # e.g., "coffee-consumption" or "water-intake-a3b9f2"
+                "text": topic.question,
+                "required": False,
+            }
+
+            # Add emoji if available
+            if topic.emoji:
+                question_data["emoji"] = topic.emoji
+
+            # Set question type and relevant fields based on data type
+            if topic.data_type == "number":
+                # Use 'number' type for numeric inputs (matches daily questionnaires)
+                question_data["type"] = "number"
+                if topic.unit:
+                    question_data["unit"] = topic.unit
+                if topic.min_value is not None:
+                    question_data["min"] = topic.min_value
+                if topic.max_value is not None:
+                    question_data["max"] = topic.max_value
+            elif topic.data_type == "boolean":
+                # Use 'boolean' type for yes/no questions (matches daily questionnaires)
+                question_data["type"] = "boolean"
+            else:
+                # Default to number type
+                question_data["type"] = "number"
+
+            # Add existing answer if available
+            question_data["answer"] = user_answers.get(topic.topic_code)
+
+            questions.append(question_data)
+
+        # Check completion status
         is_completed = self.completion_repo.is_condition_completed_for_date(
             user_id, questionnaire_id, target_date
         )
@@ -434,6 +516,10 @@ class QuestionnaireService:
         Reconstructs multi-value answers (e.g., mood-energy) from multiple observations
         with variants into a single dictionary answer.
 
+        Special handling for individual-tracking questionnaire:
+        - Observations are stored with code="individual-tracking" and variant=topic_code
+        - Returns dict of topic_code -> answer
+
         Args:
             user_id: User ID
             questionnaire_id: Questionnaire ID (e.g., "daily-asthma")
@@ -443,6 +529,7 @@ class QuestionnaireService:
             Dictionary of question_id -> answer
             - Single-value: {"mood": 4}
             - Multi-value: {"mood-energy": {"mood": 4, "energy": 7}}
+            - Individual tracking: {"coffee-consumption": 3, "water-intake-a3b9f2": 8}
         """
         from datetime import datetime, timezone
         from collections import defaultdict
@@ -464,6 +551,16 @@ class QuestionnaireService:
             page=1,
             page_size=100,
         )
+
+        # Special handling for individual tracking questionnaire
+        if questionnaire_id == "daily-individual-tracking":
+            # For individual tracking, observations have code="individual-tracking"
+            # and variant=topic_code, so we return variant -> value mapping
+            answers = {}
+            for obs in observations:
+                if obs.code == "individual-tracking" and obs.variant:
+                    answers[obs.variant] = self._extract_observation_value(obs)
+            return answers
 
         # Group observations by code (question_id)
         observations_by_code = defaultdict(list)

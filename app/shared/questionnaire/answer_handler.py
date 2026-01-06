@@ -435,8 +435,20 @@ class QuestionnaireAnswerHandler:
             tzinfo=timezone.utc
         )
 
+        # Special handling for individual tracking questionnaire
+        # Store with code="individual-tracking" and variant=topic_code
+        if questionnaire_id == "daily-individual-tracking":
+            self._create_or_update_observation(
+                user_id=user_id,
+                code="individual-tracking",
+                variant=question_id,  # question_id is the topic_code
+                answer=answer,
+                effective_datetime=effective_datetime,
+                questionnaire_id=questionnaire_id,
+                completion=completion,
+            )
         # Check if this is a multi-value answer (dict with multiple components)
-        if isinstance(answer, dict) and 'value' not in answer:
+        elif isinstance(answer, dict) and 'value' not in answer:
             # Multi-value answer - create observation for each component
             # Skip empty dicts
             if not answer:
