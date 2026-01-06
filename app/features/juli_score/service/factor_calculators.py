@@ -76,6 +76,7 @@ class FactorCalculator:
                 self.user_id,
                 config.observation_code,
                 self.target_date,
+                config.observation_variant,
             )
             return float(MOOD_VALUES.get(mood_str, 0)) if mood_str else None
 
@@ -94,6 +95,7 @@ class FactorCalculator:
                 config.observation_code,
                 config.time_window_days,
                 self.target_date,
+                config.observation_variant,
             )
             return float(avg) if avg else None
 
@@ -104,6 +106,7 @@ class FactorCalculator:
                 config.observation_code,
                 config.time_window_days,
                 self.target_date,
+                config.observation_variant,
             )
             return float(value) if value else None
 
@@ -115,6 +118,7 @@ class FactorCalculator:
             self.user_id,
             config.observation_code,
             self.target_date,
+            config.observation_variant,
         )
         return float(value) if value else None
 
@@ -136,6 +140,7 @@ class FactorCalculator:
             self.user_id,
             config.observation_code,  # "time-asleep"
             self.target_date,
+            config.observation_variant,
         )
         if value is not None:
             return float(value)
@@ -155,6 +160,7 @@ class FactorCalculator:
                 self.user_id,
                 code,
                 self.target_date,
+                None,  # No variant for sleep stage codes
             )
             if stage_value is not None:
                 total_sleep += float(stage_value)
@@ -170,6 +176,7 @@ class FactorCalculator:
             config.observation_code,
             config.time_window_days,
             self.target_date,
+            config.observation_variant,
         )
 
         if len(hrv_values) < 2:

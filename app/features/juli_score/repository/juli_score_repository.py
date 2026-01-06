@@ -25,22 +25,24 @@ class JuliScoreRepository:
         user_id: int,
         code: str,
         target_date: date,
+        variant: Optional[str] = None,
     ) -> Optional[Decimal]:
         """Get the most recent observation value for a specific code on a given date"""
         start_of_day = datetime.combine(target_date, datetime.min.time())
         end_of_day = datetime.combine(target_date, datetime.max.time())
 
-        observation = (
-            self.db.query(Observation)
-            .filter(
-                Observation.user_id == user_id,
-                Observation.code == code,
-                Observation.effective_at >= start_of_day,
-                Observation.effective_at <= end_of_day,
-            )
-            .order_by(Observation.effective_at.desc())
-            .first()
+        query = self.db.query(Observation).filter(
+            Observation.user_id == user_id,
+            Observation.code == code,
+            Observation.effective_at >= start_of_day,
+            Observation.effective_at <= end_of_day,
         )
+
+        # Add variant filter if specified
+        if variant is not None:
+            query = query.filter(Observation.variant == variant)
+
+        observation = query.order_by(Observation.effective_at.desc()).first()
 
         if observation:
             if observation.value_decimal is not None:
@@ -54,22 +56,24 @@ class JuliScoreRepository:
         user_id: int,
         code: str,
         target_date: date,
+        variant: Optional[str] = None,
     ) -> Optional[str]:
         """Get string observation value (e.g., mood)"""
         start_of_day = datetime.combine(target_date, datetime.min.time())
         end_of_day = datetime.combine(target_date, datetime.max.time())
 
-        observation = (
-            self.db.query(Observation)
-            .filter(
-                Observation.user_id == user_id,
-                Observation.code == code,
-                Observation.effective_at >= start_of_day,
-                Observation.effective_at <= end_of_day,
-            )
-            .order_by(Observation.effective_at.desc())
-            .first()
+        query = self.db.query(Observation).filter(
+            Observation.user_id == user_id,
+            Observation.code == code,
+            Observation.effective_at >= start_of_day,
+            Observation.effective_at <= end_of_day,
         )
+
+        # Add variant filter if specified
+        if variant is not None:
+            query = query.filter(Observation.variant == variant)
+
+        observation = query.order_by(Observation.effective_at.desc()).first()
 
         return observation.value_string if observation else None
 
@@ -79,24 +83,27 @@ class JuliScoreRepository:
         code: str,
         days: int,
         end_date: date,
+        variant: Optional[str] = None,
     ) -> Optional[Decimal]:
         """Get average observation value over a period"""
         start_date = end_date - timedelta(days=days)
         start_dt = datetime.combine(start_date, datetime.min.time())
         end_dt = datetime.combine(end_date, datetime.max.time())
 
-        result = (
-            self.db.query(func.avg(
-                func.coalesce(Observation.value_decimal, Observation.value_integer)
-            ))
-            .filter(
-                Observation.user_id == user_id,
-                Observation.code == code,
-                Observation.effective_at >= start_dt,
-                Observation.effective_at <= end_dt,
-            )
-            .scalar()
+        query = self.db.query(
+            func.avg(func.coalesce(Observation.value_decimal, Observation.value_integer))
+        ).filter(
+            Observation.user_id == user_id,
+            Observation.code == code,
+            Observation.effective_at >= start_dt,
+            Observation.effective_at <= end_dt,
         )
+
+        # Add variant filter if specified
+        if variant is not None:
+            query = query.filter(Observation.variant == variant)
+
+        result = query.scalar()
 
         return Decimal(str(result)) if result else None
 
@@ -106,23 +113,25 @@ class JuliScoreRepository:
         code: str,
         days: int,
         end_date: date,
+        variant: Optional[str] = None,
     ) -> Optional[Decimal]:
         """Get the most recent value within a time period"""
         start_date = end_date - timedelta(days=days)
         start_dt = datetime.combine(start_date, datetime.min.time())
         end_dt = datetime.combine(end_date, datetime.max.time())
 
-        observation = (
-            self.db.query(Observation)
-            .filter(
-                Observation.user_id == user_id,
-                Observation.code == code,
-                Observation.effective_at >= start_dt,
-                Observation.effective_at <= end_dt,
-            )
-            .order_by(Observation.effective_at.desc())
-            .first()
+        query = self.db.query(Observation).filter(
+            Observation.user_id == user_id,
+            Observation.code == code,
+            Observation.effective_at >= start_dt,
+            Observation.effective_at <= end_dt,
         )
+
+        # Add variant filter if specified
+        if variant is not None:
+            query = query.filter(Observation.variant == variant)
+
+        observation = query.order_by(Observation.effective_at.desc()).first()
 
         if observation:
             if observation.value_decimal is not None:
@@ -137,23 +146,25 @@ class JuliScoreRepository:
         code: str,
         days: int,
         end_date: date,
+        variant: Optional[str] = None,
     ) -> List[Decimal]:
         """Get all HRV values for a period (for calculating diff from average)"""
         start_date = end_date - timedelta(days=days)
         start_dt = datetime.combine(start_date, datetime.min.time())
         end_dt = datetime.combine(end_date, datetime.max.time())
 
-        observations = (
-            self.db.query(Observation)
-            .filter(
-                Observation.user_id == user_id,
-                Observation.code == code,
-                Observation.effective_at >= start_dt,
-                Observation.effective_at <= end_dt,
-            )
-            .order_by(Observation.effective_at.desc())
-            .all()
+        query = self.db.query(Observation).filter(
+            Observation.user_id == user_id,
+            Observation.code == code,
+            Observation.effective_at >= start_dt,
+            Observation.effective_at <= end_dt,
         )
+
+        # Add variant filter if specified
+        if variant is not None:
+            query = query.filter(Observation.variant == variant)
+
+        observations = query.order_by(Observation.effective_at.desc()).all()
 
         values = []
         for obs in observations:

@@ -59,6 +59,7 @@ class FactorConfig:
     multiplier: Optional[float] = None
     steps: List[Step] = field(default_factory=list)
     observation_code: Optional[str] = None
+    observation_variant: Optional[str] = None  # For observations with variants (e.g., environment)
     time_window_days: int = 0  # 0 = today only
 
 
