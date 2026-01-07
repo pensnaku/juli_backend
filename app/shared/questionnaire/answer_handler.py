@@ -485,9 +485,15 @@ class QuestionnaireAnswerHandler:
             tzinfo=timezone.utc
         )
 
+        # Special handling for journal entry - save to journal_entries table
+        if question_id == "journal-entry-text":
+            if answer and isinstance(answer, str) and answer.strip():
+                logger.info(f"Saving journal entry for user {user_id}")
+                self.journal_repo.create(user_id, answer.strip())
         # Special handling for individual tracking questionnaire
         # Store with code="individual-tracking" and variant=topic_code
-        if questionnaire_id == "daily-individual-tracking":
+        elif questionnaire_id == "daily-individual-tracking":
+            logger.info(f"Saving individual tracking: user={user_id}, topic={question_id}, answer={answer}, type={type(answer)}")
             self._create_or_update_observation(
                 user_id=user_id,
                 code="individual-tracking",
@@ -581,6 +587,8 @@ class QuestionnaireAnswerHandler:
         value_boolean = None
         unit = None
 
+        logger.info(f"Creating observation: code={code}, variant={variant}, answer={answer}, answer_type={type(answer)}")
+
         if isinstance(answer, bool):
             value_boolean = answer
         elif isinstance(answer, dict):
@@ -613,8 +621,11 @@ class QuestionnaireAnswerHandler:
             effective_at=effective_datetime,
         )
 
+        logger.info(f"Observation values: int={value_integer}, dec={value_decimal}, str={value_string}, bool={value_boolean}, unit={unit}")
+
         if existing:
             # Update existing observation
+            logger.info(f"Updating existing observation id={existing.id}")
             existing.value_integer = value_integer
             existing.value_decimal = value_decimal
             existing.value_string = value_string
@@ -624,6 +635,7 @@ class QuestionnaireAnswerHandler:
             self.observation_repo.update(existing)
         else:
             # Create new observation
+            logger.info(f"Creating new observation")
             self.observation_repo.create(
                 user_id=user_id,
                 code=code,
