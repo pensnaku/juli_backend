@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import datetime
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +30,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Track when the app started (for deployment verification)
+APP_START_TIME = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -45,9 +49,10 @@ app.include_router(api_router_v1, prefix="/api/v1")
 @app.get("/")
 def root():
     return {
-        "message": "Welcome to Juli Backend API",
+        "message": "Juli Backend API",
         "docs": "/docs",
-        "version": settings.VERSION
+        "version": settings.VERSION,
+        "deployed_at": APP_START_TIME
     }
 
 
