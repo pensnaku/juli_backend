@@ -9,6 +9,7 @@ from app.core.database import get_db
 logger = logging.getLogger(__name__)
 from app.features.auth.domain import (
     UserCreate,
+    UserUpdate,
     UserResponse,
     UserWithOnboardingStatus,
     UserLogin,
@@ -17,6 +18,9 @@ from app.features.auth.domain import (
     EmailValidationResponse,
     UserReminderResponse,
     UserReminderUpdate,
+    UserProfileUpdate,
+    UserProfileResponse,
+    UserConditionResponse,
 )
 from app.features.auth.service import AuthService
 from app.features.auth.api.dependencies import get_current_user
@@ -236,6 +240,8 @@ def test_token(current_user = Depends(get_current_user), db: Session = Depends(g
         "id": current_user.id,
         "email": current_user.email,
         "full_name": current_user.full_name,
+        "age": current_user.age,
+        "gender": current_user.gender,
         "is_active": current_user.is_active,
         "is_superuser": current_user.is_superuser,
         "is_legacy_user": current_user.is_legacy_user,
@@ -249,6 +255,201 @@ def test_token(current_user = Depends(get_current_user), db: Session = Depends(g
     }
 
     return user_dict
+
+
+@router.patch("/profile", response_model=UserProfileResponse)
+def update_user_profile(
+    update_data: UserProfileUpdate,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update the current user's profile information.
+
+    Allows updating: full_name, age, gender, ethnicity, hispanic_latino, and fields on existing conditions.
+
+    Args:
+        update_data: User profile update data (all fields optional)
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Updated user profile information
+
+    Example request body:
+    ```json
+    {
+        "full_name": "Jane Smith",
+        "age": 28,
+        "gender": "female",
+        "ethnicity": "asian",
+        "conditions": [
+            {
+                "condition_code": "73211009",
+                "diabetes_type": "type-2-diabetes",
+                "therapy_type": "pills"
+            }
+        ]
+    }
+    ```
+    """
+    from app.features.auth.repository import UserRepository, UserConditionRepository
+    from app.features.auth.domain import UserSettings
+
+    user_repo = UserRepository(db)
+    condition_repo = UserConditionRepository(db)
+    user = user_repo.get_by_id(current_user.id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # Update only provided fields
+    if update_data.full_name is not None:
+        user.full_name = update_data.full_name
+    if update_data.age is not None:
+        user.age = update_data.age
+    if update_data.gender is not None:
+        user.gender = update_data.gender
+
+    # Update ethnicity and hispanic_latino in user settings
+    if update_data.ethnicity is not None or update_data.hispanic_latino is not None:
+        if not user.settings:
+            user.settings = UserSettings(user_id=user.id)
+            db.add(user.settings)
+        if update_data.ethnicity is not None:
+            user.settings.ethnicity = update_data.ethnicity
+        if update_data.hispanic_latino is not None:
+            user.settings.hispanic_latino = update_data.hispanic_latino
+
+    # Update fields on existing conditions
+    if update_data.conditions is not None:
+        for condition_data in update_data.conditions:
+            condition = condition_repo.get_by_user_and_condition(user.id, condition_data.condition_code)
+            if condition:
+                if condition_data.diagnosed_by_physician is not None:
+                    condition.diagnosed_by_physician = condition_data.diagnosed_by_physician
+                if condition_data.duration is not None:
+                    condition.duration = condition_data.duration
+                if condition_data.physician_frequency is not None:
+                    condition.physician_frequency = condition_data.physician_frequency
+                if condition_data.diabetes_type is not None:
+                    condition.diabetes_type = condition_data.diabetes_type
+                if condition_data.therapy_type is not None:
+                    condition.therapy_type = condition_data.therapy_type
+                if condition_data.wants_glucose_reminders is not None:
+                    condition.wants_glucose_reminders = condition_data.wants_glucose_reminders
+                if condition_data.pain_type is not None:
+                    condition.pain_type = condition_data.pain_type
+
+    db.commit()
+    db.refresh(user)
+
+    return UserProfileResponse(
+        id=user.id,
+        email=user.email,
+        full_name=user.full_name,
+        age=user.age,
+        gender=user.gender,
+        ethnicity=user.settings.ethnicity if user.settings else None,
+        hispanic_latino=user.settings.hispanic_latino if user.settings else None
+    )
+
+
+@router.post("/conditions", response_model=UserConditionResponse, status_code=status.HTTP_201_CREATED)
+def create_condition(
+    condition_code: str = Query(..., description="SNOMED condition code (e.g., '73211009' for Diabetes)"),
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new condition for the current user.
+
+    Args:
+        condition_code: SNOMED code for the condition (pass as query param: ?condition_code=73211009)
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Created condition
+
+    Raises:
+        HTTPException: If condition code is invalid or condition already exists
+    """
+    from app.features.auth.repository import UserConditionRepository
+    from app.features.auth.domain.schemas import UserConditionCreate
+    from app.shared.constants import CONDITION_CODES
+
+    logger.info(f"create_condition called with condition_code: {condition_code}")
+    logger.info(f"current_user.id: {current_user.id}")
+
+    condition_repo = UserConditionRepository(db)
+
+    # Validate condition code
+    if condition_code not in CONDITION_CODES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid condition code: {condition_code}"
+        )
+
+    # Check if condition already exists
+    existing = condition_repo.get_by_user_and_condition(current_user.id, condition_code)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Condition already exists for this user"
+        )
+
+    # Create the condition
+    condition_info = CONDITION_CODES[condition_code]
+    condition_data = UserConditionCreate(
+        condition_code=condition_code,
+        condition_label=condition_info["label"],
+        condition_system=condition_info["system"],
+    )
+    condition = condition_repo.create(current_user.id, condition_data)
+
+    return condition
+
+
+@router.delete("/conditions/{condition_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_condition(
+    condition_id: int,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a condition by ID.
+
+    Args:
+        condition_id: ID of the condition to delete
+        current_user: Current authenticated user
+        db: Database session
+
+    Raises:
+        HTTPException: If condition not found or doesn't belong to user
+    """
+    from app.features.auth.repository import UserConditionRepository
+
+    condition_repo = UserConditionRepository(db)
+    condition = condition_repo.get_by_id(condition_id)
+
+    if not condition:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Condition not found"
+        )
+
+    if condition.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete this condition"
+        )
+
+    condition_repo.delete(condition)
+    return None
 
 
 @router.post("/questionnaire/answers", response_model=QuestionnaireAnswersResponse, status_code=status.HTTP_200_OK)

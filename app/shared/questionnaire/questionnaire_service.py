@@ -277,7 +277,17 @@ class QuestionnaireService:
         if mood_questionnaire:
             questionnaires.append(mood_questionnaire)
 
-        # TEST MODE: Return ALL available questionnaires
+        # Add student wellbeing questionnaire after mood if user is a student
+        if user.settings and user.settings.daily_routine == "student":
+            student_questionnaire = self._build_daily_questionnaire(
+                user_id=user_id,
+                condition_key="student_wellbeing",
+                target_date=target_date,
+            )
+            if student_questionnaire:
+                questionnaires.append(student_questionnaire)
+
+        # TEST MODE: Return ALL available questionnaires (excluding mood and student_wellbeing already added)
         if self.TEST_MODE_ALL_QUESTIONNAIRES:
             all_condition_keys = [
                 "asthma",
@@ -304,15 +314,24 @@ class QuestionnaireService:
                     questionnaires.append(questionnaire)
         else:
             # Normal mode: Only user's conditions (ordered by priority)
+            # Exclude mood and student_wellbeing as they're already added above
             if user.conditions:
                 # Use ordered_conditions to ensure questionnaires appear in priority order
-                ordered = user.ordered_conditions if hasattr(user, 'ordered_conditions') else user.conditions
+                ordered = (
+                    user.ordered_conditions
+                    if hasattr(user, "ordered_conditions")
+                    else user.conditions
+                )
                 for condition in ordered:
                     condition_code = condition.condition_code
 
                     # Get questionnaire filename for this condition
                     condition_key = DAILY_QUESTIONNAIRE_MAP.get(condition_code)
                     if not condition_key:
+                        continue
+
+                    # Skip mood, student_wellbeing, and journal as they're already added
+                    if condition_key in ["mood", "student_wellbeing", "journal"]:
                         continue
 
                     questionnaire = self._build_daily_questionnaire(
@@ -323,8 +342,19 @@ class QuestionnaireService:
                     if questionnaire:
                         questionnaires.append(questionnaire)
 
+        # Add journal questionnaire at the end (for all users)
+        journal_questionnaire = self._build_daily_questionnaire(
+            user_id=user_id,
+            condition_key="journal",
+            target_date=target_date,
+        )
+        if journal_questionnaire:
+            questionnaires.append(journal_questionnaire)
+
         # Add individual tracking questionnaire if user has active tracking topics
-        tracking_questionnaire = self._build_individual_tracking_questionnaire(user_id, target_date)
+        tracking_questionnaire = self._build_individual_tracking_questionnaire(
+            user_id, target_date
+        )
         if tracking_questionnaire:
             questionnaires.append(tracking_questionnaire)
 
@@ -430,10 +460,13 @@ class QuestionnaireService:
                 question_data["type"] = "number"
                 if topic.unit:
                     question_data["unit"] = topic.unit
-                if topic.min_value is not None:
-                    question_data["min"] = topic.min_value
-                if topic.max_value is not None:
-                    question_data["max"] = topic.max_value
+                # Add range if min or max values are specified
+                if topic.min_value is not None or topic.max_value is not None:
+                    question_data["range"] = {}
+                    if topic.min_value is not None:
+                        question_data["range"]["min"] = topic.min_value
+                    if topic.max_value is not None:
+                        question_data["range"]["max"] = topic.max_value
             elif topic.data_type == "boolean":
                 # Use 'boolean' type for yes/no questions (matches daily questionnaires)
                 question_data["type"] = "boolean"

@@ -1,0 +1,20 @@
+version: '1.0'
+questionnaire_id: daily-student-wellbeing
+title: Student Wellbeing Check-in
+description: None
+
+questions:
+  - id: energy-focus
+    text: 'Check in: Where are you at with energy and focus?'
+    type: string
+    required: true
+
+  - id: time-energy-usage
+    text: Given your current workload, did you put your time and energy in the right place between academics and self-care?
+    type: string
+    required: true
+
+  - id: homework-completion
+    text: Did you do all your homework?
+    type: boolean
+    required: true

@@ -1,0 +1,11 @@
+# journal-entry-text
+version: '1.0'
+questionnaire_id: journal
+title: Journal Entry
+description: Journal entry
+
+questions:
+  - id: journal-entry-text
+    text: Do you want to tell me a bit more about yesterday? I’ll then add this to your journal.
+    type: string
+    required: true

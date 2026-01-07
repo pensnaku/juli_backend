@@ -120,6 +120,9 @@ questions:
   - id: conditions
     text: Which condition would you like juli to help with? You may choose one or two conditions from the list below.
     type: multi_choice
+    show_if:
+      field: allow-support-for-other-condition
+      not_equals: 'no'
     validation:
       required: true
       max_selections: 2
@@ -305,40 +308,6 @@ questions:
       - value: other-pain
         label: Other pain
 
-  - id: track-additional-topics
-    text: During our daily conversation, we could ask you a few things so you can track more topics that might influence your condition (like coffee or alcohol consumption). Would you like to do that?
-    type: single_choice
-    validation:
-      required: true
-    options:
-      - value: 'yes'
-        label: 'Yes'
-      - value: 'no'
-        label: 'No'
-
-  - id: tracking-symptoms
-    text: What would you like juli to track?
-    help_text: You can also add your own later
-    type: multi_choice
-    validation:
-      required: true
-    show_if:
-      field: track-additional-topics
-      equals: 'yes'
-    allow_none: true
-    none_option: nothing-from-the-list
-    options:
-      - value: coffee-consumption
-        label: 'Coffee consumption'
-      - value: alcohol-consumption
-        label: 'Alcohol consumption'
-      - value: smoking
-        label: 'Smoking'
-      - value: hours-spent-outside
-        label: 'Hours spent outside'
-      - value: nothing-from-the-list
-        label: 'Nothing from this list'
-
   # Daily check-in preferences
   - id: notification-time
     text: Our Conversation
@@ -383,3 +352,37 @@ questions:
     show_if:
       field: medication-reminder
       equals: 'yes'
+
+  - id: track-additional-topics
+    text: During our daily conversation, we could ask you a few things so you can track more topics that might influence your condition (like coffee or alcohol consumption). Would you like to do that?
+    type: single_choice
+    validation:
+      required: true
+    options:
+      - value: 'yes'
+        label: 'Yes'
+      - value: 'no'
+        label: 'No'
+
+  - id: tracking-symptoms
+    text: What would you like juli to track?
+    help_text: You can also add your own later
+    type: multi_choice
+    validation:
+      required: true
+    show_if:
+      field: track-additional-topics
+      equals: 'yes'
+    allow_none: true
+    none_option: nothing-from-the-list
+    options:
+      - value: coffee-consumption
+        label: 'Coffee consumption'
+      - value: alcohol-consumption
+        label: 'Alcohol consumption'
+      - value: smoking
+        label: 'Smoking'
+      - value: hours-spent-outside
+        label: 'Hours spent outside'
+      - value: nothing-from-the-list
+        label: 'Nothing from this list'

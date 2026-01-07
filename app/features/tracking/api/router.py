@@ -1,5 +1,6 @@
 """API router for tracking topics feature"""
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -12,6 +13,13 @@ from app.features.auth.domain.schemas import (
     TrackingTopicListResponse,
 )
 from app.features.tracking.service import TrackingTopicService
+from app.features.tracking.domain.schemas import (
+    IndividualTrackingDataResponse,
+    IndividualTrackingTopicData,
+    TrackingObservation,
+)
+from app.features.auth.repository import UserTrackingTopicRepository
+from app.features.observations.repository import ObservationRepository
 
 
 router = APIRouter()
@@ -128,3 +136,89 @@ def delete_tracking_topic(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
+
+
+@router.get("/data", response_model=IndividualTrackingDataResponse)
+def get_individual_tracking_data(
+    start_date: datetime = Query(..., description="Start of date range (inclusive)"),
+    end_date: datetime = Query(..., description="End of date range (inclusive)"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all individual tracking topics with their observations for a date range.
+
+    Returns tracking topic metadata (label, question, unit, etc.) along with
+    all observations for each topic in the specified date range.
+
+    Observations are stored with code='individual-tracking' and variant=topic_code.
+    """
+    tracking_repo = UserTrackingTopicRepository(db)
+    obs_repo = ObservationRepository(db)
+
+    # Get all active tracking topics for the user
+    topics = tracking_repo.get_by_user_id(current_user.id, active_only=True)
+
+    if not topics:
+        return IndividualTrackingDataResponse(topics=[], count=0)
+
+    # Extract topic codes (variants for the observations)
+    topic_codes = [topic.topic_code for topic in topics]
+
+    # Query all individual-tracking observations with these variants
+    observations = obs_repo.get_by_codes_and_date_range(
+        user_id=current_user.id,
+        codes=["individual-tracking"],
+        start_date=start_date,
+        end_date=end_date,
+        variants=topic_codes,
+        limit_per_code=None,
+    )
+
+    # Group observations by variant (topic_code)
+    obs_by_topic = {}
+    for obs in observations:
+        variant = obs.variant
+        if variant not in obs_by_topic:
+            obs_by_topic[variant] = []
+        obs_by_topic[variant].append(
+            TrackingObservation(
+                id=obs.id,
+                code=obs.code,
+                variant=obs.variant,
+                value_integer=obs.value_integer,
+                value_decimal=obs.value_decimal,
+                value_string=obs.value_string,
+                value_boolean=obs.value_boolean,
+                effective_at=obs.effective_at,
+                unit=obs.unit,
+                data_source=obs.data_source,
+            )
+        )
+
+    # Build response with topic metadata and observations
+    total_count = 0
+    topic_responses = []
+
+    for topic in topics:
+        topic_obs = obs_by_topic.get(topic.topic_code, [])
+        total_count += len(topic_obs)
+
+        topic_responses.append(
+            IndividualTrackingTopicData(
+                topic_code=topic.topic_code,
+                topic_label=topic.topic_label,
+                question=topic.question,
+                unit=topic.unit,
+                emoji=topic.emoji,
+                data_type=topic.data_type,
+                min_value=topic.min_value,
+                max_value=topic.max_value,
+                observations=topic_obs,
+            )
+        )
+
+    return IndividualTrackingDataResponse(
+        topics=topic_responses,
+        count=total_count,
+    )

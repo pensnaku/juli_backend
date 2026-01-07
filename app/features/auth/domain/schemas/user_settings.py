@@ -11,6 +11,8 @@ class UserSettingsBase(BaseModel):
     timezone: Optional[str] = None
     phone_number: Optional[str] = None
     language_preference: str = "en"
+    ethnicity: Optional[str] = None
+    hispanic_latino: Optional[str] = None
 
 
 class UserSettingsCreate(UserSettingsBase):

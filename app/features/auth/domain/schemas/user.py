@@ -48,6 +48,8 @@ class UserResponse(UserBase):
     """Schema for user response (excludes password)"""
     id: int
     full_name: Optional[str] = None  # Populated during onboarding
+    age: Optional[int] = None
+    gender: Optional[str] = None
     is_active: bool
     is_superuser: bool
     is_legacy_user: bool

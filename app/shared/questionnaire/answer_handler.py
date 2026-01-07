@@ -2,6 +2,7 @@
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import time as time_type, date, datetime, timezone
 from sqlalchemy.orm import Session
+import logging
 
 from app.features.auth.repository import (
     UserRepository,
@@ -15,12 +16,15 @@ from app.features.auth.domain.schemas import (
     UserReminderCreate,
 )
 from app.features.observations.repository import ObservationRepository
+from app.features.journal.repository import JournalEntryRepository
 from app.shared.constants import (
     CONDITION_CODES,
     TRACKING_TOPICS,
     DAILY_QUESTIONNAIRE_CONDITION_MAP,
 )
 from app.shared.questionnaire.repositories import QuestionnaireCompletionRepository
+
+logger = logging.getLogger(__name__)
 
 
 class QuestionnaireAnswerHandler:
@@ -37,6 +41,7 @@ class QuestionnaireAnswerHandler:
         self.tracking_topic_repo = UserTrackingTopicRepository(db)
         self.completion_repo = QuestionnaireCompletionRepository(db)
         self.observation_repo = ObservationRepository(db)
+        self.journal_repo = JournalEntryRepository(db)
 
     def save_answers(
         self, user_id: int, questionnaire_id: str, answers: Dict[str, Any], mark_completed: bool = False
@@ -129,7 +134,30 @@ class QuestionnaireAnswerHandler:
             if answer is None:
                 user.settings.allow_medical_support = None
             else:
-                user.settings.allow_medical_support = self._parse_boolean(answer)
+                logger.info(f"Processing allow-support-for-other-condition for user {user.id}, answer: {answer}")
+                is_yes = self._parse_boolean(answer)
+                user.settings.allow_medical_support = is_yes
+                logger.info(f"Parsed as is_yes={is_yes}")
+
+                # Handle condition assignment based on answer
+                if not is_yes:  # Answer is "no"
+                    # Set condition to wellbeing
+                    logger.info(f"Setting wellbeing condition for user {user.id}")
+                    try:
+                        self._handle_conditions(user.id, ["365275006"])
+                        logger.info(f"Successfully set wellbeing condition for user {user.id}")
+                    except Exception as e:
+                        logger.error(f"Error setting wellbeing condition for user {user.id}: {str(e)}", exc_info=True)
+                        raise
+                else:  # Answer is "yes"
+                    # Remove/reset all conditions
+                    logger.info(f"Clearing all conditions for user {user.id}")
+                    try:
+                        self._handle_conditions(user.id, [])
+                        logger.info(f"Successfully cleared conditions for user {user.id}")
+                    except Exception as e:
+                        logger.error(f"Error clearing conditions for user {user.id}: {str(e)}", exc_info=True)
+                        raise
 
         # Conditions (creates/updates condition records)
         elif question_id == "conditions":
@@ -203,6 +231,12 @@ class QuestionnaireAnswerHandler:
             # This is read-only in the questionnaire - skip processing
             pass
 
+        # Journal entry
+        elif question_id == "journal-entry-text":
+            if answer and isinstance(answer, str) and answer.strip():
+                # Create journal entry instead of observation
+                self.journal_repo.create(user.id, answer.strip())
+
         # Tracking questions
         elif question_id == "track-additional-topics":
             if answer is None:
@@ -218,23 +252,36 @@ class QuestionnaireAnswerHandler:
 
         If condition_codes is None or empty, deletes all user conditions.
         """
+        logger.info(f"_handle_conditions called for user {user_id} with condition_codes: {condition_codes}")
+
         if condition_codes is None or (isinstance(condition_codes, list) and len(condition_codes) == 0):
-            # Clear all conditions
-            self.condition_repo.delete_all_by_user_id(user_id)
+            # Clear all conditions - get all user conditions and delete them
+            logger.info(f"Clearing all conditions for user {user_id}")
+            existing_conditions = self.condition_repo.get_by_user_id(user_id)
+            for condition in existing_conditions:
+                logger.info(f"Deleting condition {condition.condition_code} for user {user_id}")
+                self.condition_repo.delete(condition)
+            logger.info(f"Successfully deleted {len(existing_conditions)} conditions for user {user_id}")
             return
 
         if not isinstance(condition_codes, list):
             condition_codes = [condition_codes]
 
         for code in condition_codes:
+            logger.info(f"Processing condition code: {code}")
             if code in CONDITION_CODES:
                 condition_info = CONDITION_CODES[code]
+                logger.info(f"Found condition info for {code}: {condition_info}")
                 condition_data = UserConditionCreate(
                     condition_code=code,
                     condition_label=condition_info["label"],
                     condition_system=condition_info["system"],
                 )
+                logger.info(f"Creating/updating condition for user {user_id}: {condition_data}")
                 self.condition_repo.upsert(user_id, condition_data)
+                logger.info(f"Successfully upserted condition {code} for user {user_id}")
+            else:
+                logger.warning(f"Condition code {code} not found in CONDITION_CODES")
 
     def _update_condition_field(
         self, user_id: int, condition_code: str, field: str, value: Any
@@ -380,6 +427,9 @@ class QuestionnaireAnswerHandler:
         """Parse various boolean representations"""
         if isinstance(value, bool):
             return value
+        if isinstance(value, list):
+            # Handle array answers like ["yes"] or ["no"]
+            value = value[0] if value else ""
         if isinstance(value, str):
             return value.lower() in ("true", "yes", "1", "y")
         return bool(value)

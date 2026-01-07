@@ -18,6 +18,8 @@ from app.features.auth.domain.schemas import (
     UserWithOnboardingStatus,
     EmailValidationRequest,
     EmailValidationResponse,
+    UserProfileUpdate,
+    UserProfileResponse,
     UserSettingsBase,
     UserSettingsCreate,
     UserSettingsUpdate,
@@ -53,6 +55,9 @@ __all__ = [
     "UserWithOnboardingStatus",
     "EmailValidationRequest",
     "EmailValidationResponse",
+    # User profile schemas
+    "UserProfileUpdate",
+    "UserProfileResponse",
     # User settings schemas
     "UserSettingsBase",
     "UserSettingsCreate",

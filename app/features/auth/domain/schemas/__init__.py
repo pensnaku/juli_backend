@@ -9,6 +9,10 @@ from app.features.auth.domain.schemas.user import (
     EmailValidationRequest,
     EmailValidationResponse,
 )
+from app.features.auth.domain.schemas.user_profile import (
+    UserProfileUpdate,
+    UserProfileResponse,
+)
 from app.features.auth.domain.schemas.user_settings import (
     UserSettingsBase,
     UserSettingsCreate,
@@ -54,6 +58,9 @@ __all__ = [
     "UserWithOnboardingStatus",
     "EmailValidationRequest",
     "EmailValidationResponse",
+    # User profile schemas
+    "UserProfileUpdate",
+    "UserProfileResponse",
     # User settings schemas
     "UserSettingsBase",
     "UserSettingsCreate",

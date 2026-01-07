@@ -3,6 +3,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.features.auth.domain.entities import UserTrackingTopic
+from app.shared.constants import TRACKING_TOPICS
 
 
 class UserTrackingTopicRepository:
@@ -135,7 +136,24 @@ class UserTrackingTopicRepository:
         # Create/reactivate topics from the list
         result_topics = []
         for topic_code, topic_label in topics:
-            topic = self.upsert(user_id, topic_code, topic_label)
+            # Get default metadata from TRACKING_TOPICS if this is a default topic
+            topic_info = TRACKING_TOPICS.get(topic_code)
+            if topic_info:
+                # Populate metadata from default tracking topics
+                topic = self.upsert(
+                    user_id=user_id,
+                    topic_code=topic_code,
+                    topic_label=topic_label,
+                    question=topic_info["question"],
+                    data_type=topic_info["data_type"],
+                    unit=topic_info["unit"],
+                    emoji=topic_info["emoji"],
+                    min_value=topic_info["min"],
+                    max_value=topic_info["max"],
+                )
+            else:
+                # Custom topic - just use topic_code and topic_label
+                topic = self.upsert(user_id, topic_code, topic_label)
             result_topics.append(topic)
 
         self.db.flush()
