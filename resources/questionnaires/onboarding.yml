@@ -41,6 +41,46 @@ questions:
       - value: non-binary
         label: Non-binary
 
+  - id: ethnicity
+    text: Please tell us your ethnicity / race
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      and:
+        - setting: ask_ethnicity
+          equals: true
+    options:
+      - value: white
+        label: White
+      - value: black-or-african-american
+        label: Black or African American
+      - value: american-indian-or-alaska-native
+        label: American Indian or Alaska Native
+      - value: asian
+        label: Asian
+      - value: native-hawaiian-or-other-pacific-islander
+        label: Native Hawaiian or Other Pacific Islander
+      - value: prefer-not-to-answer
+        label: Prefer not to answer
+
+  - id: ethnicity-hispanic-latino
+    text: Are you Hispanic / Latino?
+    type: single_choice
+    validation:
+      required: true
+    show_if:
+      and:
+        - setting: ask_ethnicity
+          equals: true
+    options:
+      - value: 'yes'
+        label: 'Yes'
+      - value: 'no'
+        label: 'No'
+      - value: prefer-not-to-answer
+        label: Prefer not to answer
+
   - id: daily-routine-or-main-activity
     text: How would you describe your current daily routine or main activity?
     type: single_choice
@@ -69,60 +109,23 @@ questions:
     validation:
       required: true
     show_if:
-      field: daily-routine-or-main-activity
-      equals: student
+      and:
+        - field: daily-routine-or-main-activity
+          equals: student
     options:
       - value: 'yes'
-        label: YES, PLEASE
+        label: Yes please
       - value: 'no'
-        label: NO THANK YOU
-
-  # Ethnicity (conditional based on settings)
-  - id: ethnicity
-    text: Please tell us your ethnicity / race
-    type: single_choice
-    validation:
-      required: true
-    show_if:
-      setting: ask_ethnicity
-      equals: true
-    options:
-      - value: white
-        label: White
-      - value: black-or-african-american
-        label: Black or African American
-      - value: american-indian-or-alaska-native
-        label: American Indian or Alaska Native
-      - value: asian
-        label: Asian
-      - value: native-hawaiian-or-other-pacific-islander
-        label: Native Hawaiian or Other Pacific Islander
-      - value: prefer-not-to-answer
-        label: Prefer not to answer
-
-  - id: ethnicity-hispanic-latino
-    text: Are you Hispanic / Latino?
-    type: single_choice
-    validation:
-      required: true
-    show_if:
-      setting: ask_ethnicity
-      equals: true
-    options:
-      - value: 'yes'
-        label: 'Yes'
-      - value: 'no'
-        label: 'No'
-      - value: prefer-not-to-answer
-        label: Prefer not to answer
+        label: No thank you
 
   # Health Conditions
   - id: conditions
     text: Which condition would you like juli to help with? You may choose one or two conditions from the list below.
     type: multi_choice
     show_if:
-      field: allow-support-for-other-condition
-      not_equals: 'no'
+      and:
+        - field: allow-support-for-other-condition
+          not_equals: 'no'
     validation:
       required: true
       max_selections: 2
@@ -170,8 +173,9 @@ questions:
     validation:
       required: true
     show_if:
-      field: conditions
-      not_empty: true
+      and:
+        - field: conditions
+          not_empty: true
     options:
       - value: 'yes'
         label: 'Yes'
@@ -184,8 +188,9 @@ questions:
     validation:
       required: true
     show_if:
-      field: conditions
-      not_empty: true
+      and:
+        - field: conditions
+          not_empty: true
     options:
       - value: less-than-a-month
         label: '< 1 month'
@@ -206,8 +211,9 @@ questions:
     validation:
       required: true
     show_if:
-      field: comorbidity-condition-diagnosed-by-physician
-      equals: 'yes'
+      and:
+        - field: comorbidity-condition-diagnosed-by-physician
+          equals: 'yes'
     options:
       - value: regularly
         label: 'Yes, regularly'
@@ -225,8 +231,9 @@ questions:
     validation:
       required: true
     show_if:
-      field: conditions
-      contains: '73211009'
+      and:
+        - field: conditions
+          contains: '73211009'
     options:
       - value: type-1-diabetes
         label: Type 1
@@ -246,8 +253,9 @@ questions:
       required: true
       max_selections: 5
     show_if:
-      field: conditions
-      contains: '73211009'
+      and:
+        - field: conditions
+          contains: '73211009'
     allow_none: true
     none_option:
       value: no-medication
@@ -268,8 +276,9 @@ questions:
     validation:
       required: true
     show_if:
-      field: conditions
-      contains: '73211009'
+      and:
+        - field: conditions
+          contains: '73211009'
     options:
       - value: yes-remind-me
         label: 'Yes'
@@ -284,8 +293,9 @@ questions:
       min_times: 1
       max_times: 5
     show_if:
-      field: reminder-to-check-blood-glucose
-      equals: yes-remind-me
+      and:
+        - field: reminder-to-check-blood-glucose
+          equals: yes-remind-me
 
   # Chronic pain-specific
   - id: how-would-you-describe-your-pain
@@ -294,8 +304,9 @@ questions:
     validation:
       required: true
     show_if:
-      field: conditions
-      contains: '82423001'
+      and:
+        - field: conditions
+          contains: '82423001'
     options:
       - value: musculoskeletal-pain
         label: Musculoskeletal pain (including pain from injury, lower back pain)
@@ -322,8 +333,9 @@ questions:
     validation:
       required: true
     show_if:
-      field: comorbidity-condition-diagnosed-by-physician
-      equals: 'yes'
+      and:
+        - field: comorbidity-condition-diagnosed-by-physician
+          equals: 'yes'
     options:
       - value: 'yes'
         label: 'Yes'
@@ -336,8 +348,9 @@ questions:
     validation:
       required: true
     show_if:
-      field: do-you-take-medication
-      equals: 'yes'
+      and:
+        - field: do-you-take-medication
+          equals: 'yes'
     options:
       - value: 'yes'
         label: 'Yes'
@@ -350,8 +363,9 @@ questions:
     validation:
       required: true
     show_if:
-      field: medication-reminder
-      equals: 'yes'
+      and:
+        - field: medication-reminder
+          equals: 'yes'
 
   - id: track-additional-topics
     text: During our daily conversation, we could ask you a few things so you can track more topics that might influence your condition (like coffee or alcohol consumption). Would you like to do that?
@@ -364,6 +378,7 @@ questions:
       - value: 'no'
         label: 'No'
 
+  # Tracking symptoms for non-students
   - id: tracking-symptoms
     text: What would you like juli to track?
     help_text: You can also add your own later
@@ -371,8 +386,11 @@ questions:
     validation:
       required: true
     show_if:
-      field: track-additional-topics
-      equals: 'yes'
+      and:
+        - field: track-additional-topics
+          equals: 'yes'
+        - field: daily-routine-or-main-activity
+          not_equals: student
     allow_none: true
     none_option: nothing-from-the-list
     options:
@@ -384,5 +402,30 @@ questions:
         label: 'Smoking'
       - value: hours-spent-outside
         label: 'Hours spent outside'
+      - value: nothing-from-the-list
+        label: 'Nothing from this list'
+
+  # Tracking symptoms for students
+  - id: tracking-symptoms-student
+    text: What would you like juli to track?
+    help_text: You can also add your own later
+    type: multi_choice
+    validation:
+      required: true
+    show_if:
+      and:
+        - field: track-additional-topics
+          equals: 'yes'
+        - field: daily-routine-or-main-activity
+          equals: student
+    allow_none: true
+    none_option: nothing-from-the-list
+    options:
+      - value: coffee-consumption
+        label: 'Caffeine consumption'
+      - value: class-attendance
+        label: 'Class Attendance'
+      - value: social-contact
+        label: 'Social contact'
       - value: nothing-from-the-list
         label: 'Nothing from this list'

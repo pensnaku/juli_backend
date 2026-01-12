@@ -127,6 +127,11 @@ class EnvironmentVariants:
     POLLEN_WEED = "pollen-weed"
     POLLEN_TOTAL = "pollen-total"
 
+    # Pollen Risk
+    POLLEN_RISK_GRASS = "pollen-risk-grass"
+    POLLEN_RISK_TREE = "pollen-risk-tree"
+    POLLEN_RISK_WEED = "pollen-risk-weed"
+
     # Weather
     TEMPERATURE = "temperature"
     HUMIDITY = "humidity"

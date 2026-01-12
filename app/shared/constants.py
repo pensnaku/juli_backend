@@ -79,6 +79,12 @@ QUESTIONNAIRE_IDS = {
     "BIWEEKLY": "biweekly",
 }
 
+# Special condition codes
+WELLBEING_CONDITION_CODE = "365275006"
+
+# Daily routine values
+DAILY_ROUTINE_STUDENT = "student"
+
 # Daily questionnaire filename mapping (condition_code -> filename)
 # Maps SNOMED condition codes to daily questionnaire YAML filenames
 DAILY_QUESTIONNAIRE_MAP: Dict[str, str] = {
@@ -139,7 +145,24 @@ TRACKING_TOPICS: Dict[str, Dict[str, Any]] = {
         "min": 0,
         "max": 5,
     },
+    "class-attendance": {
+        "label": "Class Attendance",
+        "question": "Did you attend your classes yesterday?",
+        "data_type": "boolean",
+        "emoji": "📚",
+    },
+    "social-contact": {
+        "label": "Social Contact",
+        "question": "Did you have any social interactions yesterday?",
+        "data_type": "boolean",
+        "emoji": "👥",
+    },
 }
 
 # Backwards compatibility alias
 TRACKING_TOPIC_LABELS = {code: info["label"] for code, info in TRACKING_TOPICS.items()}
+
+# Tracking topics by user type (for filtering defaults)
+# These match the options in onboarding.yml tracking-symptoms and tracking-symptoms-student
+STUDENT_TRACKING_TOPICS = {"coffee-consumption", "class-attendance", "social-contact"}
+NON_STUDENT_TRACKING_TOPICS = {"coffee-consumption", "smoking", "alcohol-consumption", "hours-spent-outside"}

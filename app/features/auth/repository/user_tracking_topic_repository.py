@@ -140,16 +140,17 @@ class UserTrackingTopicRepository:
             topic_info = TRACKING_TOPICS.get(topic_code)
             if topic_info:
                 # Populate metadata from default tracking topics
+                # Use .get() for optional fields (unit, min, max) as boolean topics don't have them
                 topic = self.upsert(
                     user_id=user_id,
                     topic_code=topic_code,
                     topic_label=topic_label,
                     question=topic_info["question"],
                     data_type=topic_info["data_type"],
-                    unit=topic_info["unit"],
-                    emoji=topic_info["emoji"],
-                    min_value=topic_info["min"],
-                    max_value=topic_info["max"],
+                    unit=topic_info.get("unit"),
+                    emoji=topic_info.get("emoji"),
+                    min_value=topic_info.get("min"),
+                    max_value=topic_info.get("max"),
                 )
             else:
                 # Custom topic - just use topic_code and topic_label

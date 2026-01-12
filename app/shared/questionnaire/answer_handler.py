@@ -244,7 +244,7 @@ class QuestionnaireAnswerHandler:
             else:
                 value = answer[0] if isinstance(answer, list) and answer else answer
                 user.settings.wants_additional_tracking = self._parse_boolean(value)
-        elif question_id == "tracking-symptoms":
+        elif question_id in ("tracking-symptoms", "tracking-symptoms-student"):
             self._handle_tracking_topics(user.id, answer)
 
     def _handle_conditions(self, user_id: int, condition_codes: List[str]) -> None:
@@ -489,7 +489,12 @@ class QuestionnaireAnswerHandler:
         if question_id == "journal-entry-text":
             if answer and isinstance(answer, str) and answer.strip():
                 logger.info(f"Saving journal entry for user {user_id}")
-                self.journal_repo.create(user_id, answer.strip())
+                self.journal_repo.create(
+                    user_id,
+                    answer.strip(),
+                    source="questionnaire",
+                    questionnaire_completion_id=completion.id if completion else None,
+                )
         # Special handling for individual tracking questionnaire
         # Store with code="individual-tracking" and variant=topic_code
         elif questionnaire_id == "daily-individual-tracking":

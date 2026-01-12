@@ -8,6 +8,7 @@ from app.features.environment.domain.schemas import (
     WeatherData,
     Location,
     WeatherResponse,
+    HistoricalWeatherResponse,
 )
 from app.features.environment.exceptions import WeatherException
 
@@ -140,6 +141,89 @@ class WeatherService:
             windDirection=wind.get("deg", 0),
             sunrise=datetime.fromtimestamp(sys.get("sunrise", 0), tz=timezone.utc),
             sunset=datetime.fromtimestamp(sys.get("sunset", 0), tz=timezone.utc),
+        )
+
+    async def get_historical_weather(self, lat: float, lon: float, date: datetime) -> HistoricalWeatherResponse:
+        """
+        Fetch historical weather for a specific date using One Call Time Machine API.
+
+        Args:
+            lat: Latitude
+            lon: Longitude
+            date: The datetime to fetch historical weather for
+
+        Returns:
+            HistoricalWeatherResponse with current conditions and hourly data
+
+        Raises:
+            WeatherException: If API call fails
+        """
+        unix_timestamp = int(date.timestamp())
+        url = f"{OPENWEATHERMAP_BASE_URL}/onecall/timemachine"
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "dt": unix_timestamp,
+            "appid": self.api_key,
+            "units": "metric",
+        }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            try:
+                response = await client.get(url, params=params)
+            except httpx.HTTPError as e:
+                logger.error(f"Historical weather API error: {e}")
+                raise WeatherException(f"Failed to fetch historical weather data: {e}")
+
+        if response.status_code != 200:
+            logger.error(f"OpenWeatherMap historical weather error: {response.text}")
+            raise WeatherException(
+                f"OpenWeatherMap historical API error: {response.status_code}",
+                status=response.status_code,
+            )
+
+        data = response.json()
+
+        # Historical API uses different structure: data["current"] instead of data["main"]
+        # Access fields directly - will raise KeyError if data is incomplete
+        current = data["current"]
+        weather_info = current["weather"][0]
+
+        current_weather = WeatherData(
+            datetime=datetime.fromtimestamp(current["dt"], tz=timezone.utc),
+            status=weather_info["main"],
+            description=weather_info["description"],
+            icon=weather_info["icon"],
+            temperature=current["temp"],
+            atmosphericPressure=current["pressure"],
+            humidity=current["humidity"],
+            windStrength=current["wind_speed"],
+            windDirection=current["wind_deg"],
+            sunrise=datetime.fromtimestamp(current["sunrise"], tz=timezone.utc),
+            sunset=datetime.fromtimestamp(current["sunset"], tz=timezone.utc),
+        )
+
+        hourly_data = data["hourly"]
+        hourly_weather = [
+            WeatherData(
+                datetime=datetime.fromtimestamp(hourly["dt"], tz=timezone.utc),
+                status=hourly["weather"][0]["main"],
+                description=hourly["weather"][0]["description"],
+                icon=hourly["weather"][0]["icon"],
+                temperature=hourly["temp"],
+                atmosphericPressure=hourly["pressure"],
+                humidity=hourly["humidity"],
+                windStrength=hourly["wind_speed"],
+                windDirection=hourly["wind_deg"],
+                sunrise=datetime.fromtimestamp(current["sunrise"], tz=timezone.utc),
+                sunset=datetime.fromtimestamp(current["sunset"], tz=timezone.utc),
+            )
+            for hourly in hourly_data
+        ]
+
+        return HistoricalWeatherResponse(
+            current=current_weather,
+            hourly=hourly_weather,
         )
 
     def _parse_forecast_item(

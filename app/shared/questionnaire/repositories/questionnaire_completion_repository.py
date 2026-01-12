@@ -267,3 +267,38 @@ class QuestionnaireCompletionRepository:
         self.db.commit()
         self.db.refresh(completion)
         return completion
+
+    def get_all_for_date(
+        self, user_id: int, completion_date: date
+    ) -> List[QuestionnaireCompletion]:
+        """
+        Get all questionnaire completions for a user on a specific date.
+
+        Args:
+            user_id: User ID
+            completion_date: The date to query
+
+        Returns:
+            List of completion records for that date
+        """
+        return self.db.query(QuestionnaireCompletion).filter(
+            QuestionnaireCompletion.user_id == user_id,
+            QuestionnaireCompletion.completion_date == completion_date
+        ).all()
+
+    def delete_all_for_date(self, user_id: int, completion_date: date) -> int:
+        """
+        Delete all questionnaire completions for a user on a specific date.
+
+        Args:
+            user_id: User ID
+            completion_date: The date to delete completions for
+
+        Returns:
+            Number of records deleted
+        """
+        count = self.db.query(QuestionnaireCompletion).filter(
+            QuestionnaireCompletion.user_id == user_id,
+            QuestionnaireCompletion.completion_date == completion_date
+        ).delete(synchronize_session=False)
+        return count

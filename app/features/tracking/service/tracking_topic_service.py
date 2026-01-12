@@ -11,7 +11,11 @@ from app.features.auth.domain.schemas import (
     TrackingTopicResponse,
     TrackingTopicListResponse,
 )
-from app.shared.constants import TRACKING_TOPICS
+from app.shared.constants import (
+    TRACKING_TOPICS,
+    STUDENT_TRACKING_TOPICS,
+    NON_STUDENT_TRACKING_TOPICS,
+)
 
 
 def generate_topic_code(label: str, length: int = 6) -> str:
@@ -52,11 +56,16 @@ class TrackingTopicService:
         self.db = db
         self.repo = UserTrackingTopicRepository(db)
 
-    def get_all_topics(self, user_id: int) -> TrackingTopicListResponse:
+    def get_all_topics(self, user_id: int, is_student: bool = False) -> TrackingTopicListResponse:
         """
         Get all tracking topics for a user.
-        Default topics are always included first, followed by any custom user topics.
+        Default topics are filtered based on user type (student vs non-student),
+        followed by any custom user topics.
         No duplicates - if a default topic is activated, it only appears once.
+
+        Args:
+            user_id: User ID
+            is_student: Whether the user is a student (affects which defaults are shown)
         """
         # Get user's activated topics from database
         user_topics = self.repo.get_by_user_id(user_id, active_only=False)
@@ -64,8 +73,15 @@ class TrackingTopicService:
 
         topics: List[TrackingTopicResponse] = []
 
-        # Add default topics first (always included)
+        # Determine which default topics to show based on user type
+        default_topic_codes = STUDENT_TRACKING_TOPICS if is_student else NON_STUDENT_TRACKING_TOPICS
+
+        # Add default topics first (filtered by user type)
         for code, info in TRACKING_TOPICS.items():
+            # Only include defaults relevant to this user type
+            if code not in default_topic_codes:
+                continue
+
             user_topic = user_topic_codes.get(code)
             is_active = user_topic.is_active if user_topic else False
 
@@ -74,10 +90,10 @@ class TrackingTopicService:
                 label=info["label"],
                 question=info["question"],
                 data_type=info["data_type"],
-                unit=info["unit"],
-                emoji=info["emoji"],
-                min=info["min"],
-                max=info["max"],
+                unit=info.get("unit"),
+                emoji=info.get("emoji"),
+                min=info.get("min"),
+                max=info.get("max"),
                 is_active=is_active,
                 is_default=True,
             ))

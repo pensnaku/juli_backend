@@ -20,6 +20,7 @@ from app.features.tracking.domain.schemas import (
 )
 from app.features.auth.repository import UserTrackingTopicRepository
 from app.features.observations.repository import ObservationRepository
+from app.shared.constants import DAILY_ROUTINE_STUDENT
 
 
 router = APIRouter()
@@ -32,10 +33,15 @@ def get_tracking_topics(
 ):
     """
     Get all tracking topics for the current user.
-    Default topics are always included first with their activation status.
+    Default topics are filtered based on user type (student vs non-student),
+    followed by any custom user topics with their activation status.
     """
     service = TrackingTopicService(db)
-    return service.get_all_topics(current_user.id)
+    is_student = (
+        current_user.settings
+        and current_user.settings.daily_routine == DAILY_ROUTINE_STUDENT
+    )
+    return service.get_all_topics(current_user.id, is_student=is_student)
 
 
 @router.post("", response_model=TrackingTopicResponse, status_code=status.HTTP_201_CREATED)

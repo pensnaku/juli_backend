@@ -6,8 +6,10 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.features.auth.api.dependencies import get_current_user
+from app.features.journal.repository import JournalEntryRepository
 from app.shared.questionnaire.questionnaire_service import QuestionnaireService
 from app.shared.questionnaire.answer_handler import QuestionnaireAnswerHandler
+from app.shared.questionnaire.repositories import QuestionnaireCompletionRepository
 from app.shared.questionnaire.schemas import (
     DailyAnswerRequest,
     DailyAnswerResponse,
@@ -204,4 +206,89 @@ def get_questionnaire_by_id(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching questionnaire: {str(e)}"
+        )
+
+
+@router.delete("/daily/clear")
+def clear_daily_questionnaire_data(
+    target_date: Optional[str] = Query(
+        None,
+        alias="date",
+        description="Date to clear daily questionnaire data for (YYYY-MM-DD). Defaults to today.",
+        example="2026-01-12"
+    ),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Clear all daily questionnaire data for the authenticated user for a specific date.
+
+    This endpoint deletes:
+    - All questionnaire completion records for the date
+    - All observations linked to those completions
+    - All journal entries linked to those completions
+
+    Useful for testing daily questionnaires multiple times in a day.
+
+    Args:
+        target_date: Optional date (YYYY-MM-DD). Defaults to today if not provided.
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Summary of deleted records
+    """
+    try:
+        # Parse target_date if provided, otherwise use today
+        parsed_date = date.today()
+        if target_date:
+            try:
+                parsed_date = datetime.strptime(target_date, "%Y-%m-%d").date()
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid date format. Use YYYY-MM-DD."
+                )
+
+        completion_repo = QuestionnaireCompletionRepository(db)
+        journal_repo = JournalEntryRepository(db)
+
+        # Get all completions for the date to get their IDs
+        completions = completion_repo.get_all_for_date(current_user.id, parsed_date)
+        completion_ids = [c.id for c in completions]
+
+        # Delete observations linked to these completions
+        observations_deleted = 0
+        if completion_ids:
+            from app.features.observations.domain.entities import Observation
+            observations_deleted = db.query(Observation).filter(
+                Observation.questionnaire_completion_id.in_(completion_ids)
+            ).delete(synchronize_session=False)
+
+        # Delete journal entries linked to these completions
+        journal_entries_deleted = journal_repo.delete_by_questionnaire_completion_ids(completion_ids)
+
+        # Delete the completion records
+        completions_deleted = completion_repo.delete_all_for_date(current_user.id, parsed_date)
+
+        db.commit()
+
+        return {
+            "status": "ok",
+            "date": parsed_date.isoformat(),
+            "deleted": {
+                "questionnaire_completions": completions_deleted,
+                "observations": observations_deleted,
+                "journal_entries": journal_entries_deleted,
+            },
+            "message": f"Cleared daily questionnaire data for {parsed_date.isoformat()}"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error clearing questionnaire data: {str(e)}"
         )

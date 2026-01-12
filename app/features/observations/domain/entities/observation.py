@@ -39,6 +39,11 @@ class Observation(Base):
     data_source = Column(String(50), nullable=True)  # e.g., 'manual', 'apple-health', 'questionnaire'
     unit = Column(String(20), nullable=True)  # e.g., 'minutes', 'bpm', 'steps'
 
+    # Weather-specific fields (optional, only used for environment observations)
+    icon = Column(String(20), nullable=True)  # Weather icon code from API
+    status = Column(String(50), nullable=True)  # Weather condition status (e.g., 'clear', 'clouds')
+    description = Column(String(200), nullable=True)  # Weather description (e.g., 'clear sky')
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

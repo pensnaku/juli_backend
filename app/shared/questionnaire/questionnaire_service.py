@@ -13,6 +13,7 @@ from app.shared.questionnaire.repositories import QuestionnaireCompletionReposit
 from app.shared.constants import (
     QUESTIONNAIRE_IDS,
     DAILY_QUESTIONNAIRE_MAP,
+    DAILY_ROUTINE_STUDENT,
 )
 
 
@@ -278,7 +279,7 @@ class QuestionnaireService:
             questionnaires.append(mood_questionnaire)
 
         # Add student wellbeing questionnaire after mood if user is a student
-        if user.settings and user.settings.daily_routine == "student":
+        if user.settings and user.settings.daily_routine == DAILY_ROUTINE_STUDENT:
             student_questionnaire = self._build_daily_questionnaire(
                 user_id=user_id,
                 condition_key="student_wellbeing",

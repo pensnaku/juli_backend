@@ -30,6 +30,7 @@ class QuestionnaireCompletion(Base):
     # Relationships
     user = relationship("User", back_populates="questionnaire_completions")
     observations = relationship("Observation", back_populates="questionnaire_completion")
+    journal_entries = relationship("JournalEntry", back_populates="questionnaire_completion")
 
     # Unique constraint includes completion_date to allow recurring questionnaires
     # For onboarding (completion_date=NULL), only one record per user

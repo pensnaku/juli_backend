@@ -1,4 +1,5 @@
 """Factor calculation logic for Juli Score"""
+
 from typing import Optional, Tuple, Dict
 from decimal import Decimal
 from datetime import date, timedelta

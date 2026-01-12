@@ -66,7 +66,7 @@ class AirQualityService:
 
         return AirQualityResponse(
             airQualityIndex=station.get("AQI", 0),
-            mainPollutant=self._determine_main_pollutant(station),
+            mainPollutant=station.get("aqiInfo", {}).get("pollutant", "pm25"),
         )
 
     async def get_pollen(self, lat: float, lon: float) -> PollenResponse:
@@ -126,23 +126,6 @@ class AirQualityService:
             ),
             species=self._parse_species(species_data),
         )
-
-    def _determine_main_pollutant(self, station: dict) -> str:
-        """Determine the main pollutant from station data"""
-        pollutants = {
-            "pm25": station.get("PM25", 0),
-            "pm10": station.get("PM10", 0),
-            "o3": station.get("O3", 0),
-            "no2": station.get("NO2", 0),
-            "so2": station.get("SO2", 0),
-            "co": station.get("CO", 0),
-        }
-
-        # Return the pollutant with the highest value
-        if not any(pollutants.values()):
-            return "pm25"  # Default
-
-        return max(pollutants, key=pollutants.get)
 
     def _parse_species(self, species_data: dict) -> Dict[str, Dict[str, SpeciesData]]:
         """Parse species data from Ambee response"""

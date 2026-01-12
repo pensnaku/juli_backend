@@ -30,3 +30,9 @@ class WeatherResponse(BaseModel):
     current: WeatherData
     forecast: List[WeatherData]
     location: Location
+
+
+class HistoricalWeatherResponse(BaseModel):
+    """Historical weather response with current conditions and hourly data"""
+    current: WeatherData
+    hourly: List[WeatherData]

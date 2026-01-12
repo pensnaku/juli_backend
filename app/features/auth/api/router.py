@@ -31,7 +31,12 @@ from app.shared.questionnaire.schemas import (
     QuestionnaireAnswersRequest,
     QuestionnaireAnswersResponse,
 )
-from app.shared.constants import QUESTIONNAIRE_IDS
+from app.shared.constants import (
+    QUESTIONNAIRE_IDS,
+    WELLBEING_CONDITION_CODE,
+    CONDITION_CODES,
+    DAILY_ROUTINE_STUDENT,
+)
 
 router = APIRouter()
 
@@ -380,7 +385,6 @@ def create_condition(
     """
     from app.features.auth.repository import UserConditionRepository
     from app.features.auth.domain.schemas import UserConditionCreate
-    from app.shared.constants import CONDITION_CODES
 
     logger.info(f"create_condition called with condition_code: {condition_code}")
     logger.info(f"current_user.id: {current_user.id}")
@@ -423,15 +427,21 @@ def delete_condition(
     """
     Delete a condition by ID.
 
+    All users must always have at least one condition. If a non-student user tries
+    to delete their last condition, an error is returned. Students can delete their
+    last condition, but it will automatically be replaced with the Wellbeing condition.
+
     Args:
         condition_id: ID of the condition to delete
         current_user: Current authenticated user
         db: Database session
 
     Raises:
-        HTTPException: If condition not found or doesn't belong to user
+        HTTPException: If condition not found, doesn't belong to user, or is the last
+                      condition for a non-student user
     """
     from app.features.auth.repository import UserConditionRepository
+    from app.features.auth.domain.schemas import UserConditionCreate
 
     condition_repo = UserConditionRepository(db)
     condition = condition_repo.get_by_id(condition_id)
@@ -448,7 +458,45 @@ def delete_condition(
             detail="Not authorized to delete this condition"
         )
 
-    condition_repo.delete(condition)
+    # Check if this is the last condition
+    user_conditions = condition_repo.get_by_user_id(current_user.id)
+    is_last_condition = len(user_conditions) == 1
+
+    if is_last_condition:
+        # Check if user is a student
+        is_student = (
+            current_user.settings
+            and current_user.settings.daily_routine == DAILY_ROUTINE_STUDENT
+        )
+
+        if not is_student:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete your last condition. All users must have at least one condition."
+            )
+
+        # Student trying to delete last condition
+        # If it's already Wellbeing, they can't delete it
+        if condition.condition_code == WELLBEING_CONDITION_CODE:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete Wellbeing condition. All users must have at least one condition."
+            )
+
+        # Student deleting last non-Wellbeing condition - replace with Wellbeing
+        condition_repo.delete(condition)
+
+        # Create Wellbeing condition
+        wellbeing_info = CONDITION_CODES[WELLBEING_CONDITION_CODE]
+        wellbeing_condition = UserConditionCreate(
+            condition_code=WELLBEING_CONDITION_CODE,
+            condition_label=wellbeing_info["label"],
+            condition_system=wellbeing_info["system"],
+        )
+        condition_repo.create(current_user.id, wellbeing_condition)
+    else:
+        condition_repo.delete(condition)
+
     return None
 
 

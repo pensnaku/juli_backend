@@ -12,9 +12,20 @@ class JournalEntryRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, user_id: int, content: str) -> JournalEntry:
+    def create(
+        self,
+        user_id: int,
+        content: str,
+        source: Optional[str] = None,
+        questionnaire_completion_id: Optional[int] = None,
+    ) -> JournalEntry:
         """Create a new journal entry"""
-        entry = JournalEntry(user_id=user_id, content=content)
+        entry = JournalEntry(
+            user_id=user_id,
+            content=content,
+            source=source,
+            questionnaire_completion_id=questionnaire_completion_id,
+        )
         self.db.add(entry)
         self.db.flush()
         return entry
@@ -73,3 +84,16 @@ class JournalEntryRepository:
         """Delete a journal entry"""
         self.db.delete(entry)
         self.db.flush()
+
+    def delete_by_questionnaire_completion_ids(
+        self, completion_ids: List[int]
+    ) -> int:
+        """Delete all journal entries linked to the given questionnaire completion IDs"""
+        if not completion_ids:
+            return 0
+        count = (
+            self.db.query(JournalEntry)
+            .filter(JournalEntry.questionnaire_completion_id.in_(completion_ids))
+            .delete(synchronize_session=False)
+        )
+        return count
