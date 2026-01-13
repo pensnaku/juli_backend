@@ -13,8 +13,3 @@ questions:
     text: Given your current workload, did you put your time and energy in the right place between academics and self-care?
     type: string
     required: true
-
-  - id: homework-completion
-    text: Did you do all your homework?
-    type: boolean
-    required: true

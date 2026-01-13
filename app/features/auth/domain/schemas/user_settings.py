@@ -1,7 +1,9 @@
 """UserSettings-related Pydantic schemas"""
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from typing import Optional
 from datetime import datetime
+
+from app.shared.constants import DAILY_ROUTINE_STUDENT
 
 
 class UserSettingsBase(BaseModel):
@@ -13,6 +15,7 @@ class UserSettingsBase(BaseModel):
     language_preference: str = "en"
     ethnicity: Optional[str] = None
     hispanic_latino: Optional[str] = None
+    daily_routine: Optional[str] = None
 
 
 class UserSettingsCreate(UserSettingsBase):
@@ -35,6 +38,12 @@ class UserSettingsResponse(UserSettingsBase):
     user_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+
+    @computed_field
+    @property
+    def is_student(self) -> bool:
+        """Computed property to check if user is a student"""
+        return self.daily_routine == DAILY_ROUTINE_STUDENT
 
     class Config:
         from_attributes = True

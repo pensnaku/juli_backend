@@ -343,7 +343,14 @@ class QuestionnaireService:
                     if questionnaire:
                         questionnaires.append(questionnaire)
 
-        # Add journal questionnaire at the end (for all users)
+        # Add individual tracking questionnaire if user has active tracking topics
+        tracking_questionnaire = self._build_individual_tracking_questionnaire(
+            user_id, target_date
+        )
+        if tracking_questionnaire:
+            questionnaires.append(tracking_questionnaire)
+
+        # Add journal questionnaire at the end (always last for all users)
         journal_questionnaire = self._build_daily_questionnaire(
             user_id=user_id,
             condition_key="journal",
@@ -351,13 +358,6 @@ class QuestionnaireService:
         )
         if journal_questionnaire:
             questionnaires.append(journal_questionnaire)
-
-        # Add individual tracking questionnaire if user has active tracking topics
-        tracking_questionnaire = self._build_individual_tracking_questionnaire(
-            user_id, target_date
-        )
-        if tracking_questionnaire:
-            questionnaires.append(tracking_questionnaire)
 
         if not questionnaires:
             return None
