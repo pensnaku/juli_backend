@@ -165,4 +165,9 @@ TRACKING_TOPIC_LABELS = {code: info["label"] for code, info in TRACKING_TOPICS.i
 # Tracking topics by user type (for filtering defaults)
 # These match the options in onboarding.yml tracking-symptoms and tracking-symptoms-student
 STUDENT_TRACKING_TOPICS = {"coffee-consumption", "class-attendance", "social-contact"}
-NON_STUDENT_TRACKING_TOPICS = {"coffee-consumption", "smoking", "alcohol-consumption", "hours-spent-outside"}
+NON_STUDENT_TRACKING_TOPICS = {
+    "coffee-consumption",
+    "smoking",
+    "alcohol-consumption",
+    "hours-spent-outside",
+}
