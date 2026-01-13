@@ -18,6 +18,9 @@ class UserReminder(Base):
     time = Column(Time, nullable=False)  # Time of day for reminder (e.g., 08:00:00)
     is_active = Column(Boolean, default=True)
 
+    # Tracking when reminder was last triggered (for scheduler deduplication)
+    last_triggered_at = Column(DateTime(timezone=True), nullable=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

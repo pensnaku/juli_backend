@@ -1,7 +1,8 @@
 """Authentication API endpoints"""
 import logging
 from typing import Dict, Any, Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from zoneinfo import ZoneInfo
+from fastapi import APIRouter, Depends, HTTPException, Header, Query, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -225,17 +226,48 @@ def get_current_user_info(current_user = Depends(get_current_user)):
 
 
 @router.post("/test-token", response_model=UserWithOnboardingStatus)
-def test_token(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def test_token(
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    x_timezone: Optional[str] = Header(None, alias="X-Timezone"),
+):
     """
-    Test access token validity and get user information with onboarding status
+    Test access token validity and get user information with onboarding status.
+
+    Also updates user timezone if X-Timezone header is provided.
 
     Args:
         current_user: Current authenticated user
         db: Database session
+        x_timezone: Optional timezone from X-Timezone header (e.g., "Africa/Lagos")
 
     Returns:
         User information with onboarding completion status if token is valid
     """
+    # Update timezone if provided and valid
+    if x_timezone:
+        try:
+            # Validate timezone is a valid IANA timezone
+            ZoneInfo(x_timezone)
+
+            # Update if different from current setting
+            if current_user.settings:
+                if current_user.settings.timezone != x_timezone:
+                    current_user.settings.timezone = x_timezone
+                    db.commit()
+                    logger.debug(f"Updated timezone for user {current_user.id} to {x_timezone}")
+            else:
+                # Create settings if user doesn't have one
+                from app.features.auth.domain.entities.user_settings import UserSettings
+                settings = UserSettings(user_id=current_user.id, timezone=x_timezone)
+                db.add(settings)
+                db.commit()
+                db.refresh(current_user)
+                logger.debug(f"Created settings with timezone {x_timezone} for user {current_user.id}")
+        except Exception as e:
+            # Log but don't fail the request if timezone update fails
+            logger.warning(f"Failed to update timezone for user {current_user.id}: {e}")
+
     # Check onboarding completion status
     completion_repo = QuestionnaireCompletionRepository(db)
     onboarding_completed = completion_repo.is_completed(current_user.id, QUESTIONNAIRE_IDS["ONBOARDING"])

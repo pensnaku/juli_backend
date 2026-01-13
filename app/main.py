@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.core.scheduler import start_scheduler, stop_scheduler
 from app.api import api_router_v1
 from app.features.juli_score.scheduler import register_juli_score_job
+from app.features.auth.scheduler import register_reminder_job
 
 
 @asynccontextmanager
@@ -15,6 +16,7 @@ async def lifespan(app: FastAPI):
     """Manage application lifecycle - startup and shutdown events"""
     # Startup
     register_juli_score_job()
+    register_reminder_job()
     start_scheduler()
     yield
     # Shutdown
