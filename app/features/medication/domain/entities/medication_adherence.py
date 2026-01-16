@@ -1,6 +1,7 @@
 """MedicationAdherence entity - tracks daily medication adherence status"""
 import enum
 from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Enum, UniqueConstraint
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -14,6 +15,14 @@ class AdherenceStatus(str, enum.Enum):
     PARTLY_TAKEN = "partly_taken"
 
 
+# Create PostgreSQL ENUM that uses the string values
+adherence_status_enum = PgEnum(
+    'not_set', 'taken', 'not_taken', 'partly_taken',
+    name='adherencestatus',
+    create_type=False
+)
+
+
 class MedicationAdherence(Base):
     """Tracks daily medication adherence for each user medication"""
     __tablename__ = "medication_adherence"
@@ -23,9 +32,9 @@ class MedicationAdherence(Base):
     medication_id = Column(Integer, ForeignKey("user_medications.id"), nullable=False, index=True)
     date = Column(Date, nullable=False, index=True)
     status = Column(
-        Enum(AdherenceStatus),
+        adherence_status_enum,
         nullable=False,
-        default=AdherenceStatus.NOT_SET
+        default='not_set'
     )
     notes = Column(String(500), nullable=True)
 

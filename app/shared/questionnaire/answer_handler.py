@@ -485,8 +485,48 @@ class QuestionnaireAnswerHandler:
             tzinfo=timezone.utc
         )
 
+        # Special handling for medication questions - update adherence records
+        # Question ID: medications-notifications
+        # Answer formats:
+        #   Single: {"medication_id": 5, "value": "taken"}
+        #   Batch:  [{"medication_id": 5, "value": "taken"}, {"medication_id": 8, "value": "not_taken"}]
+        if question_id == "medications-notifications":
+            # Handle batch update (list of answers)
+            if isinstance(answer, list):
+                for item in answer:
+                    if isinstance(item, dict) and "medication_id" in item and "value" in item:
+                        medication_id = item["medication_id"]
+                        status_value = item["value"]
+                        target_date = date.fromisoformat(item["date"]) if "date" in item else completion_date
+                        self._handle_medication_adherence(user_id, medication_id, status_value, target_date)
+                    else:
+                        logger.warning(f"Invalid medication answer item: {item}")
+            # Handle single update (dict)
+            elif isinstance(answer, dict) and "medication_id" in answer and "value" in answer:
+                medication_id = answer["medication_id"]
+                status_value = answer["value"]
+                target_date = date.fromisoformat(answer["date"]) if "date" in answer else completion_date
+                self._handle_medication_adherence(user_id, medication_id, status_value, target_date)
+            else:
+                logger.warning(f"Invalid medication answer format: {answer}")
+
+            # Mark as completed if requested and return early
+            if mark_completed:
+                self.completion_repo.mark_condition_completed(
+                    user_id, questionnaire_id, completion_date
+                )
+            self.db.commit()
+            is_completed = self.completion_repo.is_condition_completed_for_date(
+                user_id, questionnaire_id, completion_date
+            )
+            return {
+                "question_id": question_id,
+                "questionnaire_id": questionnaire_id,
+                "completed": is_completed
+            }
+
         # Special handling for journal entry - save to journal_entries table
-        if question_id == "journal-entry-text":
+        elif question_id == "journal-entry-text":
             if answer and isinstance(answer, str) and answer.strip():
                 logger.info(f"Saving journal entry for user {user_id}")
                 self.journal_repo.create(
@@ -562,6 +602,55 @@ class QuestionnaireAnswerHandler:
             "questionnaire_id": questionnaire_id,
             "completed": is_completed
         }
+
+    def _handle_medication_adherence(
+        self,
+        user_id: int,
+        medication_id: int,
+        status_value: str,
+        target_date: date,
+    ) -> None:
+        """
+        Update medication adherence record for a specific date.
+
+        Args:
+            user_id: User ID
+            medication_id: Medication ID
+            status_value: One of "taken", "not_taken", "partly_taken"
+            target_date: The date for the adherence record
+        """
+        from app.features.medication.repository import MedicationAdherenceRepository
+
+        adherence_repo = MedicationAdherenceRepository(self.db)
+
+        # Get existing adherence record (should exist, created by reminder scheduler)
+        existing = adherence_repo.get_by_user_medication_date(
+            user_id=user_id,
+            medication_id=medication_id,
+            target_date=target_date,
+        )
+
+        if existing:
+            # Update status using string value directly (PostgreSQL enum)
+            existing.status = status_value
+            self.db.flush()
+            logger.info(
+                f"Updated adherence for user {user_id}, medication {medication_id}: {status_value}"
+            )
+        else:
+            # Create new record if doesn't exist (fallback)
+            from app.features.medication.domain.entities import MedicationAdherence
+            adherence = MedicationAdherence(
+                user_id=user_id,
+                medication_id=medication_id,
+                date=target_date,
+                status=status_value,
+            )
+            self.db.add(adherence)
+            self.db.flush()
+            logger.info(
+                f"Created adherence for user {user_id}, medication {medication_id}: {status_value}"
+            )
 
     def _create_or_update_observation(
         self,

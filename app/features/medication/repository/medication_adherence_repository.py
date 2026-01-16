@@ -1,5 +1,5 @@
 """Repository for medication adherence database operations"""
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import date
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
@@ -46,6 +46,18 @@ class MedicationAdherenceRepository:
                 MedicationAdherence.date == target_date
             )
         ).all()
+
+    def get_daily_adherence_map(
+        self,
+        user_id: int,
+        target_date: date
+    ) -> Dict[int, MedicationAdherence]:
+        """
+        Get all adherence records for a user on a specific date.
+        Returns dict mapping medication_id -> adherence record.
+        """
+        records = self.get_by_user_and_date(user_id, target_date)
+        return {r.medication_id: r for r in records}
 
     def get_by_user_date_range(
         self,

@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 from app.core.database import SessionLocal
 from app.core.scheduler import scheduler
 from app.features.auth.domain import UserReminder, UserSettings
-from app.features.medication.domain.entities import MedicationAdherence, AdherenceStatus
+from app.features.medication.domain.entities import MedicationAdherence
 from app.features.medication.repository import MedicationAdherenceRepository
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,8 @@ def process_reminders_job():
     Currently handles:
     - medication_reminder: Creates adherence record with NOT_SET status
     """
-    logger.debug("Starting reminder processing job...")
+    print("⏰ [Reminder] Scheduler running...")
+    logger.info("Reminder scheduler running...")
 
     db = SessionLocal()
     try:
@@ -135,12 +136,12 @@ def _process_medication_reminder(db, reminder: UserReminder, target_date):
         )
         return
 
-    # Create new adherence record with NOT_SET status
+    # Create new adherence record with not_set status
     adherence = MedicationAdherence(
         user_id=reminder.user_id,
         medication_id=reminder.medication_id,
         date=target_date,
-        status=AdherenceStatus.NOT_SET,
+        status='not_set',
     )
     db.add(adherence)
     db.flush()
@@ -164,3 +165,4 @@ def register_reminder_job():
     logger.info(
         f"Registered reminder job to run every {SCHEDULER_INTERVAL_MINUTES} minute(s)"
     )
+    print(f"⏰ [Reminder] Registered job to run every {SCHEDULER_INTERVAL_MINUTES} minute(s)")

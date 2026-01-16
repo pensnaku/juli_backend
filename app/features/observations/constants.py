@@ -37,7 +37,7 @@ class ObservationCodes:
 
     # Respiratory
     PEAK_EXPIRATORY_FLOW = "peak-expiratory-flow"
-    INHALER_USAGE_COUNT = "inhaler-usage-count"
+    INHALER_USAGE_COUNT = "how-often-inhaler-or-nebulizer"
 
     # Demographics & Personal Info
     BIOLOGICAL_SEX = "biological-sex"
@@ -52,14 +52,20 @@ class ObservationCodes:
     BIWEEKLY_ASTHMA_SCORE = "bi-weekly-asthma-questionnaire-score"
     BIWEEKLY_DEPRESSION_SCORE = "bi-weekly-depression-questionnaire-score"
     BIWEEKLY_BIPOLAR_SCORE = "bi-weekly-bipolar-questionnaire-score"
-    BIWEEKLY_CHRONIC_PAIN_INTERFERENCE_SCORE = "bi-weekly-chronic-pain-interference-questionnaire-score"
+    BIWEEKLY_CHRONIC_PAIN_INTERFERENCE_SCORE = (
+        "bi-weekly-chronic-pain-interference-questionnaire-score"
+    )
     BIWEEKLY_CHRONIC_PAIN_SCORE = "bi-weekly-chronic-pain-questionnaire-score"
     BIWEEKLY_COPD_SCORE = "bi-weekly-copd-questionnaire-score"
     BIWEEKLY_HEADACHE_SCORE = "bi-weekly-headache-questionnaire-score"
     BIWEEKLY_HYPERTENSION_SCORE = "bi-weekly-hypertension-questionnaire-score"
     BIWEEKLY_MIGRAINE_SCORE = "bi-weekly-migraine-questionnaire-score"
-    BIWEEKLY_COMORBIDITY_ASTHMA_DEPRESSION_ASTHMA_SCORE = "bi-weekly-comorbidity-asthma-depression-part-asthma-questionnaire-score"
-    BIWEEKLY_COMORBIDITY_ASTHMA_DEPRESSION_DEPRESSION_SCORE = "bi-weekly-comorbidity-asthma-depression-part-depression-questionnaire-score"
+    BIWEEKLY_COMORBIDITY_ASTHMA_DEPRESSION_ASTHMA_SCORE = (
+        "bi-weekly-comorbidity-asthma-depression-part-asthma-questionnaire-score"
+    )
+    BIWEEKLY_COMORBIDITY_ASTHMA_DEPRESSION_DEPRESSION_SCORE = (
+        "bi-weekly-comorbidity-asthma-depression-part-depression-questionnaire-score"
+    )
 
     # Daily Questionnaire - Mood & Energy
     DAILY_MOOD = "daily-questionnaire-mood"
@@ -73,7 +79,9 @@ class ObservationCodes:
 
     # Daily Questionnaire - Pain
     DAILY_ACTIVITY_PAIN_INTERFERENCE = "daily-questionnaire-activity-pain-interference"
-    DAILY_RELIEF_FROM_PAIN_MEDICATION = "daily-questionnaire-relief-from-pain-medication"
+    DAILY_RELIEF_FROM_PAIN_MEDICATION = (
+        "daily-questionnaire-relief-from-pain-medication"
+    )
     DAILY_ACTIVITY_PAIN = "daily-questionnaire-activity-pain"
 
     # Daily Questionnaire - Mental Health
@@ -150,43 +158,35 @@ OBSERVATION_CODE_CATEGORIES = {
     ObservationCodes.TIME_LIGHT_SLEEP: ObservationCategories.SLEEP,
     ObservationCodes.TIME_REM_SLEEP: ObservationCategories.SLEEP,
     ObservationCodes.TIME_DEEP_SLEEP: ObservationCategories.SLEEP,
-
     # Activity
     ObservationCodes.STEPS_COUNT: ObservationCategories.ACTIVITY,
     ObservationCodes.WORKOUT: ObservationCategories.ACTIVITY,
     ObservationCodes.BASAL_ENERGY_BURNED: ObservationCategories.ACTIVITY,
     ObservationCodes.ACTIVE_ENERGY_BURNED: ObservationCategories.ACTIVITY,
     ObservationCodes.FLIGHTS_CLIMBED: ObservationCategories.ACTIVITY,
-
     # Environment
     ObservationCodes.ENVIRONMENT: ObservationCategories.ENVIRONMENT,
-
     # Body Measurements
     ObservationCodes.WEIGHT: ObservationCategories.BODY_MEASUREMENTS,
     ObservationCodes.HEIGHT: ObservationCategories.BODY_MEASUREMENTS,
     ObservationCodes.BMI: ObservationCategories.BODY_MEASUREMENTS,
     ObservationCodes.BODY_FAT_PERCENTAGE: ObservationCategories.BODY_MEASUREMENTS,
     ObservationCodes.BODY_TEMPERATURE: ObservationCategories.BODY_MEASUREMENTS,
-
     # Vital Signs
     ObservationCodes.RESTING_HEART_RATE: ObservationCategories.VITAL_SIGNS,
     ObservationCodes.HEART_RATE: ObservationCategories.VITAL_SIGNS,
     ObservationCodes.HEART_RATE_VARIABILITY: ObservationCategories.VITAL_SIGNS,
     ObservationCodes.OXYGEN_SATURATION: ObservationCategories.VITAL_SIGNS,
     ObservationCodes.BLOOD_PRESSURE: ObservationCategories.VITAL_SIGNS,
-
     # Respiratory
     ObservationCodes.PEAK_EXPIRATORY_FLOW: ObservationCategories.RESPIRATORY,
     ObservationCodes.INHALER_USAGE_COUNT: ObservationCategories.RESPIRATORY,
-
     # Demographics
     ObservationCodes.BIOLOGICAL_SEX: ObservationCategories.DEMOGRAPHICS,
     ObservationCodes.BIRTHDATE: ObservationCategories.DEMOGRAPHICS,
-
     # Menstrual Health
     ObservationCodes.LAST_MENSTRUATION_DATE: ObservationCategories.MENSTRUAL_HEALTH,
     ObservationCodes.MENSTRUAL_FLOW: ObservationCategories.MENSTRUAL_HEALTH,
-
     # Bi-Weekly Questionnaires
     ObservationCodes.BIWEEKLY_ANXIETY_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
     ObservationCodes.BIWEEKLY_ASTHMA_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
@@ -200,7 +200,6 @@ OBSERVATION_CODE_CATEGORIES = {
     ObservationCodes.BIWEEKLY_MIGRAINE_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
     ObservationCodes.BIWEEKLY_COMORBIDITY_ASTHMA_DEPRESSION_ASTHMA_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
     ObservationCodes.BIWEEKLY_COMORBIDITY_ASTHMA_DEPRESSION_DEPRESSION_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
-
     # Daily Questionnaires
     ObservationCodes.DAILY_MOOD: ObservationCategories.QUESTIONNAIRE_DAILY,
     ObservationCodes.DAILY_MOOD_ENERGY: ObservationCategories.QUESTIONNAIRE_DAILY,
@@ -223,5 +222,5 @@ OBSERVATION_CODE_CATEGORIES = {
 ALL_OBSERVATION_CODES = [
     getattr(ObservationCodes, attr)
     for attr in dir(ObservationCodes)
-    if not attr.startswith('_')
+    if not attr.startswith("_")
 ]

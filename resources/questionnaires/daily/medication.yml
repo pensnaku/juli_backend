@@ -1,0 +1,18 @@
+id: daily-medication
+title: Medication
+description: Track your medication adherence
+
+questions:
+  - id: medications-notifications
+    text: Did you take your medication?
+    type: single_choice
+    required: false
+    options:
+      - value: taken
+        label: Yes, I took it
+      - value: not_taken
+        label: No, I didn't take it
+      - value: partly_taken
+        label: I took some of it
+      - value: not_yet
+        label: Not yet

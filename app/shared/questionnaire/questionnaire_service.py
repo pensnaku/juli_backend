@@ -2,13 +2,14 @@
 
 import copy
 from typing import Optional, Dict, Any, List
-from datetime import date
+from datetime import date, time as dt_time
 from sqlalchemy.orm import Session
 
 from app.core.resource_loader import ResourceLoader
 from app.features.auth.domain import User
 from app.features.auth.repository import UserRepository, UserMedicationRepository
 from app.features.observations.repository import ObservationRepository
+from app.features.medication.repository import MedicationAdherenceRepository
 from app.shared.questionnaire.repositories import QuestionnaireCompletionRepository
 from app.shared.constants import (
     QUESTIONNAIRE_IDS,
@@ -350,6 +351,13 @@ class QuestionnaireService:
         if tracking_questionnaire:
             questionnaires.append(tracking_questionnaire)
 
+        # Add medication questionnaire after individual tracking
+        medication_questionnaire = self._build_medication_questionnaire(
+            user_id, target_date
+        )
+        if medication_questionnaire:
+            questionnaires.append(medication_questionnaire)
+
         # Add journal questionnaire at the end (always last for all users)
         journal_questionnaire = self._build_daily_questionnaire(
             user_id=user_id,
@@ -409,6 +417,131 @@ class QuestionnaireService:
             "questionnaire_id": questionnaire_id,
             "questions": questions,
             "is_completed": is_completed,
+        }
+
+    def _build_medication_questionnaire(
+        self, user_id: int, target_date: date
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Build medication adherence questionnaire for user's active medications.
+
+        Loads base question structure from YAML, then generates sub-questions
+        for each medication with pending adherence records from yesterday and today.
+
+        Returns None if:
+        - User has no active medications
+        - No adherence records exist
+        - All adherence records have been answered (no not_set status)
+        - Questionnaire already completed for target_date
+
+        Args:
+            user_id: User ID
+            target_date: The date for the questionnaire
+
+        Returns:
+            Medication questionnaire dict, or None if no medications to track
+        """
+        from datetime import timedelta
+        from app.features.auth.repository import UserReminderRepository
+
+        # Load base questionnaire from YAML
+        questionnaire_data = self.resource_loader.load_questionnaire(
+            "daily/medication"
+        )
+        if not questionnaire_data:
+            return None
+
+        base_question = questionnaire_data.get("questions", [{}])[0]
+        questionnaire_id = questionnaire_data.get("id", "daily-medication")
+
+        # Check if already completed for today
+        if self.completion_repo.is_condition_completed_for_date(
+            user_id, questionnaire_id, target_date
+        ):
+            return None
+
+        # Get user's active medications
+        medications = self.medication_repo.get_by_user_id(user_id, active_only=True)
+        if not medications:
+            return None
+
+        # Create medication lookup map
+        medication_map = {med.id: med for med in medications}
+
+        # Get adherence records for yesterday and today
+        adherence_repo = MedicationAdherenceRepository(self.db)
+        yesterday = target_date - timedelta(days=1)
+        adherence_records = adherence_repo.get_by_user_date_range(
+            user_id, yesterday, target_date
+        )
+
+        if not adherence_records:
+            return None
+
+        # Get reminder times for all medications
+        reminder_repo = UserReminderRepository(self.db)
+        user_reminders = reminder_repo.get_by_user_and_type(user_id, "medication_reminder")
+        # Map medication_id -> reminder time (use first reminder if multiple)
+        reminder_time_map = {}
+        for reminder in user_reminders:
+            if reminder.medication_id and reminder.medication_id not in reminder_time_map:
+                reminder_time_map[reminder.medication_id] = reminder.time
+
+        # Build medication entries with adherence info
+        medication_entries = []
+        has_unanswered = False
+
+        for adherence in adherence_records:
+            med = medication_map.get(adherence.medication_id)
+            if not med:
+                continue
+
+            # Get current status - prefill if already answered
+            current_value = None
+            if adherence.status and adherence.status != "not_set":
+                current_value = adherence.status
+            else:
+                has_unanswered = True
+
+            # Get reminder time for this medication
+            reminder_time = reminder_time_map.get(med.id)
+
+            medication_entries.append(
+                {
+                    "medication_id": med.id,
+                    "medication_name": med.medication_name,
+                    "dosage": med.dosage,
+                    "date": adherence.date.isoformat(),
+                    "reminder_time": reminder_time.strftime("%H:%M") if reminder_time else None,
+                    "answer": current_value,
+                    "_sort_key": (adherence.date, reminder_time or dt_time.min),
+                }
+            )
+
+        # Only return questionnaire if at least one medication is unanswered
+        if not has_unanswered:
+            return None
+
+        # Sort by date (older first), then by reminder time
+        medication_entries.sort(key=lambda x: x["_sort_key"])
+
+        # Remove sort key from output
+        for entry in medication_entries:
+            del entry["_sort_key"]
+
+        # Build the single question with medications as sub-questions
+        question = {
+            "id": base_question.get("id", "medications-notifications"),
+            "text": base_question.get("text", "Did you take your medication?"),
+            "type": base_question.get("type", "single_choice"),
+            "required": base_question.get("required", False),
+            "medications": medication_entries,
+        }
+
+        return {
+            "questionnaire_id": questionnaire_id,
+            "questions": [question],
+            "is_completed": False,  # Always false since we only return if there's unanswered
         }
 
     def _build_individual_tracking_questionnaire(

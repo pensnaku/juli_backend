@@ -1,13 +1,16 @@
 """Juli Score constants and factor configurations"""
+
 from typing import Dict, List, Optional, Callable
 from dataclasses import dataclass, field
 
+from app.features.observations.constants import ObservationCodes
 from app.shared.constants import CONDITION_CODES
 
 
 # Supported condition codes for Juli Score (reference existing codes)
 class JuliScoreConditions:
     """Condition codes supported by Juli Score calculation"""
+
     DEPRESSION = "35489007"
     ASTHMA = "195967001"
     MIGRAINE = "37796009"
@@ -15,6 +18,7 @@ class JuliScoreConditions:
 
 class JuliScoreCodes:
     """Observation codes for juli scores"""
+
     DEPRESSION = "juli-score-depression"
     ASTHMA = "juli-score-asthma"
     MIGRAINE = "juli-score-migraine"
@@ -26,6 +30,7 @@ CONDITION_TO_SCORE_CODE = {
     JuliScoreConditions.ASTHMA: JuliScoreCodes.ASTHMA,
     JuliScoreConditions.MIGRAINE: JuliScoreCodes.MIGRAINE,
 }
+
 
 # Get condition names from shared constants
 def get_condition_name(condition_code: str) -> str:
@@ -45,6 +50,7 @@ SUPPORTED_CONDITION_CODES = [
 @dataclass
 class Step:
     """Step definition for step-based factor calculation"""
+
     lower_bound: float
     upper_bound: float
     multiplier: float
@@ -53,13 +59,16 @@ class Step:
 @dataclass
 class FactorConfig:
     """Configuration for a single factor"""
+
     weight: int
     minimum_score: float
     just_math: bool
     multiplier: Optional[float] = None
     steps: List[Step] = field(default_factory=list)
     observation_code: Optional[str] = None
-    observation_variant: Optional[str] = None  # For observations with variants (e.g., environment)
+    observation_variant: Optional[str] = (
+        None  # For observations with variants (e.g., environment)
+    )
     time_window_days: int = 0  # 0 = today only
 
 
@@ -92,8 +101,8 @@ DEPRESSION_FACTORS: Dict[str, FactorConfig] = {
         steps=[
             Step(0, 50, 1.0),
             Step(51, 100, 0.5),
-            Step(101, float('inf'), 0.0),
-        ]
+            Step(101, float("inf"), 0.0),
+        ],
     ),
     "sleep": FactorConfig(
         weight=20,
@@ -102,11 +111,11 @@ DEPRESSION_FACTORS: Dict[str, FactorConfig] = {
         observation_code="time-asleep",
         time_window_days=0,
         steps=[
-            Step(420, float('inf'), 1.0),     # 7+ hours
-            Step(360, 419, 0.7),               # 6-7 hours
-            Step(300, 359, 0.2),               # 5-6 hours
-            Step(0, 299, -0.5),                # <5 hours
-        ]
+            Step(420, float("inf"), 1.0),  # 7+ hours
+            Step(360, 419, 0.7),  # 6-7 hours
+            Step(300, 359, 0.2),  # 5-6 hours
+            Step(0, 299, -0.5),  # <5 hours
+        ],
     ),
     "biweekly": FactorConfig(
         weight=64,
@@ -147,11 +156,11 @@ DEPRESSION_FACTORS: Dict[str, FactorConfig] = {
         observation_code="heart-rate-variability",
         time_window_days=30,
         steps=[
-            Step(0, float('inf'), 1.0),           # >= 0: full score (1.0)
-            Step(-10, -0.01, 0.5),                # [-10, 0): half score (0.5)
-            Step(-15, -10.01, 0.25),              # [-15, -10): quarter score (0.25)
-            Step(float('-inf'), -15.01, 0.0),    # < -15: no score (0.0)
-        ]
+            Step(0, float("inf"), 1.0),  # >= 0: full score (1.0)
+            Step(-10, -0.01, 0.5),  # [-10, 0): half score (0.5)
+            Step(-15, -10.01, 0.25),  # [-15, -10): quarter score (0.25)
+            Step(float("-inf"), -15.01, 0.0),  # < -15: no score (0.0)
+        ],
     ),
 }
 
@@ -166,8 +175,8 @@ ASTHMA_FACTORS: Dict[str, FactorConfig] = {
         steps=[
             Step(0, 50, 1.0),
             Step(51, 100, 0.5),
-            Step(101, float('inf'), 0.0),
-        ]
+            Step(101, float("inf"), 0.0),
+        ],
     ),
     "sleep": FactorConfig(
         weight=20,
@@ -176,11 +185,11 @@ ASTHMA_FACTORS: Dict[str, FactorConfig] = {
         observation_code="time-asleep",
         time_window_days=0,
         steps=[
-            Step(420, float('inf'), 1.0),
+            Step(420, float("inf"), 1.0),
             Step(360, 419, 0.7),
             Step(300, 359, 0.2),
             Step(0, 299, -0.5),
-        ]
+        ],
     ),
     "biweekly": FactorConfig(
         weight=50,
@@ -221,11 +230,11 @@ ASTHMA_FACTORS: Dict[str, FactorConfig] = {
         observation_code="heart-rate-variability",
         time_window_days=30,
         steps=[
-            Step(0, float('inf'), 1.0),           # >= 0: full score (1.0)
-            Step(-6, -0.01, 0.75),                # [-6, 0): 0.75 score
-            Step(-14, -6.01, 0.5),                # [-14, -6): half score (0.5)
-            Step(float('-inf'), -14.01, 0.25),   # < -14: quarter score (0.25)
-        ]
+            Step(0, float("inf"), 1.0),  # >= 0: full score (1.0)
+            Step(-6, -0.01, 0.75),  # [-6, 0): 0.75 score
+            Step(-14, -6.01, 0.5),  # [-14, -6): half score (0.5)
+            Step(float("-inf"), -14.01, 0.25),  # < -14: quarter score (0.25)
+        ],
     ),
     "pollen": FactorConfig(
         weight=30,
@@ -238,20 +247,20 @@ ASTHMA_FACTORS: Dict[str, FactorConfig] = {
             Step(0, 50, 1.0),
             Step(51, 85, 0.5),
             Step(86, 100, 0.2),
-            Step(101, float('inf'), 0.0),
-        ]
+            Step(101, float("inf"), 0.0),
+        ],
     ),
     "inhaler": FactorConfig(
         weight=30,
         minimum_score=0,
         just_math=False,
-        observation_code="inhaler-usage-count",
+        observation_code=ObservationCodes.INHALER_USAGE_COUNT,
         time_window_days=0,
         steps=[
             Step(0, 0.5, 1.0),  # 0 uses
             Step(0.5, 1.5, 0.5),  # 1 use
-            Step(1.5, float('inf'), 0.0),  # 2+ uses
-        ]
+            Step(1.5, float("inf"), 0.0),  # 2+ uses
+        ],
     ),
 }
 
@@ -264,11 +273,11 @@ MIGRAINE_FACTORS: Dict[str, FactorConfig] = {
         observation_variant="air-quality-index",
         time_window_days=0,
         steps=[
-            Step(0, 50, 1.0),       # AQI 0-50: full score (30)
-            Step(51, 100, 0.5),     # AQI 51-100: half score (15)
-            Step(101, 140, 0.0),    # AQI 101-140: no score (0)
-            Step(141, float('inf'), -0.2),  # AQI > 140: negative (-6)
-        ]
+            Step(0, 50, 1.0),  # AQI 0-50: full score (30)
+            Step(51, 100, 0.5),  # AQI 51-100: half score (15)
+            Step(101, 140, 0.0),  # AQI 101-140: no score (0)
+            Step(141, float("inf"), -0.2),  # AQI > 140: negative (-6)
+        ],
     ),
     "sleep": FactorConfig(
         weight=20,
@@ -277,11 +286,11 @@ MIGRAINE_FACTORS: Dict[str, FactorConfig] = {
         observation_code="time-asleep",
         time_window_days=0,
         steps=[
-            Step(420, float('inf'), 1.0),
+            Step(420, float("inf"), 1.0),
             Step(360, 419, 0.7),
             Step(300, 359, 0.2),
             Step(0, 299, -0.5),
-        ]
+        ],
     ),
     "biweekly": FactorConfig(
         weight=42,
@@ -314,11 +323,11 @@ MIGRAINE_FACTORS: Dict[str, FactorConfig] = {
         observation_code="heart-rate-variability",
         time_window_days=30,
         steps=[
-            Step(0, float('inf'), 1.0),           # >= 0: full score (1.0)
-            Step(-10, -0.01, 0.5),                # [-10, 0): half score (0.5)
-            Step(-15, -10.01, 0.25),              # [-15, -10): quarter score (0.25)
-            Step(float('-inf'), -15.01, 0.0),    # < -15: no score (0.0)
-        ]
+            Step(0, float("inf"), 1.0),  # >= 0: full score (1.0)
+            Step(-10, -0.01, 0.5),  # [-10, 0): half score (0.5)
+            Step(-15, -10.01, 0.25),  # [-15, -10): quarter score (0.25)
+            Step(float("-inf"), -15.01, 0.0),  # < -15: no score (0.0)
+        ],
     ),
 }
 
