@@ -7,7 +7,7 @@ These tests verify the score calculation formula:
 Test data mapping from provided test cases:
     - airquality -> air_quality factor
     - minutesofsleep -> sleep factor
-    - LastBWNumber -> biweekly factor (transformed)
+    - LastBWNumber -> condition_assessment factor (transformed)
     - activenergy -> active_energy factor
     - medmultiplier -> medication factor
     - moodfromotable -> mood factor
@@ -24,7 +24,7 @@ from app.features.juli_score.constants import (
     ASTHMA_FACTORS,
     MIGRAINE_FACTORS,
     CONDITION_FACTORS,
-    BIWEEKLY_TRANSFORMATIONS,
+    CONDITION_ASSESSMENT_TRANSFORMATIONS,
     JuliScoreConditions,
     FactorConfig,
     MIN_DATA_POINTS,
@@ -36,7 +36,7 @@ class ScoreInput:
     """Input data structure for score calculation tests"""
     air_quality: Optional[float] = None
     sleep: Optional[float] = None  # minutes of sleep
-    biweekly: Optional[float] = None  # raw bi-weekly score
+    condition_assessment: Optional[float] = None  # raw condition assessment score
     active_energy: Optional[float] = None
     medication: Optional[float] = None  # compliance ratio 0-1
     mood: Optional[int] = None  # 1-5
@@ -88,7 +88,7 @@ class JuliScoreCalculator:
         mapping = {
             "air_quality": inputs.air_quality,
             "sleep": inputs.sleep,
-            "biweekly": inputs.biweekly,
+            "condition_assessment": inputs.condition_assessment,
             "active_energy": inputs.active_energy,
             "medication": inputs.medication,
             "mood": inputs.mood,
@@ -102,10 +102,10 @@ class JuliScoreCalculator:
         self, factor_name: str, raw_value: float, config: FactorConfig
     ) -> float:
         """Calculate individual factor score"""
-        # Transform biweekly scores
+        # Transform condition assessment scores
         value = raw_value
-        if factor_name == "biweekly":
-            transform = BIWEEKLY_TRANSFORMATIONS.get(self.condition_code)
+        if factor_name == "condition_assessment":
+            transform = CONDITION_ASSESSMENT_TRANSFORMATIONS.get(self.condition_code)
             if transform:
                 value = transform(float(raw_value))
 
@@ -140,7 +140,7 @@ class TestDepressionScoreCalculation:
 
     def test_case_1234(self, calculator):
         """
-        Input: air_quality=118, sleep=220, active_energy=241, biweekly=12,
+        Input: air_quality=118, sleep=220, active_energy=241, condition_assessment=12,
                medication=0.5, mood=2, hrv=-5.32491
         Expected: 50.21834061
         """
@@ -148,7 +148,7 @@ class TestDepressionScoreCalculation:
             air_quality=118,
             sleep=220,
             active_energy=241,
-            biweekly=12,
+            condition_assessment=12,
             medication=0.5,
             mood=2,
             hrv=-5.32491,
@@ -175,13 +175,13 @@ class TestDepressionScoreCalculation:
 
     def test_case_1236(self, calculator):
         """
-        Input: air_quality=10, active_energy=98, biweekly=15, medication=1, mood=4
+        Input: air_quality=10, active_energy=98, condition_assessment=15, medication=1, mood=4
         Expected: 72.31040564
         """
         inputs = ScoreInput(
             air_quality=10,
             active_energy=98,
-            biweekly=15,
+            condition_assessment=15,
             medication=1.0,
             mood=4,
         )
@@ -191,13 +191,13 @@ class TestDepressionScoreCalculation:
 
     def test_case_1237(self, calculator):
         """
-        Input: sleep=725, active_energy=310, biweekly=26, mood=2
+        Input: sleep=725, active_energy=310, condition_assessment=26, mood=2
         Expected: 57.86163522
         """
         inputs = ScoreInput(
             sleep=725,
             active_energy=310,
-            biweekly=26,
+            condition_assessment=26,
             mood=2,
         )
         score = calculator.calculate_score(inputs)
@@ -222,12 +222,12 @@ class TestDepressionScoreCalculation:
 
     def test_case_1239(self, calculator):
         """
-        Input: active_energy=43, biweekly=17, medication=1, mood=4
+        Input: active_energy=43, condition_assessment=17, medication=1, mood=4
         Expected: 55.81854043
         """
         inputs = ScoreInput(
             active_energy=43,
-            biweekly=17,
+            condition_assessment=17,
             medication=1.0,
             mood=4,
         )
@@ -237,13 +237,13 @@ class TestDepressionScoreCalculation:
 
     def test_case_1240(self, calculator):
         """
-        Input: air_quality=40, biweekly=21, sleep=394, mood=3, active_energy=168
+        Input: air_quality=40, condition_assessment=21, sleep=394, mood=3, active_energy=168
         Expected: 67.59776536
         """
         inputs = ScoreInput(
             air_quality=40,
             sleep=394,
-            biweekly=21,
+            condition_assessment=21,
             mood=3,
             active_energy=168,
         )
@@ -284,12 +284,12 @@ class TestDepressionScoreCalculation:
 
     def test_case_1243(self, calculator):
         """
-        Input: active_energy=241, biweekly=20, mood=2
+        Input: active_energy=241, condition_assessment=20, mood=2
         Expected: 60.43165468
         """
         inputs = ScoreInput(
             active_energy=241,
-            biweekly=20,
+            condition_assessment=20,
             mood=2,
         )
         score = calculator.calculate_score(inputs)
@@ -298,11 +298,11 @@ class TestDepressionScoreCalculation:
 
     def test_case_1244(self, calculator):
         """
-        Input: biweekly=8, sleep=356, medication=0.75
+        Input: condition_assessment=8, sleep=356, medication=0.75
         Expected: 65.35087719
         """
         inputs = ScoreInput(
-            biweekly=8,
+            condition_assessment=8,
             sleep=356,
             medication=0.75,
         )
@@ -312,13 +312,13 @@ class TestDepressionScoreCalculation:
 
     def test_case_1245(self, calculator):
         """
-        Input: air_quality=143, active_energy=114, biweekly=27
+        Input: air_quality=143, active_energy=114, condition_assessment=27
         Expected: 35.82089552
         """
         inputs = ScoreInput(
             air_quality=143,
             active_energy=114,
-            biweekly=27,
+            condition_assessment=27,
         )
         score = calculator.calculate_score(inputs)
         assert score is not None
@@ -326,13 +326,13 @@ class TestDepressionScoreCalculation:
 
     def test_case_1246(self, calculator):
         """
-        Input: sleep=255, active_energy=89, biweekly=13, hrv=20.1009
+        Input: sleep=255, active_energy=89, condition_assessment=13, hrv=20.1009
         Expected: 50.43290043
         """
         inputs = ScoreInput(
             sleep=255,
             active_energy=89,
-            biweekly=13,
+            condition_assessment=13,
             hrv=20.1009,
         )
         score = calculator.calculate_score(inputs)
@@ -355,7 +355,7 @@ class TestAsthmaScoreCalculation:
 
     def test_case_1234(self, calculator):
         """
-        Input: air_quality=118, sleep=220, active_energy=241, biweekly=12,
+        Input: air_quality=118, sleep=220, active_energy=241, condition_assessment=12,
                medication=0.5, mood=2, hrv=-5.32491, pollen=36, inhaler=0
         Expected: 61.40350877
         Note: Asthma has more factors, tolerance increased for weight variations
@@ -364,7 +364,7 @@ class TestAsthmaScoreCalculation:
             air_quality=118,
             sleep=220,
             active_energy=241,
-            biweekly=12,
+            condition_assessment=12,
             medication=0.5,
             mood=2,
             hrv=-5.32491,
@@ -393,13 +393,13 @@ class TestAsthmaScoreCalculation:
 
     def test_case_1236(self, calculator):
         """
-        Input: air_quality=10, active_energy=98, biweekly=15, medication=1, mood=4
+        Input: air_quality=10, active_energy=98, condition_assessment=15, medication=1, mood=4
         Expected: 75.55555556
         """
         inputs = ScoreInput(
             air_quality=10,
             active_energy=98,
-            biweekly=15,
+            condition_assessment=15,
             medication=1.0,
             mood=4,
         )
@@ -409,13 +409,13 @@ class TestAsthmaScoreCalculation:
 
     def test_case_1237(self, calculator):
         """
-        Input: sleep=725, active_energy=310, biweekly=17, pollen=124, mood=2, inhaler=2
+        Input: sleep=725, active_energy=310, condition_assessment=17, pollen=124, mood=2, inhaler=2
         Expected: 56.41025641
         """
         inputs = ScoreInput(
             sleep=725,
             active_energy=310,
-            biweekly=17,
+            condition_assessment=17,
             pollen=124,
             mood=2,
             inhaler=2,
@@ -441,13 +441,13 @@ class TestAsthmaScoreCalculation:
 
     def test_case_1239(self, calculator):
         """
-        Input: active_energy=43, pollen=26, biweekly=17, medication=1, mood=4, inhaler=0
+        Input: active_energy=43, pollen=26, condition_assessment=17, medication=1, mood=4, inhaler=0
         Expected: 73.33333333
         """
         inputs = ScoreInput(
             active_energy=43,
             pollen=26,
-            biweekly=17,
+            condition_assessment=17,
             medication=1.0,
             mood=4,
             inhaler=0,
@@ -458,13 +458,13 @@ class TestAsthmaScoreCalculation:
 
     def test_case_1240(self, calculator):
         """
-        Input: air_quality=40, biweekly=21, sleep=394, mood=3, active_energy=168
+        Input: air_quality=40, condition_assessment=21, sleep=394, mood=3, active_energy=168
         Expected: 87.09677419
         """
         inputs = ScoreInput(
             air_quality=40,
             sleep=394,
-            biweekly=21,
+            condition_assessment=21,
             mood=3,
             active_energy=168,
         )
@@ -506,12 +506,12 @@ class TestAsthmaScoreCalculation:
 
     def test_case_1243(self, calculator):
         """
-        Input: active_energy=241, biweekly=20, mood=2, inhaler=1
+        Input: active_energy=241, condition_assessment=20, mood=2, inhaler=1
         Expected: 76.55172414
         """
         inputs = ScoreInput(
             active_energy=241,
-            biweekly=20,
+            condition_assessment=20,
             mood=2,
             inhaler=1,
         )
@@ -521,11 +521,11 @@ class TestAsthmaScoreCalculation:
 
     def test_case_1244(self, calculator):
         """
-        Input: biweekly=8, sleep=356, medication=0.75, inhaler=1
+        Input: condition_assessment=8, sleep=356, medication=0.75, inhaler=1
         Expected: 44.23076923
         """
         inputs = ScoreInput(
-            biweekly=8,
+            condition_assessment=8,
             sleep=356,
             medication=0.75,
             inhaler=1,
@@ -536,13 +536,13 @@ class TestAsthmaScoreCalculation:
 
     def test_case_1245(self, calculator):
         """
-        Input: air_quality=143, active_energy=114, biweekly=14
+        Input: air_quality=143, active_energy=114, condition_assessment=14
         Expected: 55
         """
         inputs = ScoreInput(
             air_quality=143,
             active_energy=114,
-            biweekly=14,
+            condition_assessment=14,
         )
         score = calculator.calculate_score(inputs)
         assert score is not None
@@ -550,13 +550,13 @@ class TestAsthmaScoreCalculation:
 
     def test_case_1246(self, calculator):
         """
-        Input: sleep=255, active_energy=89, biweekly=13, inhaler=3, hrv=20.1009
+        Input: sleep=255, active_energy=89, condition_assessment=13, inhaler=3, hrv=20.1009
         Expected: 45.0877193
         """
         inputs = ScoreInput(
             sleep=255,
             active_energy=89,
-            biweekly=13,
+            condition_assessment=13,
             inhaler=3,
             hrv=20.1009,
         )
@@ -580,17 +580,17 @@ class TestMigraineScoreCalculation:
 
     def test_case_1234(self, calculator):
         """
-        Input: air_quality=118, sleep=220, active_energy=241, biweekly=63,
+        Input: air_quality=118, sleep=220, active_energy=241, condition_assessment=63,
                mood=2, hrv=-5.32491
         Expected: 36.04060914
-        Note: biweekly 63 -> transformed (78-63=15)
+        Note: condition_assessment 63 -> transformed (78-63=15)
         Note: Large tolerance due to HRV step boundaries and negative AQI
         """
         inputs = ScoreInput(
             air_quality=118,
             sleep=220,
             active_energy=241,
-            biweekly=63,
+            condition_assessment=63,
             mood=2,
             hrv=-5.32491,
         )
@@ -614,14 +614,14 @@ class TestMigraineScoreCalculation:
 
     def test_case_1236(self, calculator):
         """
-        Input: air_quality=10, active_energy=98, biweekly=76, mood=4
+        Input: air_quality=10, active_energy=98, condition_assessment=76, mood=4
         Expected: 63.24786325
-        Note: biweekly 76 -> transformed (78-76=2)
+        Note: condition_assessment 76 -> transformed (78-76=2)
         """
         inputs = ScoreInput(
             air_quality=10,
             active_energy=98,
-            biweekly=76,
+            condition_assessment=76,
             mood=4,
         )
         score = calculator.calculate_score(inputs)
@@ -630,14 +630,14 @@ class TestMigraineScoreCalculation:
 
     def test_case_1237(self, calculator):
         """
-        Input: sleep=725, active_energy=310, biweekly=62, mood=2
+        Input: sleep=725, active_energy=310, condition_assessment=62, mood=2
         Expected: 67.28971963
-        Note: biweekly 62 -> transformed (78-62=16)
+        Note: condition_assessment 62 -> transformed (78-62=16)
         """
         inputs = ScoreInput(
             sleep=725,
             active_energy=310,
-            biweekly=62,
+            condition_assessment=62,
             mood=2,
         )
         score = calculator.calculate_score(inputs)
@@ -662,13 +662,13 @@ class TestMigraineScoreCalculation:
 
     def test_case_1239(self, calculator):
         """
-        Input: active_energy=43, biweekly=57, mood=4
+        Input: active_energy=43, condition_assessment=57, mood=4
         Expected: 54.40613027
-        Note: biweekly 57 -> transformed (78-57=21)
+        Note: condition_assessment 57 -> transformed (78-57=21)
         """
         inputs = ScoreInput(
             active_energy=43,
-            biweekly=57,
+            condition_assessment=57,
             mood=4,
         )
         score = calculator.calculate_score(inputs)
@@ -677,14 +677,14 @@ class TestMigraineScoreCalculation:
 
     def test_case_1240(self, calculator):
         """
-        Input: air_quality=40, biweekly=42, sleep=394, mood=3, active_energy=168
+        Input: air_quality=40, condition_assessment=42, sleep=394, mood=3, active_energy=168
         Expected: 86.86131387
-        Note: biweekly 42 -> transformed (78-42=36)
+        Note: condition_assessment 42 -> transformed (78-42=36)
         """
         inputs = ScoreInput(
             air_quality=40,
             sleep=394,
-            biweekly=42,
+            condition_assessment=42,
             mood=3,
             active_energy=168,
         )
@@ -711,13 +711,13 @@ class TestMigraineScoreCalculation:
 
     def test_case_1243(self, calculator):
         """
-        Input: active_energy=241, biweekly=55, mood=2
+        Input: active_energy=241, condition_assessment=55, mood=2
         Expected: 67.81609195
-        Note: biweekly 55 -> transformed (78-55=23)
+        Note: condition_assessment 55 -> transformed (78-55=23)
         """
         inputs = ScoreInput(
             active_energy=241,
-            biweekly=55,
+            condition_assessment=55,
             mood=2,
         )
         score = calculator.calculate_score(inputs)
@@ -726,15 +726,15 @@ class TestMigraineScoreCalculation:
 
     def test_case_1245(self, calculator):
         """
-        Input: air_quality=143, active_energy=114, biweekly=67
+        Input: air_quality=143, active_energy=114, condition_assessment=67
         Expected: 34.31372549
-        Note: biweekly 67 -> transformed (78-67=11)
+        Note: condition_assessment 67 -> transformed (78-67=11)
         Note: AQI > 100 gives negative score, large variance possible
         """
         inputs = ScoreInput(
             air_quality=143,
             active_energy=114,
-            biweekly=67,
+            condition_assessment=67,
         )
         score = calculator.calculate_score(inputs)
         assert score is not None
@@ -742,14 +742,14 @@ class TestMigraineScoreCalculation:
 
     def test_case_1246(self, calculator):
         """
-        Input: sleep=255, active_energy=89, biweekly=59, hrv=20.1009
+        Input: sleep=255, active_energy=89, condition_assessment=59, hrv=20.1009
         Expected: 64.9122807
-        Note: biweekly 59 -> transformed (78-59=19)
+        Note: condition_assessment 59 -> transformed (78-59=19)
         """
         inputs = ScoreInput(
             sleep=255,
             active_energy=89,
-            biweekly=59,
+            condition_assessment=59,
             hrv=20.1009,
         )
         score = calculator.calculate_score(inputs)
@@ -788,7 +788,7 @@ class TestScoreBounds:
             air_quality=10,  # Excellent
             sleep=500,  # Excellent
             active_energy=500,  # High
-            biweekly=0,  # Best possible
+            condition_assessment=0,  # Best possible
             medication=1.0,  # Full compliance
             mood=5,  # Excellent
             hrv=20,  # Positive diff

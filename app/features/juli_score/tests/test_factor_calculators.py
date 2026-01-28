@@ -6,7 +6,7 @@ from app.features.juli_score.constants import (
     DEPRESSION_FACTORS,
     ASTHMA_FACTORS,
     MIGRAINE_FACTORS,
-    BIWEEKLY_TRANSFORMATIONS,
+    CONDITION_ASSESSMENT_TRANSFORMATIONS,
     MOOD_VALUES,
     JuliScoreConditions,
     Step,
@@ -33,12 +33,12 @@ class TestMoodMapping:
         assert MOOD_VALUES["excellent"] == 5
 
 
-class TestBiweeklyTransformations:
-    """Test bi-weekly score transformations by condition"""
+class TestConditionAssessmentTransformations:
+    """Test condition assessment score transformations by condition"""
 
     def test_depression_transformation(self):
         """Depression: 32 - rawValue"""
-        transform = BIWEEKLY_TRANSFORMATIONS[JuliScoreConditions.DEPRESSION]
+        transform = CONDITION_ASSESSMENT_TRANSFORMATIONS[JuliScoreConditions.DEPRESSION]
         # Raw value 4 -> 32 - 4 = 28
         assert transform(4) == 28
         assert transform(12) == 20  # 32 - 12 = 20
@@ -46,14 +46,14 @@ class TestBiweeklyTransformations:
 
     def test_asthma_transformation(self):
         """Asthma: no transformation (raw value)"""
-        transform = BIWEEKLY_TRANSFORMATIONS[JuliScoreConditions.ASTHMA]
+        transform = CONDITION_ASSESSMENT_TRANSFORMATIONS[JuliScoreConditions.ASTHMA]
         assert transform(4) == 4
         assert transform(12) == 12
         assert transform(0) == 0
 
     def test_migraine_transformation(self):
         """Migraine: 78 - rawValue"""
-        transform = BIWEEKLY_TRANSFORMATIONS[JuliScoreConditions.MIGRAINE]
+        transform = CONDITION_ASSESSMENT_TRANSFORMATIONS[JuliScoreConditions.MIGRAINE]
         # Raw value 4 -> 78 - 4 = 74
         assert transform(4) == 74
         assert transform(63) == 15  # 78 - 63 = 15
@@ -151,27 +151,27 @@ class TestStepBasedCalculation:
             result = self._calculate_math_factor(420, config)
             assert result == 50
 
-    # ==================== Depression Biweekly Tests ====================
-    class TestDepressionBiweekly:
-        """Biweekly questionnaire factor tests for depression"""
+    # ==================== Depression Condition Assessment Tests ====================
+    class TestDepressionConditionAssessment:
+        """Condition assessment questionnaire factor tests for depression"""
 
-        def _calculate_biweekly_factor(self, raw_value: float, condition_code: str, config: FactorConfig) -> float:
-            """Calculate biweekly factor with transformation"""
-            transform = BIWEEKLY_TRANSFORMATIONS.get(condition_code)
+        def _calculate_condition_assessment_factor(self, raw_value: float, condition_code: str, config: FactorConfig) -> float:
+            """Calculate condition assessment factor with transformation"""
+            transform = CONDITION_ASSESSMENT_TRANSFORMATIONS.get(condition_code)
             transformed = transform(raw_value) if transform else raw_value
             calculated = transformed * (config.multiplier or 1.0)
             return max(config.minimum_score, min(calculated, config.weight))
 
-        def test_biweekly_score_13(self):
+        def test_condition_assessment_score_13(self):
             """Raw 13 -> transformed (32-13=19) * 2.0 = 38"""
-            config = DEPRESSION_FACTORS["biweekly"]
-            result = self._calculate_biweekly_factor(13, JuliScoreConditions.DEPRESSION, config)
+            config = DEPRESSION_FACTORS["condition_assessment"]
+            result = self._calculate_condition_assessment_factor(13, JuliScoreConditions.DEPRESSION, config)
             assert result == 38
 
-        def test_biweekly_score_14(self):
+        def test_condition_assessment_score_14(self):
             """Raw 14 -> transformed (32-14=18) * 2.0 = 36"""
-            config = DEPRESSION_FACTORS["biweekly"]
-            result = self._calculate_biweekly_factor(14, JuliScoreConditions.DEPRESSION, config)
+            config = DEPRESSION_FACTORS["condition_assessment"]
+            result = self._calculate_condition_assessment_factor(14, JuliScoreConditions.DEPRESSION, config)
             assert result == 36
 
     # ==================== Depression Medication Tests ====================
@@ -325,27 +325,27 @@ class TestMigraineFactors:
         result = self._calculate_math_factor(43, config)
         assert abs(result - 14.319) < 0.1
 
-    # ==================== Migraine Biweekly ====================
-    def test_biweekly_score_63(self):
+    # ==================== Migraine Condition Assessment ====================
+    def test_condition_assessment_score_63(self):
         """Raw 63 -> transformed (78-63=15) * 1.0 = 15"""
-        transform = BIWEEKLY_TRANSFORMATIONS[JuliScoreConditions.MIGRAINE]
-        config = MIGRAINE_FACTORS["biweekly"]
+        transform = CONDITION_ASSESSMENT_TRANSFORMATIONS[JuliScoreConditions.MIGRAINE]
+        config = MIGRAINE_FACTORS["condition_assessment"]
         transformed = transform(63)
         result = min(transformed * config.multiplier, config.weight)
         assert result == 15
 
-    def test_biweekly_score_76(self):
+    def test_condition_assessment_score_76(self):
         """Raw 76 -> transformed (78-76=2) * 1.0 = 2"""
-        transform = BIWEEKLY_TRANSFORMATIONS[JuliScoreConditions.MIGRAINE]
-        config = MIGRAINE_FACTORS["biweekly"]
+        transform = CONDITION_ASSESSMENT_TRANSFORMATIONS[JuliScoreConditions.MIGRAINE]
+        config = MIGRAINE_FACTORS["condition_assessment"]
         transformed = transform(76)
         result = min(transformed * config.multiplier, config.weight)
         assert result == 2
 
-    def test_biweekly_score_59(self):
+    def test_condition_assessment_score_59(self):
         """Raw 59 -> transformed (78-59=19) * 1.0 = 19"""
-        transform = BIWEEKLY_TRANSFORMATIONS[JuliScoreConditions.MIGRAINE]
-        config = MIGRAINE_FACTORS["biweekly"]
+        transform = CONDITION_ASSESSMENT_TRANSFORMATIONS[JuliScoreConditions.MIGRAINE]
+        config = MIGRAINE_FACTORS["condition_assessment"]
         transformed = transform(59)
         result = min(transformed * config.multiplier, config.weight)
         assert result == 19

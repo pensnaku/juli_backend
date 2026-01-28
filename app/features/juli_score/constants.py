@@ -81,8 +81,8 @@ MOOD_VALUES = {
     "excellent": 5,
 }
 
-# Bi-weekly score transformations by condition
-BIWEEKLY_TRANSFORMATIONS: Dict[str, Callable[[float], float]] = {
+# Condition assessment score transformations by condition
+CONDITION_ASSESSMENT_TRANSFORMATIONS: Dict[str, Callable[[float], float]] = {
     JuliScoreConditions.DEPRESSION: lambda raw: 32 - raw,
     JuliScoreConditions.ASTHMA: lambda raw: raw,  # No transformation
     JuliScoreConditions.MIGRAINE: lambda raw: 78 - raw,
@@ -117,12 +117,12 @@ DEPRESSION_FACTORS: Dict[str, FactorConfig] = {
             Step(0, 299, -0.5),  # <5 hours
         ],
     ),
-    "biweekly": FactorConfig(
+    "condition_assessment": FactorConfig(
         weight=64,
         minimum_score=0,
         just_math=True,
         multiplier=2.0,
-        observation_code="bi-weekly-depression-questionnaire-score",
+        observation_code="condition-assessment-depression-score",
         time_window_days=14,
     ),
     "active_energy": FactorConfig(
@@ -191,12 +191,12 @@ ASTHMA_FACTORS: Dict[str, FactorConfig] = {
             Step(0, 299, -0.5),
         ],
     ),
-    "biweekly": FactorConfig(
+    "condition_assessment": FactorConfig(
         weight=50,
         minimum_score=0,
         just_math=True,
         multiplier=2.0,
-        observation_code="bi-weekly-asthma-questionnaire-score",
+        observation_code="condition-assessment-asthma-score",
         time_window_days=14,
     ),
     "active_energy": FactorConfig(
@@ -292,12 +292,12 @@ MIGRAINE_FACTORS: Dict[str, FactorConfig] = {
             Step(0, 299, -0.5),
         ],
     ),
-    "biweekly": FactorConfig(
+    "condition_assessment": FactorConfig(
         weight=42,
         minimum_score=0,
         just_math=True,
         multiplier=1.0,
-        observation_code="bi-weekly-migraine-questionnaire-score",
+        observation_code="condition-assessment-migraine-score",
         time_window_days=14,
     ),
     "active_energy": FactorConfig(

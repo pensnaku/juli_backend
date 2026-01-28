@@ -7,7 +7,7 @@ from datetime import date, timedelta
 from app.features.juli_score.constants import (
     FactorConfig,
     MOOD_VALUES,
-    BIWEEKLY_TRANSFORMATIONS,
+    CONDITION_ASSESSMENT_TRANSFORMATIONS,
 )
 from app.features.juli_score.repository import JuliScoreRepository
 
@@ -37,10 +37,10 @@ class FactorCalculator:
         if raw_value is None:
             return None, None
 
-        # Apply transformation for bi-weekly questionnaire
+        # Apply transformation for condition assessment questionnaire
         transformed_value = raw_value
-        if factor_name == "biweekly":
-            transform = BIWEEKLY_TRANSFORMATIONS.get(condition_code)
+        if factor_name == "condition_assessment":
+            transform = CONDITION_ASSESSMENT_TRANSFORMATIONS.get(condition_code)
             if transform:
                 transformed_value = transform(float(raw_value))
 
@@ -100,8 +100,8 @@ class FactorCalculator:
             )
             return float(avg) if avg else None
 
-        # Bi-weekly questionnaire: get most recent in window
-        if factor_name == "biweekly":
+        # Condition assessment questionnaire: get most recent in window
+        if factor_name == "condition_assessment":
             value = self.repo.get_latest_value_in_period(
                 self.user_id,
                 config.observation_code,
