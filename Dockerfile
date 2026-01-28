@@ -1,11 +1,11 @@
-FROM python:3.10-slim
+FROM python:3.10
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (WeasyPrint requirement)
 RUN apt-get update && apt-get install -y \
-    gcc \
     postgresql-client \
+    libpangoft2-1.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies

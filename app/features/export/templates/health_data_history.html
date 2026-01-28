@@ -1,0 +1,757 @@
+<head>
+    <title>My juli Data</title>
+    <meta name="author" content="juli Inc." />
+    <meta name="generator" content="juli" />
+    <meta name="description" content="Health data history" />
+
+    <style type="text/css">
+        @page {
+            @bottom-left {
+                content: "This is a service of juli Inc. For more information visit juli.co";
+                font-family: 'Futura PT Book';
+                font-size: 14px;
+                line-height: 17px;
+                color: #1E2226;
+                font-weight: 400;
+                text-decoration: none;
+            }
+
+            @bottom-right {
+                content: counter(page);
+                font-family: 'Futura PT Medium';
+                font-size: 14px;
+                line-height: 17px;
+                color: #1E2226;
+                font-weight: 400;
+            }
+
+            @top-left {
+                content: element(header-name);
+                margin-top: 18px;
+            }
+
+            @top-center {
+                content: "{{ period }}";
+                margin-top: 18px;
+                font-family: 'Futura PT Book';
+                font-size: 16px;
+                line-height: 21px;
+                font-weight: 400;
+                color: #1E2226;
+            }
+
+            margin-top: 90px;
+            margin-bottom: 65px;
+            padding-top: 24px;
+            border-bottom: 1px solid rgba(116, 140, 151, 0.15);
+            border-top: 1px solid rgba(116, 140, 151, 0.15);
+        }
+
+        @page :first {
+            border-top: none;
+
+            @top-left {
+                content: none;
+                margin-top: 0.5cm;
+            }
+
+            @top-center {
+                content: none;
+                margin-top: 0.5cm;
+            }
+
+            margin-top: 0.5cm;
+            padding-top: 0px;
+        }
+
+        .container {
+            background-color: white;
+        }
+
+        .patient-charts-container-header {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            background-color: #FFFFFF;
+            padding-bottom: 23px;
+            border-bottom: 1px solid rgba(116, 140, 151, 0.15);
+        }
+
+        .patient-charts-container-header-name {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-left: 16px;
+            min-width: 220px;
+        }
+
+        .patient-charts-container-header-name-title {
+            font-family: 'Futura PT Book';
+            font-size: 20px;
+            line-height: 24px;
+            color: #FF6961;
+            font-weight: 450;
+        }
+
+        .patient-charts-container-header-name-demographic {
+            font-family: 'Futura PT Book';
+            font-size: 14px;
+            line-height: 17px;
+            color: #1E2226;
+            font-weight: 400;
+        }
+
+        .patient-charts-container-header-condition {
+            margin-left: 16px;
+        }
+
+        .patient-charts-container-header-condition-section-label {
+            display: inline-block;
+            font-family: 'Futura PT Book';
+            font-size: 14px;
+            line-height: 17px;
+            color: #6F6F6F;
+            font-weight: 400;
+            min-width: 80px;
+        }
+
+        .patient-charts-container-header-condition-section-value {
+            font-family: 'Futura PT Book';
+            font-size: 14px;
+            line-height: 17px;
+            color: #1E2226;
+            font-weight: 400;
+            margin-left: 8px;
+        }
+
+        .patient-charts-container-period {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 32px;
+            background-color: #FFFFFF;
+        }
+
+        .patient-charts-container-period-title {
+            font-family: 'Futura PT Book';
+            font-size: 16px;
+            line-height: 21px;
+            color: #1E2226;
+            font-weight: 400;
+        }
+
+        .patient-charts-container-data-card {
+            padding: 12px;
+            margin-top: 24px;
+            background-color: #FFFFFF;
+            border-radius: 5px;
+            border: 1px solid rgba(116, 140, 151, 0.15);
+            position: relative;
+            page-break-inside: avoid;
+        }
+
+        .patient-charts-container-data-card-label {
+            font-family: 'Futura PT Medium';
+            font-size: 10px;
+            line-height: 12px;
+            font-weight: 450;
+            color: #1E2226;
+        }
+
+        .patient-charts-container-data-card-mood-legend {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: absolute;
+            height: 100px;
+            right: 45px;
+            top: 47px;
+        }
+
+        .patient-charts-container-data-card-measurement-chart-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .patient-charts-container-data-card-measurement-chart-container-legend {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-right: 8px;
+            padding-top: 18px;
+            padding-bottom: 20px;
+        }
+
+        .patient-charts-container-data-card-measurement-chart-container-legend-text {
+            font-family: 'Futura PT Book';
+            font-size: 8px;
+            line-height: 10px;
+            color: #1E2226;
+            font-weight: 400;
+            text-align: end;
+            min-width: 50px;
+        }
+
+        .patient-charts-container-data-card-measurement-chart {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .patient-charts-container-data-card-measurement-title-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+            padding-bottom: 10px;
+        }
+
+        .patient-charts-container-data-card-measurement-title-label {
+            font-family: 'Futura PT Medium';
+            font-size: 10px;
+            line-height: 12px;
+            font-weight: 450;
+            color: #1E2226;
+            border-bottom: 1.5px solid;
+            margin-left: 12px;
+        }
+
+        .patient-charts-container-data-card-measurement-chart-period {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+
+        .patient-charts-container-data-card-measurement-chart-period-dates-text {
+            font-family: 'Futura PT Book';
+            font-size: 8px;
+            line-height: 10px;
+            color: #1E2226;
+            font-weight: 400;
+            text-align: center;
+        }
+
+        .cross-page-header-container {
+            position: running(header-name);
+            display: flex;
+            align-items: center;
+            margin-left: 8px;
+            background-color: #FFFFFF;
+        }
+
+        .cross-page-header-name {
+            font-family: 'Futura PT Book';
+            font-size: 16px;
+            line-height: 21px;
+            color: #FF6961;
+            font-weight: 400;
+            margin-left: 35px;
+        }
+    </style>
+</head>
+
+{% macro logo() %}
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <rect width="48" height="48" rx="24" fill="#FF6961"/>
+        <path d="M9.75 15.0321C9.75 14.0697 10.5538 13.2998 11.5149 13.2998C12.4759 13.2998 13.2623 14.0697 13.2623 15.0321C13.2623 15.9946 12.4585 16.7995 11.4974 16.7995C10.8509 16.7645 10.4315 16.432 10.2742 16.257C10.0995 16.0995 9.75 15.6796 9.75 15.0321Z" fill="white"/>
+        <path d="M12.6856 19.8438H10.2043V37.4996H12.6856V19.8438Z" fill="white"/>
+        <path d="M18.4171 25.9333C18.4171 26.2307 18.452 26.4932 18.4695 26.7907C18.5219 27.7356 18.6093 28.4005 19.3607 28.9255C19.6053 29.083 20.0771 29.3804 20.8634 29.3804C21.0731 29.3804 21.6148 29.3454 22.1216 29.0655C23.0826 28.5055 23.2224 27.5081 23.2749 26.4932V19.8788H25.7562V26.3532C25.7037 27.6656 25.5989 28.8905 24.8126 29.9229C24.2534 30.6753 22.9953 31.7427 20.7761 31.7427C20.2344 31.7427 18.3647 31.6902 17.0891 30.2904C16.0756 29.1705 16.0406 27.7706 15.9882 26.2132V19.8613H18.4171V25.9333Z" fill="white"/>
+        <path d="M31.6448 10.5H29.0761V31.4631H31.6448V10.5Z" fill="white"/>
+        <path d="M34.7552 15.0321C34.7552 14.0697 35.5591 13.2998 36.5201 13.2998C37.4812 13.2998 38.25 14.0697 38.25 15.0321C38.25 15.9946 37.4462 16.7995 36.4852 16.7995C35.8386 16.7645 35.4193 16.432 35.262 16.257C35.1047 16.0995 34.7552 15.6796 34.7552 15.0321Z" fill="white"/>
+        <path d="M37.6559 19.8438H35.1746V31.4102H37.6559V19.8438Z" fill="white"/>
+    </svg>
+{% endmacro %}
+
+{% macro chart(components) %}
+    {% with height = 100, width = 560, intervals = 28, grid_stroke = 0.6, line_stroke = 1.5, bar_stroke = 5 %}
+        <div class="patient-charts-container-data-card-measurement-chart-container">
+            <div class="patient-charts-container-data-card-measurement-chart-container-legend">
+                {% for entry in components.legend %}
+                    <div class="patient-charts-container-data-card-measurement-chart-container-legend-text">{{ entry }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="patient-charts-container-data-card-measurement-chart">
+                <div class="patient-charts-container-data-card-measurement-title-container">
+                    {% for component in components.measurements %}
+                        <div class="patient-charts-container-data-card-measurement-title-label" style="border-bottom-color: {{ component.color }}">
+                            {{ component.title }}
+                        </div>
+                    {% endfor %}
+                </div>
+                <svg height="{{ height }}px" width="{{ width }}px" viewBox="0 0 {{ width }} {{ height }}" fill="none">
+                    {% with step = height // (components.legend | length - 1) %}
+                        {% for h in [grid_stroke / 2] + range(step, height, step) | list + [height - grid_stroke / 2] %}
+                            <path d="M 0,{{ h }} h {{ width }}" stroke="#D9D9D9" stroke-width="{{ grid_stroke }}" vector-effect="non-scaling-stroke" />
+                        {% endfor %}
+                    {% endwith %}
+
+                    {% with step = width // intervals %}
+                        {% with vertical = [grid_stroke / 2] + range(step, width, step) | list + [width - grid_stroke / 2] %}
+                            {% for v in vertical %}
+                                <path d="M {{ v }},0 v {{ height }}" stroke="#D9D9D9" stroke-width="{{ grid_stroke }}" vector-effect="non-scaling-stroke" />
+                            {% endfor %}
+
+                            {% for component in components.measurements %}
+                                {% if component.kind == "linear" %}
+                                    {% for path in component.sections %}
+                                        <path d="M  {{ vertical[path[0].x] }},{{ [[path[0].y, height - line_stroke] | min, line_stroke] | max }}
+                                                S
+                                                {% for point in path %}
+                                                    {{ vertical[point.x + 1] - step / 2 }},{{ [[point.y, height - line_stroke] | min, line_stroke] | max }}
+                                                    {{ vertical[point.x + 1] }},{{ [[point.y, height - line_stroke] | min, line_stroke] | max }}
+                                                {% endfor %}"
+                                                transform="translate(0, {{ height }}) scale(1, -1)"
+                                                vector-effect="non-scaling-stroke"
+                                                stroke={{ component.color }}
+                                                stroke-width="{{ line_stroke }}" />
+                                    {% endfor %}
+
+                                    {% for path in component.joints %}
+                                        <path d="M {{ vertical[path[0].x + 1] }},{{ [[path[0].y, height - line_stroke] | min, line_stroke] | max }}
+                                                 S {{ vertical[path[0].x + 1] }},{{ [[path[0].y, height - line_stroke] | min, line_stroke] | max }}
+                                                   {{ vertical[path[1].x]     }},{{ [[path[1].y, height - line_stroke] | min, line_stroke] | max }}"
+                                                transform="translate(0, {{ height }}) scale(1, -1)"
+                                                vector-effect="non-scaling-stroke"
+                                                stroke={{ component.color }}
+                                                stroke-dasharray="1 2"
+                                                stroke-width="{{ line_stroke }}" />
+                                    {% endfor %}
+                                {% endif %}
+
+                                {% if component.kind == "bar" %}
+                                    {% set bar_components = components.measurements | selectattr("kind", "equalto", "bar") | list %}
+                                    {% set num_bars = bar_components | length %}
+                                    {% set bar_index = loop.index0 %}
+                                    {% set bar_spacing = 1 %}
+                                    {% set bar_offset = (bar_index - (num_bars - 1) / 2) * (bar_stroke + bar_spacing) if num_bars > 1 else 0 %}
+                                    {% for path in component.sections %}
+                                        {% for point in path %}
+                                            {% if point.y %}
+                                                <path d="M {{ (vertical[point.x] + vertical[point.x + 1]) / 2 + bar_offset }},1 v {{ [point.y, height - 2] | min }}"
+                                                        transform="translate(0, {{ height }}) scale(1, -1)"
+                                                        vector-effect="non-scaling-stroke"
+                                                        stroke={{ component.color }}
+                                                        stroke-width="{{ bar_stroke }}" />
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                {% endif %}
+
+                                {% if component.kind == "circle" %}
+                                    {% for path in component.sections %}
+                                        {% for point in path %}
+                                            <circle cx="{{ (vertical[point.x] + vertical[point.x + 1]) / 2 }}"
+                                                    cy="{{ height - [[point.y, height - 4] | min, 4] | max }}"
+                                                    r="4"
+                                                    fill="{{ component.color }}" />
+                                        {% endfor %}
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    {% endwith %}
+                </svg>
+                <div class="patient-charts-container-data-card-measurement-chart-period">
+                    {% for day in range(0, intervals) %}
+                        <div class="patient-charts-container-data-card-measurement-chart-period-dates-text" style="width: {{ width // intervals }}px">
+                            {{ components.timeline[day] }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endwith %}
+{% endmacro %}
+
+<body>
+    <div class="cross-page-header-container">
+        {{ logo() }}
+        <div class="cross-page-header-name">{{ name }}</div>
+    </div>
+    <div class="container">
+        <div class="patient-charts-container-header">
+            {{ logo() }}
+            <div class="patient-charts-container-header-name">
+                <div class="patient-charts-container-header-name-title">{{ name }}</div>
+                <div class="patient-charts-container-header-name-demographic">{{ gender }}</div>
+            </div>
+            <div class="patient-charts-container-header-condition">
+                <div>
+                    <span class="patient-charts-container-header-condition-section-label">Condition:</span>
+                    <span class="patient-charts-container-header-condition-section-value">{{ condition }}</span>
+                </div>
+                <div>
+                    <span class="patient-charts-container-header-condition-section-label">Diagnosed:</span>
+                    <span class="patient-charts-container-header-condition-section-value">{{ diagnosed }}</span>
+                </div>
+                {% if score.medication.title %}
+                    <div>
+                        <span class="patient-charts-container-header-condition-section-label">Medication:</span>
+                        <span class="patient-charts-container-header-condition-section-value">{{ score.medication.title }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="patient-charts-container-period">
+            <div class="patient-charts-container-period-title">{{ period }}</div>
+        </div>
+
+        {% if score.phq8 %}
+            <div class="patient-charts-container-data-card">
+                <div class="patient-charts-container-data-card-label">{{ condition }}</div>
+                {{
+                    chart({
+                        "legend": [0, 6, 12, 18, 24, "Meds taken"] if score.medication.compliance else [0, 6, 12, 18, 24],
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "PHQ8",
+                                "kind": "linear",
+                                "color": "#00D6B2",
+                                "sections": score.phq8.sections,
+                                "joints": score.phq8.joints,
+                            },
+                            {
+                                "title": "Mood",
+                                "kind": "linear",
+                                "color": "#02108A",
+                                "sections": score.mood.sections,
+                                "joints": score.mood.joints,
+                            },
+                            {
+                                "title": "Medications",
+                                "kind": "bar",
+                                "color": "#969BDE",
+                                "sections": score.medication.compliance.sections,
+                            }
+                            if score.medication.compliance
+                            else {}
+                        ]
+                    })
+                }}
+                <div class="patient-charts-container-data-card-mood-legend">
+                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="4.27394" cy="4.48158" r="4.21986" fill="#02108A"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M4.27394 6.74986C3.25432 6.74986 2.42775 5.92329 2.42775 4.90367H1.90027C1.90027 6.21461 2.963 7.27734 4.27394 7.27734C5.58489 7.27734 6.64762 6.21461 6.64762 4.90367H6.12013C6.12013 5.92329 5.29357 6.74986 4.27394 6.74986Z" fill="white"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.15537 3.32809C3.12189 3.33172 3.05675 3.35055 2.95522 3.4267C2.55234 3.72885 2.20934 3.84941 1.90545 3.72818C1.76284 3.6713 1.66287 3.57235 1.59144 3.48477C1.54337 3.42583 1.49476 3.35356 1.45683 3.29716C1.44298 3.27657 1.43056 3.2581 1.4201 3.24317L1.85224 2.94068C1.87523 2.97352 1.89425 3.00189 1.91148 3.0276C1.94262 3.07405 1.9679 3.11178 2.0002 3.15138C2.04455 3.20575 2.07625 3.22841 2.10089 3.23824C2.13148 3.25045 2.26524 3.28483 2.63873 3.00471C2.79003 2.89123 2.94312 2.8205 3.09861 2.80367C3.25942 2.78626 3.39867 2.82919 3.51126 2.90109C3.7068 3.02595 3.82304 3.24276 3.88087 3.35062C3.88331 3.35517 3.88565 3.35953 3.88788 3.36368L3.42345 3.61376C3.35426 3.48526 3.29541 3.38911 3.22737 3.34566C3.20405 3.33077 3.18354 3.32504 3.15537 3.32809Z" fill="white"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M5.27022 3.4277C5.30371 3.43132 5.36884 3.45016 5.47038 3.52631C5.87326 3.82846 6.21626 3.94901 6.52015 3.82779C6.66276 3.77091 6.76273 3.67195 6.83416 3.58438C6.88223 3.52544 6.93084 3.45317 6.96877 3.39676C6.98262 3.37618 6.99504 3.35771 7.00549 3.34278L6.57336 3.04029C6.55037 3.07313 6.53135 3.1015 6.51412 3.12721C6.48298 3.17366 6.45769 3.21139 6.4254 3.25099C6.38105 3.30536 6.34935 3.32802 6.32471 3.33785C6.29412 3.35006 6.16036 3.38444 5.78687 3.10432C5.63556 2.99084 5.48248 2.92011 5.32699 2.90328C5.16618 2.88587 5.02693 2.9288 4.91434 3.0007C4.7188 3.12556 4.60256 3.34237 4.54472 3.45023C4.54229 3.45478 4.53995 3.45914 4.53772 3.46328L5.00215 3.71337C5.07134 3.58487 5.13018 3.48872 5.19823 3.44527C5.22155 3.43038 5.24205 3.42465 5.27022 3.4277Z" fill="white"/>
+                    </svg>
+                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="4.27394" cy="4.31557" r="3.69238" fill="#02108A" stroke="#02108A" stroke-width="1.05497"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M2.61937 4.84277C2.61937 5.75646 3.36006 6.49715 4.27375 6.49715C5.18744 6.49715 5.92813 5.75646 5.92813 4.84277H6.45561C6.45561 6.04778 5.47876 7.02464 4.27375 7.02464C3.06874 7.02464 2.09189 6.04778 2.09189 4.84277H2.61937Z" fill="white"/>
+                        <circle cx="3.12303" cy="3.16487" r="0.383624" fill="white"/>
+                        <ellipse cx="5.4251" cy="3.16487" rx="0.383624" ry="0.383624" fill="white"/>
+                    </svg>
+                    <svg width="9" height="10" viewBox="0 0 9 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="4.27394" cy="5.14955" r="3.69238" fill="#02108A" stroke="#02108A" stroke-width="1.05497"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M6.38388 6.99609L2.16402 6.99609L2.16402 6.46861L6.38388 6.46861L6.38388 6.99609Z" fill="white"/>
+                        <circle cx="3.12303" cy="3.99886" r="0.383624" fill="white"/>
+                        <ellipse cx="5.4251" cy="3.99886" rx="0.383624" ry="0.383624" fill="white"/>
+                    </svg>
+                    <svg width="9" height="10" viewBox="0 0 9 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="4.27394" cy="4.98354" r="3.69238" fill="#02108A" stroke="#02108A" stroke-width="1.05497"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M5.92851 7.28516C5.92851 6.37147 5.18782 5.63078 4.27413 5.63078C3.36044 5.63078 2.61975 6.37147 2.61975 7.28516L2.09227 7.28516C2.09227 6.08015 3.06912 5.10329 4.27413 5.10329C5.47914 5.10329 6.45599 6.08015 6.45599 7.28516L5.92851 7.28516Z" fill="white"/>
+                        <circle cx="3.12303" cy="3.83284" r="0.383624" fill="white"/>
+                        <ellipse cx="5.4251" cy="3.83284" rx="0.383624" ry="0.383624" fill="white"/>
+                    </svg>
+                    <svg width="9" height="10" viewBox="0 0 9 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="4.27394" cy="4.81752" r="4.21986" fill="#02108A"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M4.27394 5.50307C3.25432 5.50307 2.42775 6.32964 2.42775 7.34926H1.90027C1.90027 6.03832 2.963 4.97559 4.27394 4.97559C5.58489 4.97559 6.64762 6.03832 6.64762 7.34926H6.12013C6.12013 6.32964 5.29357 5.50307 4.27394 5.50307Z" fill="white"/>
+                        <path d="M2.15831 3.71943L3.32652 3.18797L3.49035 3.79938L2.26753 4.12704L2.15831 3.71943Z" fill="white"/>
+                        <path d="M6.38957 3.71943L5.22136 3.18797L5.05753 3.79938L6.28036 4.12704L6.38957 3.71943Z" fill="white"/>
+                    </svg>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if score.activity  %}
+            <div class="patient-charts-container-data-card">
+                <div class="patient-charts-container-data-card-label">Activity</div>
+                {{
+                    chart({
+                        "legend": score.activity.steps.legend,
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "Steps",
+                                "kind": "linear",
+                                "color": "#02108A",
+                                "sections": score.activity.steps.measurements.sections,
+                                "joints": score.activity.steps.measurements.joints,
+                            }
+                        ]
+                    })
+                }}
+                {{
+                    chart({
+                        "legend": score.activity.calories.legend,
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "Calories burned, kcal",
+                                "kind": "linear",
+                                "color": "#02108A",
+                                "sections": score.activity.calories.measurements.sections,
+                                "joints": score.activity.calories.measurements.joints,
+                            }
+                        ]
+                    })
+                }}
+                {{
+                    chart({
+                        "legend": score.activity.workout.legend,
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "Workout, min",
+                                "kind": "linear",
+                                "color": "#02108A",
+                                "sections": score.activity.workout.measurements.sections,
+                                "joints": score.activity.workout.measurements.joints,
+                            }
+                        ]
+                    })
+                }}
+            </div>
+        {% endif %}
+
+        {% if score.sleep  %}
+            <div class="patient-charts-container-data-card">
+                <div class="patient-charts-container-data-card-label">Sleep</div>
+                {{
+                    chart({
+                        "legend": score.sleep.legend,
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "Time in bed, hours",
+                                "kind": "bar",
+                                "color": "#02108A",
+                                "sections": score.sleep.measurements.inbed.sections,
+                            },
+                            {
+                                "title": "Time asleep, hours",
+                                "kind": "bar",
+                                "color": "#969BDE",
+                                "sections": score.sleep.measurements.asleep.sections,
+                            }
+                        ]
+                    })
+                }}
+            </div>
+        {% endif %}
+
+        {% if score.hrv  %}
+            <div class="patient-charts-container-data-card">
+                <div class="patient-charts-container-data-card-label">Heart Rate Variability</div>
+                {{
+                    chart({
+                        "legend": score.hrv.legend,
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "Heart Rate Variability, ms",
+                                "kind": "linear",
+                                "color": "#02108A",
+                                "sections": score.hrv.measurements.sections,
+                                "joints": score.hrv.measurements.joints,
+                            }
+                        ]
+                    })
+                }}
+            </div>
+        {% endif %}
+
+        {% if score.weight  %}
+            <div class="patient-charts-container-data-card">
+                <div class="patient-charts-container-data-card-label">Weight</div>
+                {{
+                    chart({
+                        "legend": score.weight.legend,
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "Weight, kg",
+                                "kind": "linear",
+                                "color": "#02108A",
+                                "sections": score.weight.measurements.sections,
+                                "joints": score.weight.measurements.joints,
+                            }
+                        ]
+                    })
+                }}
+            </div>
+        {% endif %}
+
+        {% if score.airquality  %}
+            <div class="patient-charts-container-data-card">
+                <div class="patient-charts-container-data-card-label">Air Quality</div>
+                {{
+                    chart({
+                        "legend": score.airquality.legend,
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "Air Quality Index",
+                                "kind": "linear",
+                                "color": "#02108A",
+                                "sections": score.airquality.measurements.sections,
+                                "joints": score.airquality.measurements.joints,
+                            }
+                        ]
+                    })
+                }}
+            </div>
+        {% endif %}
+
+        {% if score.pollen  %}
+            <div class="patient-charts-container-data-card">
+                <div class="patient-charts-container-data-card-label">Pollen</div>
+                {{
+                    chart({
+                        "legend": ["High", "Medium", "Low"],
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "Grass",
+                                "kind": "linear",
+                                "color": "#02108A",
+                                "sections": score.pollen.grass.sections,
+                                "joints": score.pollen.grass.joints,
+                            }
+                        ]
+                    })
+                }}
+                {{
+                    chart({
+                        "legend": ["High", "Medium", "Low"],
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "Trees",
+                                "kind": "linear",
+                                "color": "#02108A",
+                                "sections": score.pollen.trees.sections,
+                                "joints": score.pollen.trees.joints,
+                            }
+                        ]
+                    })
+                }}
+                {{
+                    chart({
+                        "legend": ["High", "Medium", "Low"],
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "Weeds",
+                                "kind": "linear",
+                                "color": "#02108A",
+                                "sections": score.pollen.weeds.sections,
+                                "joints": score.pollen.weeds.joints,
+                            }
+                        ]
+                    })
+                }}
+            </div>
+        {% endif %}
+
+        {% if score.weather  %}
+            <div class="patient-charts-container-data-card">
+                <div class="patient-charts-container-data-card-label">Weather</div>
+                {{
+                    chart({
+                        "legend": score.weather.temperature.legend,
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "Temperature, °C",
+                                "kind": "linear",
+                                "color": "#02108A",
+                                "sections": score.weather.temperature.measurements.sections,
+                                "joints": score.weather.temperature.measurements.joints,
+                            }
+                        ]
+                    })
+                }}
+                {{
+                    chart({
+                        "legend": score.weather.pressure.legend,
+                        "timeline": timeline,
+                        "measurements": [
+                            {
+                                "title": "Air Pressure, mmHg",
+                                "kind": "linear",
+                                "color": "#02108A",
+                                "sections": score.weather.pressure.measurements.sections,
+                                "joints": score.weather.pressure.measurements.joints,
+                            }
+                        ]
+                    })
+                }}
+            </div>
+        {% endif %}
+
+        {% if individual_tracking %}
+            {% for tracking_name, tracking_data in individual_tracking.items() %}
+                <div class="patient-charts-container-data-card">
+                    <div class="patient-charts-container-data-card-label">{{ tracking_data.label }}</div>
+                    {{
+                        chart({
+                            "legend": tracking_data.legend,
+                            "timeline": timeline,
+                            "measurements": [
+                                {
+                                    "title": tracking_data.label,
+                                    "kind": "circle" if tracking_data.type == "boolean" else "linear",
+                                    "color": "#969BDE" if tracking_data.type == "boolean" else "#00D6B2",
+                                    "sections": tracking_data.measurements.sections,
+                                    "joints": tracking_data.measurements.joints if tracking_data.type != "boolean" else [],
+                                },
+                                {
+                                    "title": "Mood",
+                                    "kind": "linear",
+                                    "color": "#02108A",
+                                    "sections": score.mood.sections,
+                                    "joints": score.mood.joints,
+                                }
+                            ]
+                        })
+                    }}
+                    <div class="patient-charts-container-data-card-mood-legend">
+                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="4.27394" cy="4.48158" r="4.21986" fill="#02108A"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.27394 6.74986C3.25432 6.74986 2.42775 5.92329 2.42775 4.90367H1.90027C1.90027 6.21461 2.963 7.27734 4.27394 7.27734C5.58489 7.27734 6.64762 6.21461 6.64762 4.90367H6.12013C6.12013 5.92329 5.29357 6.74986 4.27394 6.74986Z" fill="white"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.15537 3.32809C3.12189 3.33172 3.05675 3.35055 2.95522 3.4267C2.55234 3.72885 2.20934 3.84941 1.90545 3.72818C1.76284 3.6713 1.66287 3.57235 1.59144 3.48477C1.54337 3.42583 1.49476 3.35356 1.45683 3.29716C1.44298 3.27657 1.43056 3.2581 1.4201 3.24317L1.85224 2.94068C1.87523 2.97352 1.89425 3.00189 1.91148 3.0276C1.94262 3.07405 1.9679 3.11178 2.0002 3.15138C2.04455 3.20575 2.07625 3.22841 2.10089 3.23824C2.13148 3.25045 2.26524 3.28483 2.63873 3.00471C2.79003 2.89123 2.94312 2.8205 3.09861 2.80367C3.25942 2.78626 3.39867 2.82919 3.51126 2.90109C3.7068 3.02595 3.82304 3.24276 3.88087 3.35062C3.88331 3.35517 3.88565 3.35953 3.88788 3.36368L3.42345 3.61376C3.35426 3.48526 3.29541 3.38911 3.22737 3.34566C3.20405 3.33077 3.18354 3.32504 3.15537 3.32809Z" fill="white"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.27022 3.4277C5.30371 3.43132 5.36884 3.45016 5.47038 3.52631C5.87326 3.82846 6.21626 3.94901 6.52015 3.82779C6.66276 3.77091 6.76273 3.67195 6.83416 3.58438C6.88223 3.52544 6.93084 3.45317 6.96877 3.39676C6.98262 3.37618 6.99504 3.35771 7.00549 3.34278L6.57336 3.04029C6.55037 3.07313 6.53135 3.1015 6.51412 3.12721C6.48298 3.17366 6.45769 3.21139 6.4254 3.25099C6.38105 3.30536 6.34935 3.32802 6.32471 3.33785C6.29412 3.35006 6.16036 3.38444 5.78687 3.10432C5.63556 2.99084 5.48248 2.92011 5.32699 2.90328C5.16618 2.88587 5.02693 2.9288 4.91434 3.0007C4.7188 3.12556 4.60256 3.34237 4.54472 3.45023C4.54229 3.45478 4.53995 3.45914 4.53772 3.46328L5.00215 3.71337C5.07134 3.58487 5.13018 3.48872 5.19823 3.44527C5.22155 3.43038 5.24205 3.42465 5.27022 3.4277Z" fill="white"/>
+                        </svg>
+                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="4.27394" cy="4.31557" r="3.69238" fill="#02108A" stroke="#02108A" stroke-width="1.05497"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M2.61937 4.84277C2.61937 5.75646 3.36006 6.49715 4.27375 6.49715C5.18744 6.49715 5.92813 5.75646 5.92813 4.84277H6.45561C6.45561 6.04778 5.47876 7.02464 4.27375 7.02464C3.06874 7.02464 2.09189 6.04778 2.09189 4.84277H2.61937Z" fill="white"/>
+                            <circle cx="3.12303" cy="3.16487" r="0.383624" fill="white"/>
+                            <ellipse cx="5.4251" cy="3.16487" rx="0.383624" ry="0.383624" fill="white"/>
+                        </svg>
+                        <svg width="9" height="10" viewBox="0 0 9 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="4.27394" cy="5.14955" r="3.69238" fill="#02108A" stroke="#02108A" stroke-width="1.05497"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.38388 6.99609L2.16402 6.99609L2.16402 6.46861L6.38388 6.46861L6.38388 6.99609Z" fill="white"/>
+                            <circle cx="3.12303" cy="3.99886" r="0.383624" fill="white"/>
+                            <ellipse cx="5.4251" cy="3.99886" rx="0.383624" ry="0.383624" fill="white"/>
+                        </svg>
+                        <svg width="9" height="10" viewBox="0 0 9 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="4.27394" cy="4.98354" r="3.69238" fill="#02108A" stroke="#02108A" stroke-width="1.05497"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.92851 7.28516C5.92851 6.37147 5.18782 5.63078 4.27413 5.63078C3.36044 5.63078 2.61975 6.37147 2.61975 7.28516L2.09227 7.28516C2.09227 6.08015 3.06912 5.10329 4.27413 5.10329C5.47914 5.10329 6.45599 6.08015 6.45599 7.28516L5.92851 7.28516Z" fill="white"/>
+                            <circle cx="3.12303" cy="3.83284" r="0.383624" fill="white"/>
+                            <ellipse cx="5.4251" cy="3.83284" rx="0.383624" ry="0.383624" fill="white"/>
+                        </svg>
+                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="4.27394" cy="4.81756" r="3.69238" fill="#02108A" stroke="#02108A" stroke-width="1.05497"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M2.61937 4.28906C2.61937 3.37537 3.36006 2.63468 4.27375 2.63468C5.18744 2.63468 5.92813 3.37537 5.92813 4.28906H6.45561C6.45561 3.08405 5.47876 2.10719 4.27375 2.10719C3.06874 2.10719 2.09189 3.08405 2.09189 4.28906H2.61937Z" fill="white"/>
+                            <circle cx="3.12303" cy="4.66685" r="0.383624" fill="white"/>
+                            <ellipse cx="5.4251" cy="4.66685" rx="0.383624" ry="0.383624" fill="white"/>
+                        </svg>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</body>

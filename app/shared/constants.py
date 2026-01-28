@@ -1,6 +1,6 @@
 """Shared constants for the application"""
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 # Medical condition codes (SNOMED CT)
 CONDITION_CODES: Dict[str, Dict[str, Any]] = {
@@ -84,6 +84,19 @@ WELLBEING_CONDITION_CODE = "365275006"
 
 # Daily routine values
 DAILY_ROUTINE_STUDENT = "student"
+
+# Daily questionnaire keys (non-condition based, shown to all users)
+DAILY_QUESTIONNAIRE_MOOD = "mood"
+DAILY_QUESTIONNAIRE_JOURNAL = "journal"
+
+# Mood value mapping for charts (0-4 scale)
+MOOD_VALUES_CHART: Dict[str, int] = {
+    "very-bad": 0,
+    "bad": 1,
+    "good": 2,
+    "very-good": 3,
+    "excellent": 4,
+}
 
 # Daily questionnaire filename mapping (condition_code -> filename)
 # Maps SNOMED condition codes to daily questionnaire YAML filenames
@@ -170,4 +183,39 @@ NON_STUDENT_TRACKING_TOPICS = {
     "smoking",
     "alcohol-consumption",
     "hours-spent-outside",
+}
+
+# ============== Condition Assessment (Bi-weekly) Questionnaires ==============
+
+# Condition assessment questionnaire mapping (condition_code -> list of questionnaire keys)
+# These are shown every 14 days (or 30 days for diabetes)
+CONDITION_ASSESSMENT_MAP: Dict[str, List[str]] = {
+    "197480006": ["anxiety"],  # Anxiety -> GAD-7
+    "195967001": ["asthma"],  # Asthma -> ACT
+    "13746004": ["bipolar"],  # Bipolar -> ASRM
+    "82423001": [
+        "chronic_pain",
+        "chronic_pain_interference",
+    ],  # Chronic Pain -> BPI (both)
+    "13645005": ["copd"],  # COPD -> CAT
+    "35489007": ["depression"],  # Depression -> PHQ-8
+    "73211009": ["diabetes"],  # Diabetes -> DSC-R (30-day)
+    "230461009": ["headache"],  # Headache -> HIT-6
+    "38341003": ["hypertension"],  # Hypertension -> SF-12
+    "37796009": ["migraine"],  # Migraine -> HIT-6
+}
+
+# Questionnaire ID -> observation code for total score
+CONDITION_ASSESSMENT_OBSERVATION_CODES: Dict[str, str] = {
+    "condition-assessment-anxiety": "condition-assessment-anxiety-score",
+    "condition-assessment-asthma": "condition-assessment-asthma-score",
+    "condition-assessment-bipolar": "condition-assessment-bipolar-score",
+    "condition-assessment-chronic-pain": "condition-assessment-chronic-pain-score",
+    "condition-assessment-chronic-pain-interference": "condition-assessment-chronic-pain-interference-score",
+    "condition-assessment-copd": "condition-assessment-copd-score",
+    "condition-assessment-depression": "condition-assessment-depression-score",
+    "condition-assessment-diabetes": "condition-assessment-diabetes-score",
+    "condition-assessment-headache": "condition-assessment-headache-score",
+    "condition-assessment-hypertension": "condition-assessment-hypertension-score",
+    "condition-assessment-migraine": "condition-assessment-migraine-score",
 }
