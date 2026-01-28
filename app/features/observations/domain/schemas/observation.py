@@ -82,6 +82,11 @@ class ObservationResponse(BaseModel):
     unit: Optional[str] = None
     source_id: Optional[str] = None
 
+    # Weather-specific fields
+    icon: Optional[str] = None
+    status: Optional[str] = None
+    description: Optional[str] = None
+
     created_at: datetime
 
     class Config:
@@ -140,6 +145,11 @@ class ObservationQueryItem(BaseModel):
     effective_at: datetime
     unit: Optional[str] = None
     data_source: Optional[str] = None
+
+    # Weather-specific fields
+    icon: Optional[str] = None
+    status: Optional[str] = None
+    description: Optional[str] = None
 
     class Config:
         from_attributes = True

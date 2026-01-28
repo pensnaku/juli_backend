@@ -1,0 +1,65 @@
+version: '1.0'
+questionnaire_id: condition-assessment-chronic-pain-interference
+title: Chronic Pain Interference Check-in
+description: BPI (Brief Pain Inventory) - Pain Interference questionnaire
+interval_days: 14
+score_range:
+  min: 0
+  max: 70
+
+questions:
+  - id: interfered-with-general-activity
+    text: "Slide to the number that describes how, during the past 24 hours, pain has interfered with your general activity."
+    display: Pain interfered with general activity
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 10
+
+  - id: interfered-with-mood
+    text: "Slide to the number that describes how, during the past 24 hours, pain has interfered with your mood."
+    display: Pain interfered with mood
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 10
+
+  - id: interfered-with-walking-ability
+    text: "Slide to the number that describes how, during the past 24 hours, pain has interfered with your walking ability."
+    display: Pain interfered with walking ability
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 10
+
+  - id: interfered-with-normal-work
+    text: "Slide to the number that describes how, during the past 24 hours, pain has interfered with your normal work. Includes both work outside the home and housework."
+    display: Pain interfered with normal work
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 10
+
+  - id: interfered-with-relations
+    text: "Slide to the number that describes how, during the past 24 hours, pain has interfered with your relations with other people."
+    display: Pain interfered with relations with other people
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 10
+
+  - id: interfered-with-sleep
+    text: "Slide to the number that describes how, during the past 24 hours, pain has interfered with your sleep."
+    display: Pain interfered with sleep
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 10
+
+  - id: interfered-with-enjoyment-of-life
+    text: "Slide to the number that describes how, during the past 24 hours, pain has interfered with your enjoyment of life."
+    display: Pain interfered with enjoyment of life
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 10

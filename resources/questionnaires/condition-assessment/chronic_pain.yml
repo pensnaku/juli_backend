@@ -1,0 +1,41 @@
+version: '1.0'
+questionnaire_id: condition-assessment-chronic-pain
+title: Chronic Pain Check-in
+description: BPI (Brief Pain Inventory) - Pain Severity questionnaire
+interval_days: 14
+score_range:
+  min: 0
+  max: 40
+
+questions:
+  - id: rate-your-pain-at-worst
+    text: "Please rate your pain by sliding to the number that best describes your pain at its worst in the past 24 hours."
+    display: Worst pain in the past 24 hours
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 10
+
+  - id: rate-your-pain-at-least
+    text: "Please rate your pain by sliding to the number that best describes your pain at its least in the past 24 hours."
+    display: Least pain in the past 24 hours
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 10
+
+  - id: rate-your-pain-at-average
+    text: "Please rate your pain by sliding to the number that best describes your pain at average."
+    display: Pain at average
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 10
+
+  - id: rate-pain-right-now
+    text: "Please rate your pain by sliding to the number that tells how much pain you have right now."
+    display: Pain right now
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 10

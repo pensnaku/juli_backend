@@ -123,6 +123,9 @@ def query_observations(
                     effective_at=row.effective_at,
                     unit=row.unit,
                     data_source=row.data_source,
+                    icon=row.icon,
+                    status=row.status,
+                    description=row.description,
                 )
                 for row in rows
             ]
@@ -155,6 +158,9 @@ def query_observations(
                 effective_at=row.effective_at,
                 unit=row.unit,
                 data_source=row.data_source,
+                icon=row.icon,
+                status=row.status,
+                description=row.description,
             )
             for row in results
         ]

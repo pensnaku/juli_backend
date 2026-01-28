@@ -103,6 +103,50 @@ class ResourceLoader:
             if f.suffix in ['.yml', '.yaml'] and f.is_file()
         ]
 
+    def load_condition_assessment(self, questionnaire_key: str) -> Dict[str, Any]:
+        """
+        Load a condition assessment questionnaire by key
+
+        Args:
+            questionnaire_key: Questionnaire key (e.g., 'depression', 'chronic_pain')
+
+        Returns:
+            Questionnaire configuration as dictionary
+
+        Raises:
+            FileNotFoundError: If questionnaire file doesn't exist
+
+        Example:
+            loader = ResourceLoader()
+            questionnaire = loader.load_condition_assessment("depression")
+        """
+        # Try both .yml and .yaml extensions
+        for ext in ['.yml', '.yaml']:
+            file_path = self.base_path / f"questionnaires/condition-assessment/{questionnaire_key}{ext}"
+            if file_path.exists():
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    return yaml.safe_load(file)
+
+        raise FileNotFoundError(
+            f"Condition assessment questionnaire not found: {questionnaire_key}"
+        )
+
+    def list_condition_assessments(self) -> List[str]:
+        """
+        List all available condition assessment questionnaire filenames (without extension)
+
+        Returns:
+            List of questionnaire keys (e.g., ['depression', 'anxiety', 'asthma'])
+        """
+        assessment_path = self.base_path / "questionnaires" / "condition-assessment"
+        if not assessment_path.exists():
+            return []
+
+        return [
+            f.stem for f in assessment_path.iterdir()
+            if f.suffix in ['.yml', '.yaml'] and f.is_file()
+        ]
+
     def get_resource_path(self, relative_path: str) -> Path:
         """
         Get absolute path to a resource file

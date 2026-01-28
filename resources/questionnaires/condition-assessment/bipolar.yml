@@ -1,0 +1,119 @@
+version: '1.0'
+questionnaire_id: condition-assessment-bipolar
+title: Bipolar Check-in
+description: ASRM (Altman Self-Rating Mania Scale) questionnaire to assess manic symptoms
+interval_days: 14
+score_range:
+  min: 0
+  max: 20
+
+questions:
+  - id: mood-past-week
+    text: "Choose the statement that best describes your mood for the past week? The word \"occasionally\" when used here means once or twice; \"often\" means several times or more and \"frequently\" means most of the time."
+    display: Happier or more cheerful than usual
+    type: single_choice
+    required: true
+    options:
+      - value: never
+        label: I do not feel happier or more cheerful than usual.
+        score: 0
+      - value: occasionally
+        label: I occasionally feel happier or more cheerful than usual.
+        score: 1
+      - value: often
+        label: I often feel happier or more cheerful than usual.
+        score: 2
+      - value: frequently
+        label: I feel happier or more cheerful than usual most of the time.
+        score: 3
+      - value: always
+        label: I feel happier or more cheerful than usual all of the time.
+        score: 4
+
+  - id: self-confidence-past-week
+    text: "Choose the statement that best describes your self-confidence for the past week? The word \"occasionally\" when used here means once or twice; \"often\" means several times or more and \"frequently\" means most of the time."
+    display: More self-confident
+    type: single_choice
+    required: true
+    options:
+      - value: never
+        label: I do not feel more self-confident than usual.
+        score: 0
+      - value: occasionally
+        label: I occasionally feel more self-confident than usual.
+        score: 1
+      - value: often
+        label: I often feel more self-confident than usual.
+        score: 2
+      - value: frequently
+        label: I frequently feel more self-confident than usual.
+        score: 3
+      - value: always
+        label: I feel extremely self-confident all of the time.
+        score: 4
+
+  - id: sleep-past-week
+    text: "Choose the statement that best describes your sleep pattern for the past week? The word \"occasionally\" when used here means once or twice; \"often\" means several times or more and \"frequently\" means most of the time."
+    display: Need less sleep
+    type: single_choice
+    required: true
+    options:
+      - value: never
+        label: I do not need less sleep than usual.
+        score: 0
+      - value: occasionally
+        label: I occasionally need less sleep than usual.
+        score: 1
+      - value: often
+        label: I often need less sleep than usual.
+        score: 2
+      - value: frequently
+        label: I frequently need less sleep than usual.
+        score: 3
+      - value: always
+        label: I can go all day and all night without any sleep and still not feel tired.
+        score: 4
+
+  - id: speech-past-week
+    text: "Choose the statement that best describes your speech for the past week? The word \"occasionally\" when used here means once or twice; \"often\" means several times or more and \"frequently\" means most of the time."
+    display: Talking more
+    type: single_choice
+    required: true
+    options:
+      - value: never
+        label: I do not talk more than usual.
+        score: 0
+      - value: occasionally
+        label: I occasionally talk more than usual.
+        score: 1
+      - value: often
+        label: I often talk more than usual.
+        score: 2
+      - value: frequently
+        label: I frequently talk more than usual.
+        score: 3
+      - value: always
+        label: I talk constantly and cannot be interrupted.
+        score: 4
+
+  - id: activity-past-week
+    text: "Choose the statement that best describes your activity level for the past week? The word \"occasionally\" when used here means once or twice; \"often\" means several times or more and \"frequently\" means most of the time."
+    display: More active
+    type: single_choice
+    required: true
+    options:
+      - value: never
+        label: I have not been more active (either socially, sexually, at work, home, or school) than usual.
+        score: 0
+      - value: occasionally
+        label: I have occasionally been more active than usual.
+        score: 1
+      - value: often
+        label: I have often been more active than usual.
+        score: 2
+      - value: frequently
+        label: I have frequently been more active than usual.
+        score: 3
+      - value: always
+        label: I am constantly more active or on the go all the time.
+        score: 4

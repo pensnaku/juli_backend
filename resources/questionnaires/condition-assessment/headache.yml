@@ -1,0 +1,141 @@
+version: '1.0'
+questionnaire_id: condition-assessment-headache
+title: Headache Check-in
+description: HIT-6 (Headache Impact Test) questionnaire to assess headache impact
+interval_days: 14
+score_range:
+  min: 36
+  max: 78
+
+questions:
+  - id: how-often-pain-is-severe
+    text: "When you have a headache, how often is the pain severe?"
+    display: Have severe headache pains
+    type: single_choice
+    required: true
+    options:
+      - value: never
+        label: Never
+        score: 6
+      - value: rarely
+        label: Rarely
+        score: 8
+      - value: sometimes
+        label: Sometimes
+        score: 10
+      - value: very-often
+        label: Very often
+        score: 11
+      - value: always
+        label: Always
+        score: 13
+
+  - id: how-often-limit-daily-activities
+    text: "How often do headaches limit your ability to do usual daily activities including household work, work, school, or social activities?"
+    display: Headaches limit ability to do usual daily activities
+    type: single_choice
+    required: true
+    options:
+      - value: never
+        label: Never
+        score: 6
+      - value: rarely
+        label: Rarely
+        score: 8
+      - value: sometimes
+        label: Sometimes
+        score: 10
+      - value: very-often
+        label: Very often
+        score: 11
+      - value: always
+        label: Always
+        score: 13
+
+  - id: how-often-wish-could-lie-down
+    text: "When you have a headache, how often do you wish you could lie down?"
+    display: Wish could lie down when having a headache
+    type: single_choice
+    required: true
+    options:
+      - value: never
+        label: Never
+        score: 6
+      - value: rarely
+        label: Rarely
+        score: 8
+      - value: sometimes
+        label: Sometimes
+        score: 10
+      - value: very-often
+        label: Very often
+        score: 11
+      - value: always
+        label: Always
+        score: 13
+
+  - id: how-often-felt-too-tired
+    text: "In the past 2 weeks, how often have you felt too tired to do work or daily activities because of your headaches?"
+    display: Felt too tired to do work or daily activities because of headaches
+    type: single_choice
+    required: true
+    options:
+      - value: never
+        label: Never
+        score: 6
+      - value: rarely
+        label: Rarely
+        score: 8
+      - value: sometimes
+        label: Sometimes
+        score: 10
+      - value: very-often
+        label: Very often
+        score: 11
+      - value: always
+        label: Always
+        score: 13
+
+  - id: how-often-felt-fed-up
+    text: "In the past 2 weeks, how often have you felt fed up or irritated because of your headaches?"
+    display: Felt fed up or irritated because of headaches
+    type: single_choice
+    required: true
+    options:
+      - value: never
+        label: Never
+        score: 6
+      - value: rarely
+        label: Rarely
+        score: 8
+      - value: sometimes
+        label: Sometimes
+        score: 10
+      - value: very-often
+        label: Very often
+        score: 11
+      - value: always
+        label: Always
+        score: 13
+
+  - id: how-often-limit-ability-to-concentrate
+    text: "In the past 2 weeks, how often did headaches limit your ability to concentrate on work or daily activities?"
+    display: Headaches limit ability to concentrate on work or daily activities
+    type: single_choice
+    required: true
+    options:
+      - value: never
+        label: Never
+        score: 6
+      - value: rarely
+        label: Rarely
+        score: 8
+      - value: sometimes
+        label: Sometimes
+        score: 10
+      - value: very-often
+        label: Very often
+        score: 11
+      - value: always
+        label: Always
+        score: 13

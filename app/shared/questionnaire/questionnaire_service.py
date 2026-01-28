@@ -15,6 +15,12 @@ from app.shared.constants import (
     QUESTIONNAIRE_IDS,
     DAILY_QUESTIONNAIRE_MAP,
     DAILY_ROUTINE_STUDENT,
+    CONDITION_ASSESSMENT_MAP,
+    DAILY_QUESTIONNAIRE_MOOD,
+    DAILY_QUESTIONNAIRE_JOURNAL,
+)
+from app.shared.questionnaire.condition_assessment_service import (
+    ConditionAssessmentService,
 )
 
 
@@ -358,24 +364,67 @@ class QuestionnaireService:
         if medication_questionnaire:
             questionnaires.append(medication_questionnaire)
 
-        # Add journal questionnaire at the end (always last for all users)
-        journal_questionnaire = self._build_daily_questionnaire(
-            user_id=user_id,
-            condition_key="journal",
-            target_date=target_date,
+        # Add condition assessment questionnaires if due (second to last, ordered by leading conditions)
+        assessment_service = ConditionAssessmentService(self.db)
+        due_assessments = assessment_service.get_due_questionnaires_for_user(
+            user_id, target_date
         )
+
+        # Sort assessments by leading condition order
+        if due_assessments and user.conditions:
+            from app.shared.condition_utils import order_leading_conditions
+
+            condition_codes = [c.condition_code for c in user.conditions]
+            ordered_conditions = order_leading_conditions(condition_codes)
+
+            # Build reverse mapping: questionnaire_key -> condition_code
+            questionnaire_to_condition = {}
+            for code, keys in CONDITION_ASSESSMENT_MAP.items():
+                for key in keys:
+                    questionnaire_to_condition[key] = code
+
+            def get_assessment_priority(questionnaire_id: str) -> int:
+                key = questionnaire_id.replace("condition-assessment-", "").replace("-", "_")
+                condition_code = questionnaire_to_condition.get(key)
+                if condition_code in ordered_conditions:
+                    return ordered_conditions.index(condition_code)
+                return 999  # Unknown conditions go last
+
+            due_assessments = sorted(due_assessments, key=get_assessment_priority)
+
+        for questionnaire_id in due_assessments:
+            # questionnaire_id is already in correct format: "condition-assessment-{condition}"
+            # Extract the condition key for loading the YAML file (e.g., "depression" from "condition-assessment-depression")
+            condition_key = questionnaire_id.replace("condition-assessment-", "").replace("-", "_")
+            assessment_q = self._build_condition_assessment(
+                user_id, condition_key, questionnaire_id, target_date
+            )
+            if assessment_q:
+                questionnaires.append(assessment_q)
+
+        # Add journal questionnaire at the end (always last for all users)
+        journal_questionnaire = self._build_journal_questionnaire(user_id, target_date)
         if journal_questionnaire:
             questionnaires.append(journal_questionnaire)
 
         if not questionnaires:
             return None
 
-        return {
+        result = {
             "title": "Daily Check-in",
             "description": "Your daily health questions",
             "completion_date": target_date.isoformat(),
             "questionnaires": questionnaires,
         }
+
+        # Include condition assessment scores completed today
+        assessment_scores = self._get_condition_assessment_scores_for_date(
+            user_id, target_date
+        )
+        if assessment_scores:
+            result["condition_assessment_scores"] = assessment_scores
+
+        return result
 
     def _build_mood_questionnaire(
         self, user_id: int, target_date: date
@@ -391,11 +440,57 @@ class QuestionnaireService:
             Mood questionnaire dict, or None if file not found
         """
         try:
-            questionnaire_data = self.resource_loader.load_daily_questionnaire("mood")
+            questionnaire_data = self.resource_loader.load_daily_questionnaire(
+                DAILY_QUESTIONNAIRE_MOOD
+            )
         except FileNotFoundError:
             return None
 
         questionnaire_id = questionnaire_data.get("questionnaire_id", "daily-mood")
+
+        # Get existing answers for this questionnaire and date
+        user_answers = self._extract_daily_answers(
+            user_id, questionnaire_id, target_date
+        )
+
+        # Merge answers into questions (deep copy to avoid mutating original)
+        questions = copy.deepcopy(questionnaire_data.get("questions", []))
+        for question in questions:
+            question_id = question.get("id")
+            question["answer"] = user_answers.get(question_id)
+
+        # Check completion status from database
+        is_completed = self.completion_repo.is_condition_completed_for_date(
+            user_id, questionnaire_id, target_date
+        )
+
+        return {
+            "questionnaire_id": questionnaire_id,
+            "questions": questions,
+            "is_completed": is_completed,
+        }
+
+    def _build_journal_questionnaire(
+        self, user_id: int, target_date: date
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Build the journal questionnaire (shown to all users daily, always last).
+
+        Args:
+            user_id: User ID
+            target_date: The date for the questionnaire
+
+        Returns:
+            Journal questionnaire dict, or None if file not found
+        """
+        try:
+            questionnaire_data = self.resource_loader.load_daily_questionnaire(
+                DAILY_QUESTIONNAIRE_JOURNAL
+            )
+        except FileNotFoundError:
+            return None
+
+        questionnaire_id = questionnaire_data.get("questionnaire_id", "daily-journal")
 
         # Get existing answers for this questionnaire and date
         user_answers = self._extract_daily_answers(
@@ -771,3 +866,203 @@ class QuestionnaireService:
         elif obs.value_string is not None:
             return obs.value_string
         return None
+
+    # ========== Condition Assessment Methods ==========
+
+    def _build_condition_assessment(
+        self,
+        user_id: int,
+        condition_key: str,
+        questionnaire_id: str,
+        target_date: date,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Build a condition assessment questionnaire item.
+
+        Args:
+            user_id: User ID
+            condition_key: Condition filename key (e.g., 'depression', 'chronic_pain')
+            questionnaire_id: Full questionnaire ID (e.g., 'condition-assessment-depression')
+            target_date: The date for the questionnaire
+
+        Returns:
+            Questionnaire item dict, or None if questionnaire file not found
+        """
+        try:
+            questionnaire_data = self.resource_loader.load_condition_assessment(
+                condition_key
+            )
+        except FileNotFoundError:
+            return None
+
+        # Get existing answers for this questionnaire and date
+        user_answers = self._extract_condition_assessment_answers(
+            user_id, questionnaire_id, target_date
+        )
+
+        # Merge answers into questions (deep copy to avoid mutating original)
+        questions = copy.deepcopy(questionnaire_data.get("questions", []))
+        for question in questions:
+            question_id = question.get("id")
+            question["answer"] = user_answers.get(question_id)
+
+        # Check completion status from database
+        is_completed = self.completion_repo.is_condition_completed_for_date(
+            user_id, questionnaire_id, target_date
+        )
+
+        result = {
+            "questionnaire_id": questionnaire_id,
+            "title": questionnaire_data.get("title"),
+            "description": questionnaire_data.get("description"),
+            "questions": questions,
+            "is_completed": is_completed,
+        }
+
+        # Include score_range if present in YAML
+        if "score_range" in questionnaire_data:
+            result["score_range"] = questionnaire_data["score_range"]
+
+        return result
+
+    def _extract_condition_assessment_answers(
+        self, user_id: int, questionnaire_id: str, target_date: date
+    ) -> Dict[str, Any]:
+        """
+        Extract user's condition assessment answers from observations.
+
+        Condition assessment answers are stored with:
+        - code: questionnaire_id (e.g., "condition-assessment-depression")
+        - variant: question_id (e.g., "bothered-little-interest")
+        - value_string: selected option value (e.g., "several-days")
+        - questionnaire_completion_id: links to the completion record
+
+        Args:
+            user_id: User ID
+            questionnaire_id: Questionnaire ID (e.g., "condition-assessment-depression")
+            target_date: The date to get answers for
+
+        Returns:
+            Dictionary of question_id -> answer value
+        """
+        # Get questionnaire completion record for this user/questionnaire/date
+        completion = self.completion_repo.get_by_user_questionnaire_date(
+            user_id, questionnaire_id, target_date
+        )
+
+        if not completion:
+            return {}
+
+        # Query observations by questionnaire_completion_id
+        observations = self.observation_repo.get_by_questionnaire_completion_id(
+            completion.id
+        )
+
+        # Build answers dict: variant (question_id) -> value_string (selected option)
+        answers = {}
+        for obs in observations:
+            if obs.variant:
+                # Return the string value (option value like "several-days")
+                answers[obs.variant] = obs.value_string
+
+        return answers
+
+    def _get_condition_assessment_scores_for_date(
+        self, user_id: int, target_date: date
+    ) -> List[Dict[str, Any]]:
+        """
+        Get condition assessment scores completed on a specific date for user's active conditions.
+        Results are ordered by leading condition priority.
+
+        Args:
+            user_id: User ID
+            target_date: The date to check for completed assessments
+
+        Returns:
+            List of score dictionaries with questionnaire_id, score, and condition
+        """
+        from datetime import datetime, timezone
+        from app.shared.condition_utils import order_leading_conditions
+        from app.shared.constants import CONDITION_ASSESSMENT_OBSERVATION_CODES
+
+        # Get user's active conditions
+        user = self.user_repo.get_by_id(user_id)
+        if not user or not user.conditions:
+            return []
+
+        # Build set of relevant questionnaire keys based on user's conditions
+        relevant_keys: set = set()
+        condition_codes = [c.condition_code for c in user.conditions]
+
+        for condition_code in condition_codes:
+            questionnaire_keys = CONDITION_ASSESSMENT_MAP.get(condition_code, [])
+            relevant_keys.update(questionnaire_keys)
+
+        # Special case: Bipolar users without Depression get depression assessment too
+        has_bipolar = "13746004" in set(condition_codes)
+        has_depression = "35489007" in set(condition_codes)
+        if has_bipolar and not has_depression:
+            relevant_keys.add("depression")
+
+        if not relevant_keys:
+            return []
+
+        # Get ordered conditions for sorting
+        ordered_conditions = order_leading_conditions(condition_codes)
+
+        # Build reverse mapping: questionnaire_key -> condition_code
+        questionnaire_to_condition = {}
+        for code, keys in CONDITION_ASSESSMENT_MAP.items():
+            for key in keys:
+                questionnaire_to_condition[key] = code
+
+        scores = []
+
+        # Create datetime range for the target date
+        start_datetime = datetime.combine(
+            target_date, datetime.min.time(), tzinfo=timezone.utc
+        )
+        end_datetime = datetime.combine(
+            target_date, datetime.max.time(), tzinfo=timezone.utc
+        )
+
+        # Only check observation codes for user's relevant conditions
+        for questionnaire_id, observation_code in CONDITION_ASSESSMENT_OBSERVATION_CODES.items():
+            # Extract key from questionnaire_id (e.g., "chronic_pain" from "condition-assessment-chronic-pain")
+            key = questionnaire_id.replace("condition-assessment-", "").replace("-", "_")
+            if key not in relevant_keys:
+                continue
+
+            # Query for score observation on this date
+            observations, _ = self.observation_repo.get_by_user_paginated(
+                user_id=user_id,
+                code=observation_code,
+                start_date=start_datetime,
+                end_date=end_datetime,
+                page=1,
+                page_size=1,
+            )
+
+            if observations:
+                obs = observations[0]
+                score_value = obs.value_integer
+                if score_value is not None:
+                    # Extract condition from questionnaire_id (e.g., "depression" from "condition-assessment-depression")
+                    condition = questionnaire_id.replace("condition-assessment-", "")
+                    scores.append({
+                        "questionnaire_id": questionnaire_id,
+                        "condition": condition,
+                        "score": score_value,
+                    })
+
+        # Sort scores by leading condition order
+        def get_score_priority(score_item: Dict[str, Any]) -> int:
+            key = score_item["condition"].replace("-", "_")
+            condition_code = questionnaire_to_condition.get(key)
+            if condition_code in ordered_conditions:
+                return ordered_conditions.index(condition_code)
+            return 999  # Unknown conditions go last
+
+        scores.sort(key=get_score_priority)
+
+        return scores

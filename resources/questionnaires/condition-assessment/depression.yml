@@ -1,0 +1,161 @@
+version: '1.0'
+questionnaire_id: condition-assessment-depression
+title: Depression Check-in
+description: PHQ-8 questionnaire to assess depression symptoms over the past two weeks
+interval_days: 14
+score_range:
+  min: 0
+  max: 24
+
+questions:
+  - id: bothered-little-interest
+    text: "Over the last two weeks, how often have you been bothered by: Little interest or pleasure in doing things?"
+    display: Lack of interest/pleasure
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: bothered-feeling-down
+    text: "Over the last two weeks, how often have you been bothered by: Feeling down, depressed, or hopeless?"
+    display: Feeling down
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: bothered-trouble-sleep
+    text: "Over the last two weeks, how often have you been bothered by: Trouble falling asleep, or sleeping too much?"
+    display: Sleep
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: bothered-tired
+    text: "Over the last two weeks, how often have you been bothered by: Feeling tired or having little energy?"
+    display: Lack of energy
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: poor-appetite
+    text: "Over the last two weeks, how often have you been bothered by: Poor appetite or overeating?"
+    display: Appetite
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: feeling-bad-about-yourself
+    text: "Over the last two weeks, how often have you been bothered by: Feeling bad about yourself or that you are a failure or have let yourself or your family down?"
+    display: Bad feelings about yourself
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: trouble-concentrating
+    text: "Over the last two weeks, how often have you been bothered by: Trouble concentrating on things, such as reading the newspaper or watching television?"
+    display: Concentration
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: moving-speaking-slowly-or-opposite
+    text: "Over the last two weeks, how often have you been bothered by: Moving or speaking so slowly that other people could have noticed? Or the opposite being so fidgety or restless that you have been moving around a lot more than usual?"
+    display: Being slow or restless
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3

@@ -1,0 +1,97 @@
+version: '1.0'
+questionnaire_id: condition-assessment-copd
+title: COPD Check-in
+description: CAT (COPD Assessment Test) questionnaire to assess COPD symptoms
+interval_days: 14
+score_range:
+  min: 0
+  max: 40
+
+questions:
+  - id: cough-past-two-weeks
+    text: "Please pick the number that describes your situation best"
+    display: How much cough in last 2 weeks
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: I cough all the time
+      upper: I never cough
+
+  - id: phlegm-past-two-weeks
+    text: "Please pick the number that describes your situation best"
+    display: How much phlegm in chest
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: My chest is full of phlegm (mucus)
+      upper: I have no phlegm (mucus) on my chest at all
+
+  - id: chest-tightness
+    text: "Please pick the number that describes your situation best"
+    display: Chest tightness
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: My chest feels very tight
+      upper: My chest does not feel tight at all
+
+  - id: shortness-of-breath-stairs
+    text: "Please pick the number that describes your situation best"
+    display: Shortness of breath while climbing stairs
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: When I walk up a hill or a flight of stairs I am completely out of breath
+      upper: When I walk up a hill or a flight of stairs I am not out of breath
+
+  - id: limited-activity-at-home
+    text: "Please pick the number that describes your situation best"
+    display: Limitation in doing activities at home
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: I am completely limited to doing any activities at home
+      upper: I am not limited to doing any activities at home
+
+  - id: confidence-leaving-home
+    text: "Please pick the number that describes your situation best"
+    display: Confidence leaving home despite lung condition
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: I am not confident leaving my home despite my lung condition
+      upper: I am confident leaving my home despite my lung condition
+
+  - id: sound-sleeping
+    text: "Please pick the number that describes your situation best"
+    display: Sound sleep
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: I do not sleep soundly because of my lung condition
+      upper: I sleep soundly
+
+  - id: energy-levels
+    text: "Please pick the number that describes your situation best"
+    display: Energy level
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: I have no energy at all
+      upper: I have lots of energy

@@ -1,0 +1,383 @@
+version: '1.0'
+questionnaire_id: condition-assessment-diabetes
+title: Diabetes Check-in
+description: DSC-R (Diabetes Symptom Checklist - Revised) questionnaire to assess diabetes symptoms over the past month
+interval_days: 30
+score_range:
+  min: 0
+  max: 170
+
+questions:
+  - id: lack-of-energy
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Lack of energy
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: aching-calves-when-walking
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Aching calves when walking
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: numbness-in-the-feet
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Numbness (loss of sensation) in the feet
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: overall-sense-of-fatigue
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Overall sense of fatigue
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: shortness-of-breath-at-night
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Shortness of breath at night
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: sleepiness-or-drowsiness
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Sleepiness or drowsiness
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: difficulty-concentrating
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Difficulty concentrating
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: moodiness
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Moodiness
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: numbness-in-the-hands
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Numbness (loss of sensation) in the hands
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: persistently-blurred-vision
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Persistently blurred vision (even with glasses on)
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: tingling-sensations-in-the-limbs-at-night
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Tingling sensations in the limbs at night
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: very-thirsty
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Very thirsty
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: palpitations-in-heart-region
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Palpitations or pounding in the heart region
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: deteriorating-vision
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Deteriorating vision
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: burning-pain-in-calves-at-night
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Burning pain in the calves at night
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: dry-mouth
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Dry mouth
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: increasing-fatigue-during-the-day
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Increasing fatigue during the course of the day
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: flashing-or-black-spots-in-field-of-vision
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Flashes or black spots in the field of vision
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: irritability-just-before-a-meal
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Irritability just before a meal
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: fatigue-in-the-morning-when-getting-up
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Fatigue in the morning when getting up
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: shooting-pains-in-the-legs
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Shooting pains in the legs
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: alternating-clear-and-blurred-vision
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Alternating clear and blurred vision
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: frequent-need-to-empty-bladder
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Frequent need to empty your bladder
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: pains-in-chest-or-heart-region
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Pains in the chest or heart region
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: burning-pain-in-legs-during-the-day
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Burning pain in legs during the day
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: tricking-sensation-in-hands-or-fingers
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Tingling or prickling sensation in the hands or fingers
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: easily-irritated-or-annoyed
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Easily irritated or annoyed
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: sudden-deterioration-of-vision
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Sudden deterioration of vision
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: odd-feeling-in-lower-legs-when-touched
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Odd feeling in the (lower) legs or feet when touched
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: shortness-of-breath-during-physical-exertion
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Shortness of breath during physical exertion
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: fuzzy-feeling-in-head
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Fuzzy feeling in your head (difficulty thinking clearly)
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: drinking-a-lot-of-beverages
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Drinking a lot (all sorts of beverages)
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: difficulty-paying-attention
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Difficulty paying attention
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all
+
+  - id: tingling-sensations-in-lower-legs-or-feet
+    text: "Which of the following symptoms did you experience over the last month?"
+    display: Tingling or prickling sensations in the lower legs or feet
+    type: slider
+    required: true
+    min_value: 0
+    max_value: 5
+    labels:
+      lower: Extremely
+      upper: Not at all

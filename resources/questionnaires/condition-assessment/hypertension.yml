@@ -1,0 +1,234 @@
+version: '1.0'
+questionnaire_id: condition-assessment-hypertension
+title: Hypertension Check-in
+description: SF-12 (Short Form 12) Health Survey for hypertension patients
+interval_days: 14
+score_range:
+  min: 0
+  max: 100
+
+questions:
+  - id: general-health-status
+    text: "In general, would you say your health is"
+    display: General health status
+    type: single_choice
+    required: true
+    options:
+      - value: poor
+        label: Poor
+        score: 1
+      - value: fair
+        label: Fair
+        score: 2
+      - value: good
+        label: Good
+        score: 3.4
+      - value: very-good
+        label: Very Good
+        score: 4.4
+      - value: excellent
+        label: Excellent
+        score: 5
+
+  - id: limited-in-moderate-acitvities
+    text: "The following questions are about activities you might do during a typical day. Does your health now limit you in these activities? If so, how much: Moderate activities such as moving a table, pushing a vacuum cleaner, bowling, or playing golf."
+    display: Limited in moderate activities
+    type: single_choice
+    required: true
+    options:
+      - value: limited-a-lot
+        label: Yes, limited a lot
+        score: 1
+      - value: limited-a-little
+        label: Yes, limited a little
+        score: 2
+      - value: not-limited
+        label: No, not limited at all
+        score: 3
+
+  - id: limited-in-stairs-climbing
+    text: "The following questions are about activities you might do during a typical day. Does your health now limit you in these activities? If so, how much: Climbing several flights of stairs."
+    display: Limited in stairs climbing
+    type: single_choice
+    required: true
+    options:
+      - value: limited-a-lot
+        label: Yes, limited a lot
+        score: 1
+      - value: limited-a-little
+        label: Yes, limited a little
+        score: 2
+      - value: not-limited
+        label: No, not limited at all
+        score: 3
+
+  - id: physical-health-problmes-accomplished-less
+    text: "During the past 2 weeks, have you had any of the following problems with your work or other regular daily activities as a result of your physical health: Accomplished less than you would like."
+    display: Physical health - accomplished less
+    type: single_choice
+    required: true
+    options:
+      - value: "yes"
+        label: "Yes"
+        score: 1
+      - value: "no"
+        label: "No"
+        score: 2
+
+  - id: physical-health-problems-kind-limited
+    text: "During the past 2 weeks, have you had any of the following problems with your work or other regular daily activities as a result of your physical health: Were limited in the kind of work or other activities."
+    display: Physical health - kind limited
+    type: single_choice
+    required: true
+    options:
+      - value: "yes"
+        label: "Yes"
+        score: 1
+      - value: "no"
+        label: "No"
+        score: 2
+
+  - id: emotional-problems-accomplished-less
+    text: "During the past 2 weeks, have you had any of the following problems with your work or other regular daily activities as a result of any emotional problems (such as feeling depressed or anxious): Accomplished less than you would like."
+    display: Emotional problems - accomplished less
+    type: single_choice
+    required: true
+    options:
+      - value: "yes"
+        label: "Yes"
+        score: 1
+      - value: "no"
+        label: "No"
+        score: 2
+
+  - id: emotional-problems-less-careful
+    text: "During the past 2 weeks, have you had any of the following problems with your work or other regular daily activities as a result of any emotional problems (such as feeling depressed or anxious): Did work or activities less carefully than usual."
+    display: Emotional problems - less careful
+    type: single_choice
+    required: true
+    options:
+      - value: "yes"
+        label: "Yes"
+        score: 1
+      - value: "no"
+        label: "No"
+        score: 2
+
+  - id: work-pain-interference
+    text: "During the past 2 weeks, how much did pain interfere with your normal work (including work outside the home and housework)?"
+    display: Work pain interference
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 5
+      - value: little-bit
+        label: A little bit
+        score: 4
+      - value: moderately
+        label: Moderately
+        score: 3
+      - value: quite-a-bit
+        label: Quite a bit
+        score: 2
+      - value: extremely
+        label: Extremely
+        score: 1
+
+  - id: felt-calm-and-peaceful
+    text: "These questions are about how you have been feeling during the past 2 weeks. For each question, please give the one answer that comes closest to the way you have been feeling. How much of the time during the past 2 weeks have you felt calm & peaceful?"
+    display: Felt calm and peaceful
+    type: single_choice
+    required: true
+    options:
+      - value: all-time
+        label: All of the time
+        score: 6
+      - value: most-time
+        label: Most of the time
+        score: 5
+      - value: good-bit-time
+        label: A good bit of the time
+        score: 4
+      - value: some-time
+        label: Some of the time
+        score: 3
+      - value: little-time
+        label: A little of the time
+        score: 2
+      - value: none-time
+        label: None of the time
+        score: 1
+
+  - id: have-a-lot-of-energy
+    text: "These questions are about how you have been feeling during the past 2 weeks. For each question, please give the one answer that comes closest to the way you have been feeling. How much of the time during the past 2 weeks did you have a lot of energy?"
+    display: Have a lot of energy
+    type: single_choice
+    required: true
+    options:
+      - value: all-time
+        label: All of the time
+        score: 6
+      - value: most-time
+        label: Most of the time
+        score: 5
+      - value: good-bit-time
+        label: A good bit of the time
+        score: 4
+      - value: some-time
+        label: Some of the time
+        score: 3
+      - value: little-time
+        label: A little of the time
+        score: 2
+      - value: none-time
+        label: None of the time
+        score: 1
+
+  - id: felt-down-hearted-and-blue
+    text: "These questions are about how you have been feeling during the past 2 weeks. For each question, please give the one answer that comes closest to the way you have been feeling. How much of the time during the past 2 weeks have you felt downhearted and blue?"
+    display: Felt downhearted and blue
+    type: single_choice
+    required: true
+    options:
+      - value: all-time
+        label: All of the time
+        score: 1
+      - value: most-time
+        label: Most of the time
+        score: 2
+      - value: good-bit-time
+        label: A good bit of the time
+        score: 3
+      - value: some-time
+        label: Some of the time
+        score: 4
+      - value: little-time
+        label: A little of the time
+        score: 5
+      - value: none-time
+        label: None of the time
+        score: 6
+
+  - id: interference-with-social-acitivites
+    text: "During the past 2 weeks, how much of the time has your physical health or emotional problems interfered with your social activities (like visiting friends, relatives, etc.)?"
+    display: Interference with social activities
+    type: single_choice
+    required: true
+    options:
+      - value: all-time
+        label: All of the time
+        score: 1
+      - value: most-time
+        label: Most of the time
+        score: 2
+      - value: some-time
+        label: Some of the time
+        score: 3
+      - value: little-time
+        label: A little of the time
+        score: 4
+      - value: none-time
+        label: None of the time
+        score: 5

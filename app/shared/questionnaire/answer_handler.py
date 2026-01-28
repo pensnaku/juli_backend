@@ -21,6 +21,7 @@ from app.shared.constants import (
     CONDITION_CODES,
     TRACKING_TOPICS,
     DAILY_QUESTIONNAIRE_CONDITION_MAP,
+    CONDITION_ASSESSMENT_OBSERVATION_CODES,
 )
 from app.shared.questionnaire.repositories import QuestionnaireCompletionRepository
 
@@ -548,6 +549,19 @@ class QuestionnaireAnswerHandler:
                 questionnaire_id=questionnaire_id,
                 completion=completion,
             )
+        # Special handling for condition assessment questionnaires
+        # Store with code=questionnaire_id and variant=question_id
+        elif questionnaire_id.startswith("condition-assessment-"):
+            logger.info(f"Saving condition assessment answer: user={user_id}, questionnaire={questionnaire_id}, question={question_id}, answer={answer}")
+            self._create_or_update_observation(
+                user_id=user_id,
+                code=questionnaire_id,  # e.g., "condition-assessment-depression"
+                variant=question_id,  # e.g., "bothered-little-interest"
+                answer=answer,
+                effective_datetime=effective_datetime,
+                questionnaire_id=questionnaire_id,
+                completion=completion,
+            )
         # Check if this is a multi-value answer (dict with multiple components)
         elif isinstance(answer, dict) and 'value' not in answer:
             # Multi-value answer - create observation for each component
@@ -587,6 +601,15 @@ class QuestionnaireAnswerHandler:
 
         # Mark questionnaire as completed if requested
         if mark_completed:
+            # For condition assessments, calculate and store the total score
+            if questionnaire_id.startswith("condition-assessment-"):
+                self._complete_condition_assessment(
+                    user_id=user_id,
+                    questionnaire_id=questionnaire_id,
+                    completion=completion,
+                    effective_datetime=effective_datetime,
+                )
+
             self.completion_repo.mark_condition_completed(
                 user_id, questionnaire_id, completion_date
             )
@@ -744,3 +767,253 @@ class QuestionnaireAnswerHandler:
                 data_source=questionnaire_id,
                 questionnaire_completion_id=completion.id,
             )
+
+    # ========== Condition Assessment Methods ==========
+
+    def save_condition_assessment_answers(
+        self,
+        user_id: int,
+        questionnaire_id: str,
+        answers: Dict[str, str],
+        completion_date: date,
+        questionnaire_config: Dict[str, Any],
+        mark_completed: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Save condition assessment answers.
+
+        Stores individual answer observations (code=questionnaire_id, variant=question_id).
+        When mark_completed=True, calculates total score from all answers and stores
+        it as a single score observation.
+
+        Args:
+            user_id: User ID
+            questionnaire_id: Questionnaire ID (e.g., "condition-assessment-depression")
+            answers: Dictionary of question_id -> option value
+            completion_date: Date for this questionnaire completion
+            questionnaire_config: YAML config with questions and option scores
+            mark_completed: If True, calculate total score and mark as completed
+
+        Returns:
+            Dict with questionnaire_id, total_score (if completed), and completed status
+        """
+        user = self.user_repo.get_by_id(user_id)
+        if not user:
+            raise ValueError(f"User {user_id} not found")
+
+        # Get or create questionnaire completion record
+        completion = self.completion_repo.get_by_user_questionnaire_date(
+            user_id, questionnaire_id, completion_date
+        )
+        if not completion:
+            completion = self.completion_repo.assign_questionnaire_for_date(
+                user_id, questionnaire_id, completion_date
+            )
+
+        # Create effective datetime (midnight of completion date)
+        effective_datetime = datetime.combine(
+            completion_date,
+            datetime.min.time(),
+            tzinfo=timezone.utc
+        )
+
+        # Build question config lookup: question_id -> {option_value -> score}
+        question_scores = self._build_question_score_lookup(questionnaire_config)
+
+        # Store each individual answer observation and calculate total score
+        total_score = 0
+        for question_id, option_value in answers.items():
+            # Get score for this answer
+            score = 0
+            if question_id in question_scores and option_value in question_scores[question_id]:
+                score = question_scores[question_id][option_value]
+
+            total_score += score
+
+            # Store individual answer observation (upsert)
+            self._upsert_condition_assessment_observation(
+                user_id=user_id,
+                code=questionnaire_id,
+                variant=question_id,
+                value_string=option_value,
+                value_integer=score,
+                effective_datetime=effective_datetime,
+                questionnaire_id=questionnaire_id,
+                completion=completion,
+            )
+
+        result = {
+            "questionnaire_id": questionnaire_id,
+            "completed": False,
+        }
+
+        # Only store total score and mark completed when mark_completed=True
+        if mark_completed:
+            # Store total score observation
+            score_code = CONDITION_ASSESSMENT_OBSERVATION_CODES.get(
+                questionnaire_id,
+                f"{questionnaire_id}-score"
+            )
+            self._upsert_condition_assessment_observation(
+                user_id=user_id,
+                code=score_code,
+                variant=None,
+                value_string=None,
+                value_integer=total_score,
+                effective_datetime=effective_datetime,
+                questionnaire_id=questionnaire_id,
+                completion=completion,
+            )
+
+            # Mark questionnaire as completed
+            self.completion_repo.mark_condition_completed(
+                user_id, questionnaire_id, completion_date
+            )
+
+            result["completed"] = True
+            result["total_score"] = total_score
+
+            logger.info(
+                f"Completed condition assessment {questionnaire_id} for user {user_id}: "
+                f"total_score={total_score}"
+            )
+
+        self.db.commit()
+
+        return result
+
+    def _build_question_score_lookup(
+        self, questionnaire_config: Dict[str, Any]
+    ) -> Dict[str, Dict[str, int]]:
+        """
+        Build a lookup dict from questionnaire config: question_id -> {option_value -> score}
+        """
+        lookup = {}
+        questions = questionnaire_config.get("questions", [])
+
+        for question in questions:
+            question_id = question.get("id")
+            if not question_id:
+                continue
+
+            options = question.get("options", [])
+            lookup[question_id] = {}
+
+            for option in options:
+                option_value = option.get("value")
+                option_score = option.get("score", 0)
+                if option_value is not None:
+                    lookup[question_id][option_value] = option_score
+
+        return lookup
+
+    def _upsert_condition_assessment_observation(
+        self,
+        user_id: int,
+        code: str,
+        variant: Optional[str],
+        value_string: Optional[str],
+        value_integer: Optional[int],
+        effective_datetime: datetime,
+        questionnaire_id: str,
+        completion: Any,
+    ) -> None:
+        """
+        Create or update an observation for a condition assessment answer or score.
+        """
+        existing = self.observation_repo.get_by_code_and_time(
+            user_id=user_id,
+            code=code,
+            variant=variant,
+            effective_at=effective_datetime,
+        )
+
+        if existing:
+            existing.value_string = value_string
+            existing.value_integer = value_integer
+            existing.questionnaire_completion_id = completion.id
+            self.observation_repo.update(existing)
+        else:
+            self.observation_repo.create(
+                user_id=user_id,
+                code=code,
+                variant=variant,
+                value_string=value_string,
+                value_integer=value_integer,
+                effective_at=effective_datetime,
+                category="questionnaire",
+                data_source=questionnaire_id,
+                questionnaire_completion_id=completion.id,
+            )
+
+    def _complete_condition_assessment(
+        self,
+        user_id: int,
+        questionnaire_id: str,
+        completion: Any,
+        effective_datetime: datetime,
+    ) -> int:
+        """
+        Calculate and store the total score for a condition assessment.
+
+        Called when mark_completed=True for a condition assessment questionnaire.
+
+        Args:
+            user_id: User ID
+            questionnaire_id: Questionnaire ID (e.g., "condition-assessment-depression")
+            completion: The questionnaire completion record
+            effective_datetime: When the observation was effective
+
+        Returns:
+            The calculated total score
+        """
+        from app.core.resource_loader import get_resource_loader
+
+        # Extract condition key from questionnaire_id (e.g., "depression" from "condition-assessment-depression")
+        condition_key = questionnaire_id.replace("condition-assessment-", "").replace("-", "_")
+
+        # Load questionnaire config to get score mappings
+        resource_loader = get_resource_loader()
+        try:
+            questionnaire_config = resource_loader.load_condition_assessment(condition_key)
+        except FileNotFoundError:
+            logger.warning(f"Could not load config for {questionnaire_id}, skipping score calculation")
+            return 0
+
+        # Build score lookup: question_id -> {option_value -> score}
+        question_scores = self._build_question_score_lookup(questionnaire_config)
+
+        # Get all answer observations for this completion
+        observations = self.observation_repo.get_by_questionnaire_completion_id(completion.id)
+
+        # Calculate total score from stored answers
+        total_score = 0
+        for obs in observations:
+            if obs.variant and obs.code == questionnaire_id and obs.value_string:
+                # Look up score for this answer
+                if obs.variant in question_scores and obs.value_string in question_scores[obs.variant]:
+                    total_score += question_scores[obs.variant][obs.value_string]
+
+        # Store total score observation
+        score_code = CONDITION_ASSESSMENT_OBSERVATION_CODES.get(
+            questionnaire_id,
+            f"{questionnaire_id}-score"
+        )
+
+        self._upsert_condition_assessment_observation(
+            user_id=user_id,
+            code=score_code,
+            variant=None,
+            value_string=None,
+            value_integer=total_score,
+            effective_datetime=effective_datetime,
+            questionnaire_id=questionnaire_id,
+            completion=completion,
+        )
+
+        logger.info(
+            f"Completed condition assessment {questionnaire_id} for user {user_id}: "
+            f"total_score={total_score}"
+        )
+
+        return total_score

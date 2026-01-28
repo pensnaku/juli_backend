@@ -1,0 +1,119 @@
+version: '1.0'
+questionnaire_id: condition-assessment-asthma
+title: Asthma Check-in
+description: ACT (Asthma Control Test) questionnaire to assess asthma control over the past two weeks
+interval_days: 14
+score_range:
+  min: 5
+  max: 25
+
+questions:
+  - id: asthma-past-week
+    text: "In the past 2 weeks, how much of the time did your asthma keep you from getting as much done at work, school or at home?"
+    display: Asthma limiting activity
+    type: single_choice
+    required: true
+    options:
+      - value: all-of-the-time
+        label: All of the time
+        score: 1
+      - value: most-of-the-time
+        label: Most of the time
+        score: 2
+      - value: some-of-the-time
+        label: Some of the time
+        score: 3
+      - value: little-of-the-time
+        label: A little of the time
+        score: 4
+      - value: none-of-the-time
+        label: None of the time
+        score: 5
+
+  - id: shortness-of-breath
+    text: "During the past 2 weeks, how often have you had shortness of breath?"
+    display: Episodes of shortness of breath
+    type: single_choice
+    required: true
+    options:
+      - value: more-than-once-a-day
+        label: More than once a day
+        score: 1
+      - value: once-a-day
+        label: Once a day
+        score: 2
+      - value: 3-to-6-times-a-week
+        label: 3 to 6 times a week
+        score: 3
+      - value: once-or-twice-a-week
+        label: Once or twice a week
+        score: 4
+      - value: not-at-all
+        label: Not at all
+        score: 5
+
+  - id: asthma-symptoms-at-night
+    text: "During the past 2 weeks, how often did your asthma symptoms (wheezing, coughing, shortness of breath, chest tightness or pain) wake you up at night or earlier than usual in the morning?"
+    display: Asthma affecting sleep
+    type: single_choice
+    required: true
+    options:
+      - value: 4-or-more-nights-a-week
+        label: 4 or more nights a week
+        score: 1
+      - value: 2-to-3-nights-a-week
+        label: 2 to 3 nights a week
+        score: 2
+      - value: once-a-week
+        label: Once a week
+        score: 3
+      - value: once-or-twice
+        label: Once or twice
+        score: 4
+      - value: not-at-all
+        label: Not at all
+        score: 5
+
+  - id: how-often-inhaler-or-nebulizer
+    text: "During the past 2 weeks, how often have you used your rescue inhaler or nebulizer medication (such as albuterol)?"
+    display: Needing to use rescue inhaler
+    type: single_choice
+    required: true
+    options:
+      - value: 3-or-more-times-per-day
+        label: 3 or more times per day
+        score: 1
+      - value: 1-to-2-times-per-day
+        label: 1 to 2 times per day
+        score: 2
+      - value: 2-or-3-times-per-week
+        label: 2 or 3 times per week
+        score: 3
+      - value: once-a-week-or-less
+        label: Once a week or less
+        score: 4
+      - value: not-at-all
+        label: Not at all
+        score: 5
+
+  - id: rate-asthma-control
+    text: "How would you rate your asthma control during the past 2 weeks?"
+    display: Rating asthma control
+    type: single_choice
+    required: true
+    options:
+      - value: not-controlled-at-all
+        label: Not Controlled at All
+        score: 1
+      - value: poorly-controlled
+        label: Poorly Controlled
+        score: 2
+      - value: somewhat-controlled
+        label: Somewhat Controlled
+        score: 3
+      - value: well-controlled
+        label: Well Controlled
+        score: 4
+      - value: completely-controlled
+        label: Completely Controlled
+        score: 5

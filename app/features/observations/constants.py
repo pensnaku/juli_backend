@@ -47,25 +47,20 @@ class ObservationCodes:
     LAST_MENSTRUATION_DATE = "last-menstruation-date"
     MENSTRUAL_FLOW = "menstrual-flow"
 
-    # Bi-Weekly Questionnaire Scores
-    BIWEEKLY_ANXIETY_SCORE = "bi-weekly-anxiety-questionnaire-score"
-    BIWEEKLY_ASTHMA_SCORE = "bi-weekly-asthma-questionnaire-score"
-    BIWEEKLY_DEPRESSION_SCORE = "bi-weekly-depression-questionnaire-score"
-    BIWEEKLY_BIPOLAR_SCORE = "bi-weekly-bipolar-questionnaire-score"
-    BIWEEKLY_CHRONIC_PAIN_INTERFERENCE_SCORE = (
-        "bi-weekly-chronic-pain-interference-questionnaire-score"
+    # Condition Assessment Questionnaire Scores
+    CONDITION_ASSESSMENT_ANXIETY_SCORE = "condition-assessment-anxiety-score"
+    CONDITION_ASSESSMENT_ASTHMA_SCORE = "condition-assessment-asthma-score"
+    CONDITION_ASSESSMENT_DEPRESSION_SCORE = "condition-assessment-depression-score"
+    CONDITION_ASSESSMENT_BIPOLAR_SCORE = "condition-assessment-bipolar-score"
+    CONDITION_ASSESSMENT_CHRONIC_PAIN_INTERFERENCE_SCORE = (
+        "condition-assessment-chronic-pain-interference-score"
     )
-    BIWEEKLY_CHRONIC_PAIN_SCORE = "bi-weekly-chronic-pain-questionnaire-score"
-    BIWEEKLY_COPD_SCORE = "bi-weekly-copd-questionnaire-score"
-    BIWEEKLY_HEADACHE_SCORE = "bi-weekly-headache-questionnaire-score"
-    BIWEEKLY_HYPERTENSION_SCORE = "bi-weekly-hypertension-questionnaire-score"
-    BIWEEKLY_MIGRAINE_SCORE = "bi-weekly-migraine-questionnaire-score"
-    BIWEEKLY_COMORBIDITY_ASTHMA_DEPRESSION_ASTHMA_SCORE = (
-        "bi-weekly-comorbidity-asthma-depression-part-asthma-questionnaire-score"
-    )
-    BIWEEKLY_COMORBIDITY_ASTHMA_DEPRESSION_DEPRESSION_SCORE = (
-        "bi-weekly-comorbidity-asthma-depression-part-depression-questionnaire-score"
-    )
+    CONDITION_ASSESSMENT_CHRONIC_PAIN_SCORE = "condition-assessment-chronic-pain-score"
+    CONDITION_ASSESSMENT_COPD_SCORE = "condition-assessment-copd-score"
+    CONDITION_ASSESSMENT_HEADACHE_SCORE = "condition-assessment-headache-score"
+    CONDITION_ASSESSMENT_HYPERTENSION_SCORE = "condition-assessment-hypertension-score"
+    CONDITION_ASSESSMENT_MIGRAINE_SCORE = "condition-assessment-migraine-score"
+    CONDITION_ASSESSMENT_DIABETES_SCORE = "condition-assessment-diabetes-score"
 
     # Daily Questionnaire - Mood & Energy
     DAILY_MOOD = "daily-questionnaire-mood"
@@ -105,7 +100,7 @@ class ObservationCategories:
     RESPIRATORY = "respiratory"
     DEMOGRAPHICS = "demographics"
     MENSTRUAL_HEALTH = "menstrual-health"
-    QUESTIONNAIRE_BIWEEKLY = "questionnaire-biweekly"
+    QUESTIONNAIRE_CONDITION_ASSESSMENT = "questionnaire-condition-assessment"
     QUESTIONNAIRE_DAILY = "questionnaire-daily"
 
 
@@ -187,19 +182,18 @@ OBSERVATION_CODE_CATEGORIES = {
     # Menstrual Health
     ObservationCodes.LAST_MENSTRUATION_DATE: ObservationCategories.MENSTRUAL_HEALTH,
     ObservationCodes.MENSTRUAL_FLOW: ObservationCategories.MENSTRUAL_HEALTH,
-    # Bi-Weekly Questionnaires
-    ObservationCodes.BIWEEKLY_ANXIETY_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
-    ObservationCodes.BIWEEKLY_ASTHMA_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
-    ObservationCodes.BIWEEKLY_DEPRESSION_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
-    ObservationCodes.BIWEEKLY_BIPOLAR_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
-    ObservationCodes.BIWEEKLY_CHRONIC_PAIN_INTERFERENCE_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
-    ObservationCodes.BIWEEKLY_CHRONIC_PAIN_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
-    ObservationCodes.BIWEEKLY_COPD_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
-    ObservationCodes.BIWEEKLY_HEADACHE_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
-    ObservationCodes.BIWEEKLY_HYPERTENSION_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
-    ObservationCodes.BIWEEKLY_MIGRAINE_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
-    ObservationCodes.BIWEEKLY_COMORBIDITY_ASTHMA_DEPRESSION_ASTHMA_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
-    ObservationCodes.BIWEEKLY_COMORBIDITY_ASTHMA_DEPRESSION_DEPRESSION_SCORE: ObservationCategories.QUESTIONNAIRE_BIWEEKLY,
+    # Condition Assessment Questionnaires
+    ObservationCodes.CONDITION_ASSESSMENT_ANXIETY_SCORE: ObservationCategories.QUESTIONNAIRE_CONDITION_ASSESSMENT,
+    ObservationCodes.CONDITION_ASSESSMENT_ASTHMA_SCORE: ObservationCategories.QUESTIONNAIRE_CONDITION_ASSESSMENT,
+    ObservationCodes.CONDITION_ASSESSMENT_DEPRESSION_SCORE: ObservationCategories.QUESTIONNAIRE_CONDITION_ASSESSMENT,
+    ObservationCodes.CONDITION_ASSESSMENT_BIPOLAR_SCORE: ObservationCategories.QUESTIONNAIRE_CONDITION_ASSESSMENT,
+    ObservationCodes.CONDITION_ASSESSMENT_CHRONIC_PAIN_INTERFERENCE_SCORE: ObservationCategories.QUESTIONNAIRE_CONDITION_ASSESSMENT,
+    ObservationCodes.CONDITION_ASSESSMENT_CHRONIC_PAIN_SCORE: ObservationCategories.QUESTIONNAIRE_CONDITION_ASSESSMENT,
+    ObservationCodes.CONDITION_ASSESSMENT_COPD_SCORE: ObservationCategories.QUESTIONNAIRE_CONDITION_ASSESSMENT,
+    ObservationCodes.CONDITION_ASSESSMENT_HEADACHE_SCORE: ObservationCategories.QUESTIONNAIRE_CONDITION_ASSESSMENT,
+    ObservationCodes.CONDITION_ASSESSMENT_HYPERTENSION_SCORE: ObservationCategories.QUESTIONNAIRE_CONDITION_ASSESSMENT,
+    ObservationCodes.CONDITION_ASSESSMENT_MIGRAINE_SCORE: ObservationCategories.QUESTIONNAIRE_CONDITION_ASSESSMENT,
+    ObservationCodes.CONDITION_ASSESSMENT_DIABETES_SCORE: ObservationCategories.QUESTIONNAIRE_CONDITION_ASSESSMENT,
     # Daily Questionnaires
     ObservationCodes.DAILY_MOOD: ObservationCategories.QUESTIONNAIRE_DAILY,
     ObservationCodes.DAILY_MOOD_ENERGY: ObservationCategories.QUESTIONNAIRE_DAILY,

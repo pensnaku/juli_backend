@@ -1,0 +1,142 @@
+version: '1.0'
+questionnaire_id: condition-assessment-anxiety
+title: Anxiety Check-in
+description: GAD-7 questionnaire to assess anxiety symptoms over the past two weeks
+interval_days: 14
+score_range:
+  min: 0
+  max: 21
+
+questions:
+  - id: feeling-nervous-anxious-or-on-edge
+    text: "Over the last two weeks, how often have you been bothered by: Feeling nervous, anxious or on edge?"
+    display: Feeling nervous, anxious or on edge
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: not-able-to-control-worrying
+    text: "Over the last two weeks, how often have you been bothered by: Not being able to stop or control worrying?"
+    display: Not being able to stop or control worrying
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: worrying-too-much-about-different-things
+    text: "Over the last two weeks, how often have you been bothered by: Worrying too much about different things?"
+    display: Worrying too much about different things
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: trouble-relaxing
+    text: "Over the last two weeks, how often have you been bothered by: Trouble relaxing?"
+    display: Trouble relaxing
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: being-so-restless-its-hard-to-sit-still
+    text: "Over the last two weeks, how often have you been bothered by: Being so restless that it is hard to sit still?"
+    display: Being so restless that it is hard to sit still
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: becoming-easily-annoyed-or-irritable
+    text: "Over the last two weeks, how often have you been bothered by: Becoming easily annoyed or irritable?"
+    display: Becoming easily annoyed or irritable
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3
+
+  - id: feeling-afraid-as-if-something-awful-might-happen
+    text: "Over the last two weeks, how often have you been bothered by: Feeling afraid, as if something awful might happen?"
+    display: Feeling afraid, as if something awful might happen
+    type: single_choice
+    required: true
+    options:
+      - value: not-at-all
+        label: Not at all
+        score: 0
+      - value: several-days
+        label: Several days
+        score: 1
+      - value: more-than-half-days
+        label: More than half the days
+        score: 2
+      - value: nearly-every-day
+        label: Nearly every day
+        score: 3

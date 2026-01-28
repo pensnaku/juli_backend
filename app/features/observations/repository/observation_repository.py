@@ -125,6 +125,17 @@ class ObservationRepository:
 
         return query.order_by(Observation.effective_at.desc()).first()
 
+    def get_by_questionnaire_completion_id(
+        self,
+        questionnaire_completion_id: int,
+    ) -> List[Observation]:
+        """Get all observations linked to a questionnaire completion"""
+        return (
+            self.db.query(Observation)
+            .filter(Observation.questionnaire_completion_id == questionnaire_completion_id)
+            .all()
+        )
+
     def update(self, observation: Observation) -> Observation:
         """Update an observation"""
         self.db.flush()
@@ -195,6 +206,9 @@ class ObservationRepository:
                 Observation.effective_at,
                 Observation.unit,
                 Observation.data_source,
+                Observation.icon,
+                Observation.status,
+                Observation.description,
             )
             .filter(Observation.user_id == user_id)
             .filter(Observation.code.in_(codes))
