@@ -149,3 +149,10 @@ class MedicationAdherenceRepository:
                 MedicationAdherence.date <= end_date
             )
         ).order_by(MedicationAdherence.date.desc()).all()
+
+    def delete_by_medication_id(self, medication_id: int) -> int:
+        """Delete all adherence records for a medication. Returns count of deleted records."""
+        count = self.db.query(MedicationAdherence).filter(
+            MedicationAdherence.medication_id == medication_id
+        ).delete()
+        return count

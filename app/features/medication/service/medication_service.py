@@ -8,6 +8,7 @@ from app.features.auth.domain.schemas import (
     UserMedicationUpdate,
     UserMedicationResponse,
 )
+from app.features.medication.repository import MedicationAdherenceRepository
 
 
 class MedicationService:
@@ -17,6 +18,7 @@ class MedicationService:
         self.db = db
         self.repo = UserMedicationRepository(db)
         self.reminder_repo = UserReminderRepository(db)
+        self.adherence_repo = MedicationAdherenceRepository(db)
 
     def get_all(self, user_id: int) -> List[UserMedicationResponse]:
         """Get all medications for a user (both active and inactive)"""
@@ -97,11 +99,13 @@ class MedicationService:
         return UserMedicationResponse.model_validate(medication)
 
     def delete(self, user_id: int, medication_id: int) -> bool:
-        """Delete a medication and its associated reminders"""
+        """Delete a medication and its associated reminders and adherence records"""
         medication = self.repo.get_by_id(medication_id)
         if not medication or medication.user_id != user_id:
             return False
 
+        # Delete adherence records first (foreign key constraint)
+        self.adherence_repo.delete_by_medication_id(medication_id)
         # Reminders are deleted via cascade, but let's be explicit
         self.reminder_repo.delete_by_medication_id(medication_id)
         self.repo.delete(medication_id)

@@ -1,4 +1,5 @@
 """Authentication API endpoints"""
+
 import logging
 from typing import Dict, Any, Optional, List
 from zoneinfo import ZoneInfo
@@ -63,34 +64,32 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
     try:
         user = auth_service.register_user(user_data)
-        logger.info(f"User registered successfully - id: {user.id}, email: {user.email}")
+        logger.info(
+            f"User registered successfully - id: {user.id}, email: {user.email}"
+        )
 
         # Automatically log in the user by creating an access token
         access_token = auth_service.create_access_token(user)
 
         # Check onboarding completion status (will be false for new users)
         completion_repo = QuestionnaireCompletionRepository(db)
-        onboarding_completed = completion_repo.is_completed(user.id, QUESTIONNAIRE_IDS["ONBOARDING"])
+        onboarding_completed = completion_repo.is_completed(
+            user.id, QUESTIONNAIRE_IDS["ONBOARDING"]
+        )
 
         return {
             "access_token": access_token,
             "token_type": "bearer",
             "onboarding_completed": onboarding_completed,
-            "user": user
+            "user": user,
         }
     except ValueError as e:
         logger.warning(f"Registration failed for {user_data.email}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post("/validate-email", response_model=EmailValidationResponse)
-def validate_email(
-    request: EmailValidationRequest,
-    db: Session = Depends(get_db)
-):
+def validate_email(request: EmailValidationRequest, db: Session = Depends(get_db)):
     """
     Validate email format and check if it's available for registration
 
@@ -124,16 +123,12 @@ def validate_email(
     auth_service = AuthService(db)
     validation_result = auth_service.validate_email(request.email)
 
-    return EmailValidationResponse(
-        email=request.email,
-        **validation_result
-    )
+    return EmailValidationResponse(email=request.email, **validation_result)
 
 
 @router.post("/login", response_model=Token)
 def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ):
     """
     OAuth2 compatible token login, get an access token for future requests
@@ -149,7 +144,9 @@ def login(
         HTTPException: If credentials are incorrect
     """
     auth_service = AuthService(db)
-    user = auth_service.authenticate(email=form_data.username, password=form_data.password)
+    user = auth_service.authenticate(
+        email=form_data.username, password=form_data.password
+    )
 
     if not user:
         raise HTTPException(
@@ -162,13 +159,15 @@ def login(
 
     # Check onboarding completion status
     completion_repo = QuestionnaireCompletionRepository(db)
-    onboarding_completed = completion_repo.is_completed(user.id, QUESTIONNAIRE_IDS["ONBOARDING"])
+    onboarding_completed = completion_repo.is_completed(
+        user.id, QUESTIONNAIRE_IDS["ONBOARDING"]
+    )
 
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "onboarding_completed": onboarding_completed,
-        "user": user
+        "user": user,
     }
 
 
@@ -188,7 +187,9 @@ def login_json(user_login: UserLogin, db: Session = Depends(get_db)):
         HTTPException: If credentials are incorrect
     """
     auth_service = AuthService(db)
-    user = auth_service.authenticate(email=user_login.email, password=user_login.password)
+    user = auth_service.authenticate(
+        email=user_login.email, password=user_login.password
+    )
 
     if not user:
         raise HTTPException(
@@ -201,18 +202,20 @@ def login_json(user_login: UserLogin, db: Session = Depends(get_db)):
 
     # Check onboarding completion status
     completion_repo = QuestionnaireCompletionRepository(db)
-    onboarding_completed = completion_repo.is_completed(user.id, QUESTIONNAIRE_IDS["ONBOARDING"])
+    onboarding_completed = completion_repo.is_completed(
+        user.id, QUESTIONNAIRE_IDS["ONBOARDING"]
+    )
 
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "onboarding_completed": onboarding_completed,
-        "user": user
+        "user": user,
     }
 
 
 @router.get("/me", response_model=UserResponse)
-def get_current_user_info(current_user = Depends(get_current_user)):
+def get_current_user_info(current_user=Depends(get_current_user)):
     """
     Get current user information
 
@@ -227,7 +230,7 @@ def get_current_user_info(current_user = Depends(get_current_user)):
 
 @router.post("/test-token", response_model=UserWithOnboardingStatus)
 def test_token(
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
     x_timezone: Optional[str] = Header(None, alias="X-Timezone"),
 ):
@@ -255,22 +258,29 @@ def test_token(
                 if current_user.settings.timezone != x_timezone:
                     current_user.settings.timezone = x_timezone
                     db.commit()
-                    logger.debug(f"Updated timezone for user {current_user.id} to {x_timezone}")
+                    logger.debug(
+                        f"Updated timezone for user {current_user.id} to {x_timezone}"
+                    )
             else:
                 # Create settings if user doesn't have one
                 from app.features.auth.domain.entities.user_settings import UserSettings
+
                 settings = UserSettings(user_id=current_user.id, timezone=x_timezone)
                 db.add(settings)
                 db.commit()
                 db.refresh(current_user)
-                logger.debug(f"Created settings with timezone {x_timezone} for user {current_user.id}")
+                logger.debug(
+                    f"Created settings with timezone {x_timezone} for user {current_user.id}"
+                )
         except Exception as e:
             # Log but don't fail the request if timezone update fails
             logger.warning(f"Failed to update timezone for user {current_user.id}: {e}")
 
     # Check onboarding completion status
     completion_repo = QuestionnaireCompletionRepository(db)
-    onboarding_completed = completion_repo.is_completed(current_user.id, QUESTIONNAIRE_IDS["ONBOARDING"])
+    onboarding_completed = completion_repo.is_completed(
+        current_user.id, QUESTIONNAIRE_IDS["ONBOARDING"]
+    )
 
     # Convert user to dict and add onboarding status
     user_dict = {
@@ -288,7 +298,7 @@ def test_token(
         "updated_at": current_user.updated_at,
         "settings": current_user.settings,
         "conditions": current_user.conditions,
-        "onboarding_completed": onboarding_completed
+        "onboarding_completed": onboarding_completed,
     }
 
     return user_dict
@@ -297,8 +307,8 @@ def test_token(
 @router.patch("/profile", response_model=UserProfileResponse)
 def update_user_profile(
     update_data: UserProfileUpdate,
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """
     Update the current user's profile information.
@@ -339,8 +349,7 @@ def update_user_profile(
 
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     # Update only provided fields
@@ -364,10 +373,14 @@ def update_user_profile(
     # Update fields on existing conditions
     if update_data.conditions is not None:
         for condition_data in update_data.conditions:
-            condition = condition_repo.get_by_user_and_condition(user.id, condition_data.condition_code)
+            condition = condition_repo.get_by_user_and_condition(
+                user.id, condition_data.condition_code
+            )
             if condition:
                 if condition_data.diagnosed_by_physician is not None:
-                    condition.diagnosed_by_physician = condition_data.diagnosed_by_physician
+                    condition.diagnosed_by_physician = (
+                        condition_data.diagnosed_by_physician
+                    )
                 if condition_data.duration is not None:
                     condition.duration = condition_data.duration
                 if condition_data.physician_frequency is not None:
@@ -377,7 +390,9 @@ def update_user_profile(
                 if condition_data.therapy_type is not None:
                     condition.therapy_type = condition_data.therapy_type
                 if condition_data.wants_glucose_reminders is not None:
-                    condition.wants_glucose_reminders = condition_data.wants_glucose_reminders
+                    condition.wants_glucose_reminders = (
+                        condition_data.wants_glucose_reminders
+                    )
                 if condition_data.pain_type is not None:
                     condition.pain_type = condition_data.pain_type
 
@@ -391,15 +406,21 @@ def update_user_profile(
         age=user.age,
         gender=user.gender,
         ethnicity=user.settings.ethnicity if user.settings else None,
-        hispanic_latino=user.settings.hispanic_latino if user.settings else None
+        hispanic_latino=user.settings.hispanic_latino if user.settings else None,
     )
 
 
-@router.post("/conditions", response_model=UserConditionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/conditions",
+    response_model=UserConditionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_condition(
-    condition_code: str = Query(..., description="SNOMED condition code (e.g., '73211009' for Diabetes)"),
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    condition_code: str = Query(
+        ..., description="SNOMED condition code (e.g., '73211009' for Diabetes)"
+    ),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """
     Create a new condition for the current user.
@@ -427,7 +448,7 @@ def create_condition(
     if condition_code not in CONDITION_CODES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid condition code: {condition_code}"
+            detail=f"Invalid condition code: {condition_code}",
         )
 
     # Check if condition already exists
@@ -435,7 +456,7 @@ def create_condition(
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Condition already exists for this user"
+            detail="Condition already exists for this user",
         )
 
     # Create the condition
@@ -453,8 +474,8 @@ def create_condition(
 @router.delete("/conditions/{condition_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_condition(
     condition_id: int,
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """
     Delete a condition by ID.
@@ -480,14 +501,13 @@ def delete_condition(
 
     if not condition:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Condition not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Condition not found"
         )
 
     if condition.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to delete this condition"
+            detail="Not authorized to delete this condition",
         )
 
     # Check if this is the last condition
@@ -504,7 +524,7 @@ def delete_condition(
         if not is_student:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete your last condition. All users must have at least one condition."
+                detail="Cannot delete your last condition. All users must have at least one condition.",
             )
 
         # Student trying to delete last condition
@@ -512,7 +532,7 @@ def delete_condition(
         if condition.condition_code == WELLBEING_CONDITION_CODE:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete Wellbeing condition. All users must have at least one condition."
+                detail="Cannot delete Wellbeing condition. All users must have at least one condition.",
             )
 
         # Student deleting last non-Wellbeing condition - replace with Wellbeing
@@ -532,11 +552,15 @@ def delete_condition(
     return None
 
 
-@router.post("/questionnaire/answers", response_model=QuestionnaireAnswersResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/questionnaire/answers",
+    response_model=QuestionnaireAnswersResponse,
+    status_code=status.HTTP_200_OK,
+)
 def save_questionnaire_answers(
     request: QuestionnaireAnswersRequest,
-    current_user = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """
     Save or update questionnaire answers for the authenticated user.
@@ -575,24 +599,21 @@ def save_questionnaire_answers(
             current_user.id,
             request.questionnaire_id,
             request.answers,
-            mark_completed=request.completed
+            mark_completed=request.completed,
         )
         return QuestionnaireAnswersResponse(
             message="Questionnaire answers saved successfully",
             user_id=current_user.id,
             questionnaire_id=request.questionnaire_id,
             answers_count=answers_count,
-            completed=is_completed
+            completed=is_completed,
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error saving questionnaire answers: {str(e)}"
+            detail=f"Error saving questionnaire answers: {str(e)}",
         )
 
 
@@ -600,7 +621,7 @@ def save_questionnaire_answers(
 def get_reminders(
     reminder_type: Optional[str] = Query(
         default=None,
-        description="Filter by reminder type (e.g., 'daily_check_in', 'medication_reminder')"
+        description="Filter by reminder type (e.g., 'daily_check_in', 'medication_reminder')",
     ),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -653,14 +674,13 @@ def update_reminder(
 
     if not reminder:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Reminder not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Reminder not found"
         )
 
     if reminder.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to update this reminder"
+            detail="Not authorized to update this reminder",
         )
 
     updated_reminder = repo.update(reminder, update_data)
