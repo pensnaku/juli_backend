@@ -16,6 +16,13 @@ class Settings(BaseSettings):
     OPENWEATHERMAP_API_KEY: Optional[str] = None
     AMBEE_API_KEY: Optional[str] = None
 
+    # Push Notifications - APNs (iOS)
+    APNS_PEM_FILE: Optional[str] = None
+    APNS_USE_SANDBOX: bool = True
+
+    # Push Notifications - FCM (Android)
+    FCM_SERVICE_ACCOUNT_FILE: Optional[str] = None
+
     class Config:
         env_file = ".env"
         case_sensitive = True
