@@ -11,6 +11,8 @@ from app.features.juli_score.api import router as juli_score_router
 from app.features.environment.api import router as environment_router
 from app.features.daily_dare_badges.api import router as badges_router
 from app.features.export.api import router as export_router
+from app.features.notifications.api import router as notifications_router
+from app.features.notifications.api.admin_router import router as notifications_admin_router
 
 # Create main API router
 api_router_v1 = APIRouter()
@@ -27,5 +29,7 @@ api_router_v1.include_router(juli_score_router, prefix="/juli-score", tags=["jul
 api_router_v1.include_router(environment_router, prefix="/environment", tags=["environment"])
 api_router_v1.include_router(badges_router, prefix="/badges", tags=["badges"])
 api_router_v1.include_router(export_router, prefix="/export", tags=["export"])
+api_router_v1.include_router(notifications_router, prefix="/notifications", tags=["notifications"])
+api_router_v1.include_router(notifications_admin_router, prefix="/admin/notifications", tags=["admin"])
 
 __all__ = ["api_router_v1"]

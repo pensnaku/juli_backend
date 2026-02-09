@@ -6,8 +6,10 @@ from zoneinfo import ZoneInfo
 from app.core.database import SessionLocal
 from app.core.scheduler import scheduler
 from app.features.auth.domain import UserReminder, UserSettings
+from app.features.auth.domain.entities.user_medication import UserMedication
 from app.features.medication.domain.entities import MedicationAdherence
 from app.features.medication.repository import MedicationAdherenceRepository
+from app.features.notifications.scheduler.notification_triggers import trigger_medication_reminder
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +40,15 @@ def process_reminders_job():
     try:
         utc_now = datetime.now(timezone.utc)
 
-        # Query active reminders with user timezone (LEFT JOIN to include users without settings)
+        # Query active medication reminders with user timezone
+        # Daily check-in reminders are handled by daily_push_scheduler
         reminders_with_tz = (
             db.query(UserReminder, UserSettings.timezone)
             .outerjoin(UserSettings, UserReminder.user_id == UserSettings.user_id)
-            .filter(UserReminder.is_active == True)
+            .filter(
+                UserReminder.is_active == True,
+                UserReminder.reminder_type == "medication_reminder",
+            )
             .all()
         )
 
@@ -109,10 +115,11 @@ def _process_reminder(db, reminder: UserReminder, target_date):
 
 def _process_medication_reminder(db, reminder: UserReminder, target_date):
     """
-    Process a medication reminder by creating an adherence record.
+    Process a medication reminder by creating an adherence record and sending push notification.
 
     Creates a medication adherence record with NOT_SET status if one
-    doesn't already exist for this medication on this date.
+    doesn't already exist for this medication on this date, then sends
+    a push notification to the user.
     """
     if not reminder.medication_id:
         logger.warning(
@@ -151,18 +158,33 @@ def _process_medication_reminder(db, reminder: UserReminder, target_date):
         f"medication {reminder.medication_id}, date {target_date}"
     )
 
+    # Get medication details and send push notification
+    medication = db.query(UserMedication).filter(
+        UserMedication.id == reminder.medication_id
+    ).first()
+
+    if medication:
+        trigger_medication_reminder(
+            user_id=reminder.user_id,
+            medication_id=reminder.medication_id,
+            medication_name=medication.medication_name,
+            time=reminder.time.strftime("%H:%M"),
+        )
+    else:
+        logger.warning(
+            f"Medication {reminder.medication_id} not found for push notification"
+        )
+
 
 def register_reminder_job():
     """Register the reminder processing job with the scheduler."""
     scheduler.add_job(
         process_reminders_job,
-        'interval',
-        minutes=SCHEDULER_INTERVAL_MINUTES,
+        'cron',
+        second=0,  # Run at second 0 of every minute
         id='reminder_processing',
         name='Process user reminders',
         replace_existing=True,
     )
-    logger.info(
-        f"Registered reminder job to run every {SCHEDULER_INTERVAL_MINUTES} minute(s)"
-    )
-    print(f"⏰ [Reminder] Registered job to run every {SCHEDULER_INTERVAL_MINUTES} minute(s)")
+    logger.info("Registered reminder job to run at the start of every minute")
+    print("⏰ [Reminder] Registered job to run at the start of every minute")

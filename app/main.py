@@ -12,10 +12,14 @@ logging.basicConfig(
 )
 
 from app.core.config import settings
+from app.core.database import SessionLocal
 from app.core.scheduler import start_scheduler, stop_scheduler
 from app.api import api_router_v1
 from app.features.juli_score.scheduler import register_juli_score_job
 from app.features.auth.scheduler import register_reminder_job
+from app.features.notifications.service.notification_queue import start_notification_workers
+from app.features.notifications.service import NotificationService
+from app.features.notifications.scheduler.daily_push_scheduler import register_daily_push_job
 
 
 @asynccontextmanager
@@ -24,7 +28,17 @@ async def lifespan(app: FastAPI):
     # Startup
     register_juli_score_job()
     register_reminder_job()
+    register_daily_push_job()
     start_scheduler()
+
+    # Start notification queue workers
+    db = SessionLocal()
+    try:
+        notification_service = NotificationService(db)
+        await start_notification_workers(notification_service)
+    finally:
+        db.close()
+
     yield
     # Shutdown
     stop_scheduler()
