@@ -25,13 +25,15 @@ class MedicationAdherenceService:
 
     def _build_adherence_response(self, adherence, medication_name: str) -> MedicationAdherenceResponse:
         """Build adherence response with medication name"""
+        # Handle both enum and string status values
+        status_value = adherence.status.value if hasattr(adherence.status, 'value') else adherence.status
         return MedicationAdherenceResponse(
             id=adherence.id,
             user_id=adherence.user_id,
             medication_id=adherence.medication_id,
             medication_name=medication_name,
             date=adherence.date,
-            status=AdherenceStatusEnum(adherence.status.value),
+            status=AdherenceStatusEnum(status_value),
             notes=adherence.notes,
             created_at=adherence.created_at,
             updated_at=adherence.updated_at,
