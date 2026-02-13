@@ -1,15 +1,17 @@
-"""Main export service that orchestrates PDF generation"""
-from datetime import date
+"""Main export service that orchestrates PDF generation and CSV data export"""
+from datetime import date, timedelta
 from sqlalchemy.orm import Session
 
+from app.features.export.constants import CSV_EXPORT_DAYS
 from app.features.export.domain.schemas import HealthDataExportResponse
 from app.features.export.service.data_collector import DataCollector
-from app.features.export.service.chart_builder import ChartBuilder, REPORT_DAYS
+from app.features.export.service.chart_builder import ChartBuilder
 from app.features.export.service.pdf_generator import PDFGenerator
+from app.features.export.service.csv_serializer import serialize_health_data_for_csv
 
 
 class ExportService:
-    """Service for exporting health data as PDF"""
+    """Service for exporting health data as PDF and CSV"""
 
     def __init__(self, db: Session):
         self.db = db
@@ -62,3 +64,17 @@ class ExportService:
             content=pdf_content,
             period=self.pdf_generator.format_period(start_date),
         )
+
+    def export_health_data_csv(self, user_id: int) -> dict:
+        """
+        Export health data as JSON for client-side XLSX generation.
+
+        Returns 90 days of health data in the format expected by the mobile app.
+        """
+        end_date = date.today()
+        start_date = end_date - timedelta(days=CSV_EXPORT_DAYS)
+
+        payload = self.data_collector.collect_health_data(user_id, start_date, end_date)
+        content = serialize_health_data_for_csv(payload)
+
+        return {"status": "OK", "content": content}

@@ -204,6 +204,8 @@ class ObservationRepository:
                 Observation.value_string,
                 Observation.value_boolean,
                 Observation.effective_at,
+                Observation.period_start,
+                Observation.period_end,
                 Observation.unit,
                 Observation.data_source,
                 Observation.icon,

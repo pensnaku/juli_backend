@@ -3,7 +3,7 @@ from typing import Literal, Optional
 from datetime import date, timedelta
 from pydantic import BaseModel, Field, model_validator
 
-from app.features.export.service.chart_builder import REPORT_DAYS
+from app.features.export.constants import REPORT_DAYS
 
 
 class HealthDataExportRequest(BaseModel):

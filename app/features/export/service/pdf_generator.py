@@ -8,7 +8,7 @@ from weasyprint.text.fonts import FontConfiguration
 from jinja2 import Environment
 
 from app.features.export.service.data_collector import HealthDataPayload
-from app.features.export.service.chart_builder import REPORT_DAYS
+from app.features.export.constants import REPORT_DAYS
 
 
 class PDFGenerator:

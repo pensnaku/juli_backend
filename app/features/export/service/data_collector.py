@@ -11,15 +11,18 @@ from app.features.observations.repository import ObservationRepository
 from app.features.medication.repository import MedicationAdherenceRepository
 from app.features.medication.domain.entities import AdherenceStatus
 from app.features.observations.constants import ObservationCodes, EnvironmentVariants
+from app.features.journal.repository import JournalEntryRepository
 from app.shared.constants import CONDITION_CODES, MOOD_VALUES_CHART
+from app.features.export.constants import REPORT_DAYS
 from app.features.export.service.chart_builder import (
     Measurement,
     MedicationCompliance,
     DailyMedication,
     PollenData,
     WeatherData,
+    SleepPeriodData,
     IndividualTrackingData,
-    REPORT_DAYS,
+    JournalEntryData,
 )
 
 
@@ -71,6 +74,12 @@ class HealthDataPayload:
     # Individual tracking
     individual_tracking: List[IndividualTrackingData]
 
+    # Sleep periods (for CSV export — individual sleep sessions with start/end)
+    sleep_periods: List[SleepPeriodData]
+
+    # Journal entries
+    journal: List[JournalEntryData]
+
     # Report period
     start_date: date
 
@@ -85,19 +94,22 @@ class DataCollector:
         self.medication_repo = UserMedicationRepository(db)
         self.adherence_repo = MedicationAdherenceRepository(db)
         self.tracking_topic_repo = UserTrackingTopicRepository(db)
+        self.journal_repo = JournalEntryRepository(db)
 
-    def collect_health_data(self, user_id: int, start_date: date) -> HealthDataPayload:
+    def collect_health_data(self, user_id: int, start_date: date, end_date: date = None) -> HealthDataPayload:
         """
-        Collect all health data for 28-day PDF export.
+        Collect all health data for a report period.
 
         Args:
             user_id: The user's ID
-            start_date: Start date of the 28-day report period
+            start_date: Start date of the report period
+            end_date: End date of the report period. Defaults to start_date + REPORT_DAYS - 1
 
         Returns:
-            HealthDataPayload with all data needed for PDF generation
+            HealthDataPayload with all data needed for export
         """
-        end_date = start_date + timedelta(days=REPORT_DAYS - 1)
+        if end_date is None:
+            end_date = start_date + timedelta(days=REPORT_DAYS - 1)
 
         # Get user profile
         user = self._get_user_profile(user_id)
@@ -110,6 +122,9 @@ class DataCollector:
 
         # Fetch individual tracking data
         individual_tracking_data = self._fetch_individual_tracking(user_id, start_date, end_date)
+
+        # Fetch journal entries
+        journal_data = self._fetch_journal_entries(user_id, start_date, end_date)
 
         # Extract environment data
         pollen_data = self._extract_pollen_data(observations.get(ObservationCodes.ENVIRONMENT, []))
@@ -143,6 +158,13 @@ class DataCollector:
             weather=weather_data,
             medication=medication_data,
             individual_tracking=individual_tracking_data,
+            sleep_periods=self._extract_sleep_periods(
+                observations.get(ObservationCodes.TIME_LIGHT_SLEEP, []),
+                observations.get(ObservationCodes.TIME_REM_SLEEP, []),
+                observations.get(ObservationCodes.TIME_DEEP_SLEEP, []),
+                observations.get(ObservationCodes.TIME_IN_BED, []),
+            ),
+            journal=journal_data,
             start_date=start_date,
         )
 
@@ -321,6 +343,88 @@ class DataCollector:
                 measurements.append(Measurement(date=d, value=asleep_by_date[d]))
 
         return measurements
+
+    def _extract_sleep_periods(
+        self,
+        light_sleep_obs: List[Any],
+        rem_sleep_obs: List[Any],
+        deep_sleep_obs: List[Any],
+        time_in_bed_obs: List[Any],
+    ) -> List[SleepPeriodData]:
+        """
+        Extract sleep periods with start/end times for CSV export.
+
+        For time-asleep: groups sleep stage observations (light+REM+deep) by date,
+        uses the earliest period_start and latest period_end.
+
+        For time-in-bed: uses period_start/period_end from time-in-bed observations.
+        """
+        def _get_obs_value(obs) -> Optional[float]:
+            if obs.value_decimal is not None:
+                return float(obs.value_decimal)
+            if obs.value_integer is not None:
+                return float(obs.value_integer)
+            return None
+
+        # time-asleep: derive from sleep stages per day
+        asleep_by_date: Dict[date, dict] = {}
+        for obs in light_sleep_obs + rem_sleep_obs + deep_sleep_obs:
+            if obs.period_start and obs.period_end:
+                obs_date = obs.effective_at.date()
+                value = _get_obs_value(obs) or 0.0
+                if obs_date not in asleep_by_date:
+                    asleep_by_date[obs_date] = {
+                        "start": obs.period_start,
+                        "end": obs.period_end,
+                        "minutes": value,
+                    }
+                else:
+                    entry = asleep_by_date[obs_date]
+                    if obs.period_start < entry["start"]:
+                        entry["start"] = obs.period_start
+                    if obs.period_end > entry["end"]:
+                        entry["end"] = obs.period_end
+                    entry["minutes"] += value
+
+        # time-in-bed: derive from time-in-bed observations per day
+        in_bed_by_date: Dict[date, dict] = {}
+        for obs in time_in_bed_obs:
+            if obs.period_start and obs.period_end:
+                obs_date = obs.effective_at.date()
+                value = _get_obs_value(obs) or 0.0
+                if obs_date not in in_bed_by_date:
+                    in_bed_by_date[obs_date] = {
+                        "start": obs.period_start,
+                        "end": obs.period_end,
+                        "minutes": value,
+                    }
+                else:
+                    entry = in_bed_by_date[obs_date]
+                    if obs.period_start < entry["start"]:
+                        entry["start"] = obs.period_start
+                    if obs.period_end > entry["end"]:
+                        entry["end"] = obs.period_end
+                    entry["minutes"] += value
+
+        periods = []
+        for d in sorted(asleep_by_date):
+            entry = asleep_by_date[d]
+            periods.append(SleepPeriodData(
+                code="time-asleep",
+                start=entry["start"],
+                end=entry["end"],
+                value=entry["minutes"] / 60,
+            ))
+        for d in sorted(in_bed_by_date):
+            entry = in_bed_by_date[d]
+            periods.append(SleepPeriodData(
+                code="time-in-bed",
+                start=entry["start"],
+                end=entry["end"],
+                value=entry["minutes"] / 60,
+            ))
+
+        return periods
 
     def _extract_pollen_data(self, environment_obs: List[Any]) -> List[PollenData]:
         """Extract pollen data from environment observations"""
@@ -519,6 +623,25 @@ class DataCollector:
             )
 
         return result
+
+    def _fetch_journal_entries(
+        self, user_id: int, start_date: date, end_date: date
+    ) -> List[JournalEntryData]:
+        """Fetch journal entries for the report period."""
+        entries, _ = self.journal_repo.get_by_user_paginated(
+            user_id=user_id,
+            start_date=start_date,
+            end_date=end_date,
+            page=1,
+            page_size=10000,
+        )
+        return [
+            JournalEntryData(
+                date=entry.created_at,
+                value=entry.content,
+            )
+            for entry in entries
+        ]
 
     def _calculate_age(self, user_id: int) -> Optional[int]:
         """Calculate age from birthdate observation"""

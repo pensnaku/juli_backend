@@ -52,3 +52,32 @@ def export_health_data_pdf(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Failed to generate PDF export", "code": "export_failed"},
         )
+
+
+@router.get("/health-data/csv")
+def export_health_data_csv(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Export health data as JSON for client-side XLSX generation.
+
+    Returns 90 days of health data in the format expected by the mobile app
+    to generate an XLSX file with Medication, Observations, and Sleep sheets.
+    """
+    service = ExportService(db)
+    try:
+        return service.export_health_data_csv(current_user.id)
+    except ValueError as e:
+        logger.error(f"CSV export validation error for user {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": str(e), "code": "validation_error"},
+        )
+    except Exception as e:
+        logger.error(f"CSV export failed for user {current_user.id}: {e}")
+        logger.error(f"Full traceback:\n{traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Failed to generate CSV export", "code": "export_failed"},
+        )

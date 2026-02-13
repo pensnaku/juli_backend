@@ -1,9 +1,9 @@
 """SVG chart path building for PDF export"""
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Optional, List, Tuple, Dict
 
-REPORT_DAYS = 28
+from app.features.export.constants import REPORT_DAYS
 
 
 @dataclass
@@ -63,6 +63,24 @@ class WeatherData:
     date: date
     temperature: Optional[float]
     pressure: Optional[float]
+
+
+@dataclass(kw_only=True)
+class SleepPeriodData:
+    """Sleep period data with start/end times for CSV export"""
+
+    code: str  # "time-in-bed" or "time-asleep"
+    start: datetime
+    end: datetime
+    value: float  # duration in hours
+
+
+@dataclass(kw_only=True)
+class JournalEntryData:
+    """Journal entry data for export"""
+
+    date: datetime
+    value: str
 
 
 @dataclass(kw_only=True)
