@@ -3,6 +3,7 @@
 Sends engagement-based notifications depending on how many days since
 the user last completed a daily questionnaire.
 """
+
 import logging
 from datetime import datetime, timezone, timedelta, date
 from zoneinfo import ZoneInfo
@@ -163,7 +164,7 @@ def process_daily_push_job():
             .outerjoin(UserSettings, UserReminder.user_id == UserSettings.user_id)
             .filter(
                 UserReminder.is_active == True,
-                UserReminder.reminder_type == "daily_check_in"
+                UserReminder.reminder_type == "daily_check_in",
             )
             .all()
         )
@@ -183,13 +184,17 @@ def process_daily_push_job():
                 local_now = utc_now.astimezone(user_tz)
 
                 # Check if reminder time matches current local time (exact minute)
-                if (reminder.time.hour != local_now.hour or
-                        reminder.time.minute != local_now.minute):
+                if (
+                    reminder.time.hour != local_now.hour
+                    or reminder.time.minute != local_now.minute
+                ):
                     continue
 
                 # Check if already triggered today (in user's local timezone)
                 if reminder.last_triggered_at:
-                    last_triggered_local = reminder.last_triggered_at.astimezone(user_tz)
+                    last_triggered_local = reminder.last_triggered_at.astimezone(
+                        user_tz
+                    )
                     if last_triggered_local.date() == local_now.date():
                         skipped_count += 1
                         continue
@@ -201,7 +206,9 @@ def process_daily_push_job():
                     continue
 
                 # Calculate days since last questionnaire completion
-                days_since = get_days_since_last_completion(db, user.id, local_now.date())
+                days_since = get_days_since_last_completion(
+                    db, user.id, local_now.date()
+                )
 
                 # Send appropriate notification
                 _send_daily_notification(db, user, days_since)
@@ -234,10 +241,10 @@ def register_daily_push_job():
     """Register the daily push notification job with the scheduler."""
     scheduler.add_job(
         process_daily_push_job,
-        'cron',
+        "cron",
         second=0,  # Run at second 0 of every minute
-        id='daily_push_notifications',
-        name='Process daily check-in push notifications',
+        id="daily_push_notifications",
+        name="Process daily check-in push notifications",
         replace_existing=True,
     )
     logger.info("Registered daily push job to run at the start of every minute")
