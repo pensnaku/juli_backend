@@ -4,6 +4,7 @@ import logging
 from typing import Dict, Any, Optional, List
 from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, HTTPException, Header, Query, status
+from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -18,6 +19,8 @@ from app.features.auth.domain import (
     Token,
     EmailValidationRequest,
     EmailValidationResponse,
+    ResetPasswordLinkRequest,
+    ResetPasswordRequest,
     UserReminderResponse,
     UserReminderUpdate,
     UserProfileUpdate,
@@ -67,6 +70,12 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
         logger.info(
             f"User registered successfully - id: {user.id}, email: {user.email}"
         )
+
+        # Send welcome email (non-blocking, don't fail registration if email fails)
+        try:
+            auth_service.send_welcome_email(user.id, user.email)
+        except Exception as email_err:
+            logger.warning(f"Failed to send welcome email to {user.email}: {email_err}")
 
         # Automatically log in the user by creating an access token
         access_token = auth_service.create_access_token(user)
@@ -685,3 +694,96 @@ def update_reminder(
 
     updated_reminder = repo.update(reminder, update_data)
     return updated_reminder
+
+
+# --- Email & Password Reset Endpoints ---
+
+
+@router.post("/send-reset-password-link")
+def send_reset_password_link(
+    request: ResetPasswordLinkRequest, db: Session = Depends(get_db)
+):
+    """
+    Send a password reset link to the given email address.
+
+    Always returns 200 OK to prevent user enumeration.
+    """
+    auth_service = AuthService(db)
+    user = auth_service.get_user_by_email(request.email)
+
+    if user:
+        try:
+            auth_service.send_reset_password_email(user.id, user.email)
+        except Exception as e:
+            logger.error(f"Failed to send reset password email to {request.email}: {e}")
+    else:
+        logger.debug(f"Ignoring reset password request for unknown email: {request.email}")
+
+    return {"status": "OK"}
+
+
+@router.post("/reset-password")
+def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """
+    Reset password using a signed token from the reset email.
+    """
+    auth_service = AuthService(db)
+
+    if not auth_service.reset_password(request.signed_payload, request.password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token",
+        )
+
+    return {"status": "OK"}
+
+
+@router.post("/send-confirmation-email")
+def send_confirmation_email(
+    current_user=Depends(get_current_user), db: Session = Depends(get_db)
+):
+    """
+    Resend email confirmation link to the current authenticated user.
+    """
+    auth_service = AuthService(db)
+
+    if current_user.email_confirmed:
+        return {"status": "OK", "message": "Email already confirmed"}
+
+    try:
+        auth_service.send_confirmation_email(current_user.id, current_user.email)
+    except Exception as e:
+        logger.error(f"Failed to send confirmation email to {current_user.email}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send confirmation email",
+        )
+
+    return {"status": "OK"}
+
+
+@router.get("/confirm-account/{token}", response_class=HTMLResponse)
+def confirm_account(token: str, db: Session = Depends(get_db)):
+    """
+    Confirm a user's email address via a signed token link.
+
+    Returns an HTML page indicating success or failure.
+    """
+    auth_service = AuthService(db)
+    success = auth_service.confirm_email(token)
+
+    if success:
+        return HTMLResponse(
+            content="<html><body><h1>Email Confirmed</h1>"
+            "<p>Your email has been confirmed successfully. "
+            "You can close this page and return to the app.</p>"
+            "</body></html>"
+        )
+
+    return HTMLResponse(
+        content="<html><body><h1>Confirmation Failed</h1>"
+        "<p>The confirmation link is invalid or has expired. "
+        "Please request a new confirmation email from the app.</p>"
+        "</body></html>",
+        status_code=400,
+    )

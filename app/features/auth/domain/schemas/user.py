@@ -31,6 +31,17 @@ class UserUpdate(BaseModel):
     password: Optional[str] = Field(None, min_length=8, max_length=72, description="Password must be between 8 and 72 characters")
 
 
+class ResetPasswordLinkRequest(BaseModel):
+    """Schema for requesting a password reset email"""
+    email: EmailStr = Field(..., description="Email address to send reset link to")
+
+
+class ResetPasswordRequest(BaseModel):
+    """Schema for resetting password with a signed token"""
+    signed_payload: str = Field(..., description="Signed token from the reset email link")
+    password: str = Field(..., min_length=8, max_length=72, description="New password")
+
+
 class EmailValidationRequest(BaseModel):
     """Schema for email validation request"""
     email: EmailStr = Field(..., description="Email address to validate")
@@ -53,6 +64,7 @@ class UserResponse(UserBase):
     is_active: bool
     is_superuser: bool
     is_legacy_user: bool
+    email_confirmed: bool
     terms_accepted: bool
     age_confirmed: bool
     created_at: datetime

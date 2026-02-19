@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     # Push Notifications - FCM (Android)
     FCM_SERVICE_ACCOUNT_FILE: Optional[str] = None
 
+    # Email (Postmark)
+    POSTMARK_API_TOKEN: Optional[str] = None
+    POSTMARK_EMAIL_FROM: str = "info@juli.co"
+    BACKEND_PUBLIC_URL: str = "http://localhost:8000"
+
     class Config:
         env_file = ".env"
         case_sensitive = True

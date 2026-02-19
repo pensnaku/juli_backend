@@ -19,6 +19,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
     is_legacy_user = Column(Boolean, default=False)
+    email_confirmed = Column(Boolean, default=False, nullable=False)
 
     # Legal compliance fields
     terms_accepted = Column(Boolean, default=False, nullable=False)

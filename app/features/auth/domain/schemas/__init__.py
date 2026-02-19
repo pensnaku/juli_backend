@@ -8,6 +8,8 @@ from app.features.auth.domain.schemas.user import (
     UserWithOnboardingStatus,
     EmailValidationRequest,
     EmailValidationResponse,
+    ResetPasswordLinkRequest,
+    ResetPasswordRequest,
 )
 from app.features.auth.domain.schemas.user_profile import (
     UserProfileUpdate,
@@ -58,6 +60,8 @@ __all__ = [
     "UserWithOnboardingStatus",
     "EmailValidationRequest",
     "EmailValidationResponse",
+    "ResetPasswordLinkRequest",
+    "ResetPasswordRequest",
     # User profile schemas
     "UserProfileUpdate",
     "UserProfileResponse",
