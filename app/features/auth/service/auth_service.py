@@ -190,7 +190,7 @@ class AuthService:
             key=settings.SECRET_KEY,
             max_age=PASSWORD_RESET_MAX_AGE,
         )
-        return f"{settings.BACKEND_PUBLIC_URL}/app/reset-password/{token}"
+        return f"{settings.DEEPLINK_URL}/app/reset-password/{token}"
 
     def send_welcome_email(self, user_id: int, user_email: str) -> bool:
         link = self._generate_confirmation_link(user_id, user_email)

@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     POSTMARK_API_TOKEN: Optional[str] = None
     POSTMARK_EMAIL_FROM: str = "info@juli.co"
     BACKEND_PUBLIC_URL: str = "http://localhost:8000"
+    DEEPLINK_URL: str = "http://localhost:8000"
 
     class Config:
         env_file = ".env"
