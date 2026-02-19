@@ -15,6 +15,7 @@ from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.scheduler import start_scheduler, stop_scheduler
 from app.api import api_router_v1
+from app.universal_links import router as universal_links_router
 from app.features.juli_score.scheduler import register_juli_score_job
 from app.features.auth.scheduler import register_reminder_job
 from app.features.notifications.service.notification_queue import start_notification_workers
@@ -67,6 +68,9 @@ app.add_middleware(
 
 # Include API router
 app.include_router(api_router_v1, prefix="/api/v1")
+
+# Universal links (AASA + Android asset links) — no prefix, served at root
+app.include_router(universal_links_router)
 
 
 @app.get("/")
